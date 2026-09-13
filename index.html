@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الولاء لستائر Balalem co | متجر أقمشة الستائر الفاخرة، كريب، كتان، تول، مخمل</title>
+  <meta name="description" content="متجر الولاء لستائر Balalem co - تفصيل وأقمشة ستائر فاخرة (كريب، كتان، تول، مخمل، بلاك آوت، وبروكار) مع التوصيل لكافة المدن الفلسطينية (نابلس، الخليل، رام الله، القدس، جنين...). هاتف وواتساب: 0599842231.">
+
+  <!-- Favicon & PWA Manifest -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d4af37'><path d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/></svg>">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0f1d">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/customer.css">
+  <link rel="stylesheet" href="css/admin.css">
+
+  <!-- Immediate Fast Navigation Helpers (Zero Lag, Instant Click Handling) -->
+  <script>
+    function scrollToSection(sectionId, ev) {
+      if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+      if (window.naseejCustomer && typeof window.naseejCustomer.scrollToSection === 'function') {
+        window.naseejCustomer.scrollToSection(sectionId, ev);
+        return;
+      }
+      var target = document.getElementById(sectionId);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.querySelectorAll('.header-nav-menu .nav-link').forEach(function(link) {
+          var h = link.getAttribute('href');
+          if (h === '#' + sectionId || (sectionId === 'storefront-view' && h === '#storefront-view')) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
+        var card = target.querySelector('.wholesale-main-card') || 
+                   target.querySelector('.tailoring-header') || 
+                   target.querySelector('.catalog-toolbar') || 
+                   target;
+        card.classList.remove('section-target-highlight');
+        void card.offsetWidth;
+        card.classList.add('section-target-highlight');
+        setTimeout(function() { card.classList.remove('section-target-highlight'); }, 2400);
+      } else {
+        window.location.hash = '#' + sectionId;
+      }
+    }
+
+    function openSmartCalculator(type, ev) {
+      if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+      if (window.naseejCustomer && typeof window.naseejCustomer.openCalculatorFromNav === 'function') {
+        window.naseejCustomer.openCalculatorFromNav(ev, type);
+      }
+    }
+
+    function enterAdminPortal(ev) {
+      if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+      if (window.naseejAuth && window.naseejAuth.isAdmin()) {
+        if (window.naseejApp) {
+          window.naseejApp.openAdminView();
+        }
+      } else {
+        if (window.naseejCustomer) {
+          window.naseejCustomer.showToast('لوحة تحكم المسؤول محمية وتتطلب تسجيل الدخول ببيانات مدير النظام المعتمدة', 'warning');
+          window.naseejCustomer.openAuthModal('login');
+        }
+      }
+    }
+
+    function openAddProductModal(ev) {
+      if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+      try {
+        if (window.naseejAdmin && typeof window.naseejAdmin.openAddProductModal === 'function') {
+          window.naseejAdmin.openAddProductModal();
+          return;
+        }
+      } catch (e) {
+        console.warn('Fallback opening admin-product-modal:', e);
+      }
+      var modal = document.getElementById('admin-product-modal');
+      if (modal) {
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+        modal.style.opacity = '1';
+        modal.style.visibility = 'visible';
+        modal.style.pointerEvents = 'auto';
+        modal.style.zIndex = '99999';
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function openWalkinOrderModal(ev) {
+      if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+      try {
+        if (window.naseejAdmin && typeof window.naseejAdmin.openWalkinOrderModal === 'function') {
+          window.naseejAdmin.openWalkinOrderModal();
+          return;
+        }
+      } catch (e) {
+        console.warn('Fallback opening admin-walkin-order-modal:', e);
+      }
+      var modal = document.getElementById('admin-walkin-order-modal');
+      if (modal) {
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+        modal.style.opacity = '1';
+        modal.style.visibility = 'visible';
+        modal.style.pointerEvents = 'auto';
+        modal.style.zIndex = '99999';
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeAdminProductModal() {
+      try {
+        if (window.naseejAdmin && typeof window.naseejAdmin.closeProductModal === 'function') {
+          window.naseejAdmin.closeProductModal();
+          return;
+        }
+      } catch (e) {
+        console.warn('Fallback closing admin-product-modal:', e);
+      }
+      var modal = document.getElementById('admin-product-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = '';
+        modal.style.opacity = '';
+        modal.style.visibility = '';
+        modal.style.pointerEvents = '';
+        modal.style.zIndex = '';
+        document.body.style.overflow = '';
+      }
+    }
+
+    function closeWalkinOrderModal() {
+      try {
+        if (window.naseejAdmin && typeof window.naseejAdmin.closeWalkinOrderModal === 'function') {
+          window.naseejAdmin.closeWalkinOrderModal();
+          return;
+        }
+      } catch (e) {
+        console.warn('Fallback closing admin-walkin-order-modal:', e);
+      }
+      var modal = document.getElementById('admin-walkin-order-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = '';
+        modal.style.opacity = '';
+        modal.style.visibility = '';
+        modal.style.pointerEvents = '';
+        modal.style.zIndex = '';
+        document.body.style.overflow = '';
+      }
+    }
+
+    window.scrollToSection = scrollToSection;
+    window.openSmartCalculator = openSmartCalculator;
+    window.enterAdminPortal = enterAdminPortal;
+    window.openAddProductModal = openAddProductModal;
+    window.openWalkinOrderModal = openWalkinOrderModal;
+    window.closeAdminProductModal = closeAdminProductModal;
+    window.closeWalkinOrderModal = closeWalkinOrderModal;
+  </script>
+</head>
+<body>
+
+  <!-- Top Official Announcement & Fast Contact Bar -->
+  <div class="top-official-bar" id="top-social-bar">
+    <div class="container top-official-inner">
+      <!-- Right: Brand Identity & Palestinian Verification Badge -->
+      <div class="top-brand-badge-group">
+        <span class="official-shield-badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+          العلامة الرسمية المعتمدة
+        </span>
+        <span class="top-brand-title">شركة الولاء لستائر Balalem co • تفصيل وأقمشة فاخرة</span>
+      </div>
+
+      <!-- Center: Delivery Notice across Palestine -->
+      <div class="top-delivery-notice">
+        <span class="pulse-dot-gold"></span>
+        <span>🚚 توصيل سريع وتفصيل فوري لكافة محافظات فلسطين (القدس، الضفة، والداخل) | فنيو تركيب معتمدون</span>
+      </div>
+
+      <!-- Left: Fast Contact, Hotline & Social Links -->
+      <div class="top-contact-actions">
+        <a href="https://wa.me/970599842231" target="_blank" rel="noopener noreferrer" class="top-hotline-btn" title="تواصل مباشر عبر الواتساب والمكالمات">
+          <span class="live-dot-green"></span>
+          <span class="hotline-text">واتساب ومبيعات:</span>
+          <span dir="ltr" class="hotline-number">0599842231</span>
+        </a>
+        <div class="top-social-icons">
+          <a href="https://www.facebook.com/search/top?q=شركة%20الولاء%20للستائر%20BalalemCo" target="_blank" rel="noopener noreferrer" class="top-social-circle facebook" title="فيسبوك - شركة الولاء للستائر BalalemCo">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+          <a href="https://www.instagram.com/explore/tags/BalalemCo/" target="_blank" rel="noopener noreferrer" class="top-social-circle instagram" title="إنستغرام - شركة الولاء للستائر BalalemCo">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Luxury Sticky Header -->
+  <header class="main-header" id="main-header">
+    <div class="container header-inner">
+      <!-- Brand Logo -->
+      <div class="brand-wrapper" onclick="window.naseejApp.openStorefrontView()" role="button" tabindex="0">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="brand-texts">
+          <span class="brand-name">الـوَلاء لستائر <span class="brand-gold-dot">•</span> Balalem co</span>
+          <span class="brand-subtitle">أقمشة ستائر فاخرة ومنسوجات راقية</span>
+        </div>
+      </div>
+
+      <!-- Navigation Menu Links (Desktop & Tablet) -->
+      <nav class="header-nav-menu" aria-label="القائمة الرئيسية">
+        <a href="#storefront-view" class="nav-link active" onclick="window.scrollToSection('storefront-view', event)">الرئيسية</a>
+        <a href="#fabrics-catalog-section" class="nav-link" onclick="window.scrollToSection('fabrics-catalog-section', event)">تشكيلات الأقمشة</a>
+        <a href="#calculator" class="nav-link" onclick="window.openSmartCalculator(null, event)">حاسبة المقاسات</a>
+        <a href="#tailoring-services-section" class="nav-link" onclick="window.scrollToSection('tailoring-services-section', event)">خدمات التفصيل</a>
+        <a href="#contacts-section" class="nav-link" onclick="window.scrollToSection('contacts-section', event)">تواصل معنا</a>
+      </nav>
+
+      <!-- Smart Integrated Search Bar -->
+      <div class="header-search-wrap">
+        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="header-search-input" class="header-search-input" placeholder="ابحث عن قماش ستارة..." aria-label="بحث سريع عن الأقمشة">
+      </div>
+
+      <!-- Actions: My Orders, Cart & Smart Account Dropdown -->
+      <div class="header-actions">
+        <!-- My Orders Button -->
+        <button class="btn-header-action btn-header-orders" onclick="window.naseejCustomer.openMyOrdersModal()" title="متابعة طلباتي السابقة وحالة التجهيز">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          <span>طلباتي</span>
+          <span id="header-orders-count" class="orders-count-badge" style="display: none;">0</span>
+        </button>
+
+        <!-- Cart Trigger Button -->
+        <button class="btn-header-action btn-header-cart" onclick="window.naseejCustomer.openCartDrawer()" title="سلة مشتريات الستائر">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span>السلة</span>
+          <span class="cart-count-badge" style="display: none;">0</span>
+        </button>
+
+        <!-- Smart Account Trigger & Dropdown -->
+        <div class="header-account-wrap" id="header-account-wrap">
+          <button id="header-user-btn" class="btn-header-action btn-header-account" onclick="window.naseejCustomer.toggleAccountDropdown()" title="إدارة الحساب">
+            <div class="user-avatar-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <span id="header-user-name">تسجيل الدخول</span>
+            <span id="header-user-role-badge" style="display: none;"></span>
+            <svg class="dropdown-arrow-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+
+          <!-- Interactive User Dropdown Menu -->
+          <div id="header-account-dropdown" class="header-account-dropdown">
+            <div id="header-dropdown-body">
+              <!-- Dynamically populated via customer.js updateUserUI() -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- 1. CUSTOMER STOREFRONT VIEW                -->
+  <!-- ========================================== -->
+  <main id="storefront-view">
+    <!-- Hero Banner -->
+    <section class="customer-hero">
+      <div class="hero-glow"></div>
+      <div class="container hero-content">
+        <div class="hero-badge">
+          <span>✦ متجر أقمشة الستائر المعتمد • تواصل وطلب مباشر: 0599842231</span>
+        </div>
+        <h1 class="hero-title">
+          أناقة منسدلة تُعيد تعريف مساحتك بلمسة <span class="gold-text">مَلَكِيَّة</span>
+        </h1>
+        <p class="hero-desc">
+          اكتشف تشكيلتنا الحصرية من أجود أقمشة الستائر العالمية: كريب ناعم مهدل، كتان طبيعي، تول وفوال مطرز، ومخمل بلاك آوت عازل. نوفر خدمة القص والتفصيل الفوري وحاسبة مقاسات النوافذ الذكية مع خدمة التوصيل السريع لكافة محافظات ومدن فلسطين.
+        </p>
+        <div class="hero-features-row">
+          <div class="hero-feature-item" style="cursor: pointer;" onclick="window.openSmartCalculator(null, event)" title="اضغط لفتح حاسبة تفصيل الستائر">
+            <span class="icon">📐</span>
+            <span>حاسبة أمتار النوافذ والكسرات الذكية</span>
+          </div>
+          <div class="hero-feature-item" style="cursor: pointer;" onclick="window.scrollToSection('tailoring-services-section', event)" title="اضغط للانتقال لخدمات التفصيل">
+            <span class="icon">✂️</span>
+            <span>تفصيل وتصميم حسب المقاس بأعلى جودة</span>
+          </div>
+          <div class="hero-feature-item" style="cursor: pointer;" onclick="window.scrollToSection('fabrics-catalog-section', event)" title="اضغط لعرض كافة الأقمشة">
+            <span class="icon">🚚</span>
+            <span>توصيل لكافة المدن (نابلس، الخليل، رام الله، القدس، جنين...)</span>
+          </div>
+          <div class="hero-feature-item" style="cursor: pointer;" onclick="window.scrollToSection('contacts-section', event)" title="اضغط للانتقال لجدول أرقام التواصل">
+            <span class="icon">💬</span>
+            <span>أرقام الإدارة والمبيعات المباشرة</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Wholesale & Direct Sales Contacts Section (Main Page) -->
+    <section class="wholesale-main-section" id="contacts-section">
+      <div class="container">
+        <div class="wholesale-main-card">
+          <div class="wholesale-card-header">
+            <div class="wholesale-header-badge">🏢 مبيعات الجملة والتفصيل المباشر</div>
+            <h3 class="wholesale-main-title">أرقام التواصل المباشر مع إدارة متجر الولاء لستائر (Balalem co)</h3>
+            <p class="wholesale-main-desc">لطلبات الجملة الكبيرة، شراء طاقات الأقمشة، استشارات تفصيل الستائر وتجهيز الفلل:</p>
+          </div>
+          <div class="wholesale-table-wrap">
+            <table class="wholesale-contacts-table">
+              <thead>
+                <tr>
+                  <th>المسؤول</th>
+                  <th>رقم الجوال</th>
+                  <th>اتصال هاتفي سريع</th>
+                  <th>محادثة واتساب فورية</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="contact-avatar">👤</span> <strong>هشام بلالم</strong></td>
+                  <td dir="ltr" class="phone-num-style">0599842231</td>
+                  <td><a href="tel:0599842231" class="btn-contact-call">📞 0599842231</a></td>
+                  <td><a href="https://wa.me/970599842231?text=مرحباً%20هشام%20بلالم،%20أود%20الاستفسار%20عن%20أقمشة%20الستائر%20والجملة" target="_blank" class="btn-contact-wa">💬 تواصل واتساب</a></td>
+                </tr>
+                <tr>
+                  <td><span class="contact-avatar">👤</span> <strong>هباب بلالم</strong></td>
+                  <td dir="ltr" class="phone-num-style">0599360015</td>
+                  <td><a href="tel:0599360015" class="btn-contact-call">📞 0599360015</a></td>
+                  <td><a href="https://wa.me/970599360015?text=مرحباً%20هباب%20بلالم،%20أود%20الاستفسار%20عن%20أقمشة%20الستائر%20والجملة" target="_blank" class="btn-contact-wa">💬 تواصل واتساب</a></td>
+                </tr>
+                <tr>
+                  <td><span class="contact-avatar">👤</span> <strong>أسامه بلالم</strong></td>
+                  <td dir="ltr" class="phone-num-style">0599072201</td>
+                  <td><a href="tel:0599072201" class="btn-contact-call">📞 0599072201</a></td>
+                  <td><a href="https://wa.me/970599072201?text=مرحباً%20أسامه%20بلالم،%20أود%20الاستفسار%20عن%20أقمشة%20الستائر%20والجملة" target="_blank" class="btn-contact-wa">💬 تواصل واتساب</a></td>
+                </tr>
+                <tr>
+                  <td><span class="contact-avatar">👤</span> <strong>احمد بلالم</strong></td>
+                  <td dir="ltr" class="phone-num-style">0599552065</td>
+                  <td><a href="tel:0599552065" class="btn-contact-call">📞 0599552065</a></td>
+                  <td><a href="https://wa.me/970599552065?text=مرحباً%20أحمد%20بلالم،%20أود%20الاستفسار%20عن%20أقمشة%20الستائر%20والجملة" target="_blank" class="btn-contact-wa">💬 تواصل واتساب</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tailoring Services & Curtain Craftsmanship Section -->
+    <section class="tailoring-services-section" id="tailoring-services-section">
+      <div class="container">
+        <div class="tailoring-header">
+          <div class="tailoring-badge">✂️ خدمات التفصيل وخياطة الستائر المعتمدة</div>
+          <h2 class="tailoring-title">تفصيل وخياطة ستائر حسب المقاس بأعلى مقاييس الجودة</h2>
+          <p class="tailoring-subtitle">ورش متخصصة في تفصيل أقمشة الستائر الفاخرة، قص دقيق، خياطة شتوح وكسرات ويفي، مع فنيي تركيب معتمدين في كافة مدن فلسطين</p>
+        </div>
+
+        <div class="tailoring-cards-grid">
+          <div class="tailoring-card">
+            <div class="tailoring-card-media">
+              <img src="assets/images/tailoring_american_pleat.jpg" alt="تفصيل كسرات وشتوح أمريكي" class="tailoring-img" loading="lazy">
+              <span class="tailoring-media-badge">شتوح أمريكي فخم</span>
+            </div>
+            <h3>تفصيل كسرات وشتوح أمريكي (American Pleat)</h3>
+            <p>سقوط انسيابي كلاسيكي ثابت وثنيات متوازية تمنح الصالات وغرف الضيوف فخامة لا تضاهى، متوافق مع كافة السكك اليدوية والكهربائية.</p>
+            <span class="tailoring-pill">الخيار الأكثر طلباً ✓</span>
+            <div class="tailoring-card-actions">
+              <button class="btn btn-outline-gold" onclick="window.scrollToSection('fabrics-catalog-section', event)">اختر القماش للتفصيل 👈</button>
+              <button class="btn btn-subtle" onclick="window.openSmartCalculator('american', event)">📐 احسب أمتار الكسرات</button>
+            </div>
+          </div>
+
+          <div class="tailoring-card">
+            <div class="tailoring-card-media">
+              <img src="assets/images/tailoring_wave_fold.jpg" alt="تفصيل ويفي ملكي انسيابي" class="tailoring-img" loading="lazy">
+              <span class="tailoring-media-badge">موديل ويفي S-Fold</span>
+            </div>
+            <h3>تفصيل ويفي ملكي انسيابي (Wave S-Fold)</h3>
+            <p>تموجات عصرية ناعمة بشكل حرف S متواصل من السقف للأرضية، مثالي للأقمشة الخفيفة كالكريب والشيفون والكتان مع سكة ويفي خاصة.</p>
+            <span class="tailoring-pill">موديل عصري فندقي ✓</span>
+            <div class="tailoring-card-actions">
+              <button class="btn btn-outline-gold" onclick="window.scrollToSection('fabrics-catalog-section', event)">أقمشة الويفي الملكي 👈</button>
+              <button class="btn btn-subtle" onclick="window.openSmartCalculator('wave', event)">📐 احسب أمتار الويفي</button>
+            </div>
+          </div>
+
+          <div class="tailoring-card">
+            <div class="tailoring-card-media">
+              <img src="assets/images/tailoring_eyelet_rings.jpg" alt="حلقات وبكرات كبس هيدروليك" class="tailoring-img" loading="lazy">
+              <span class="tailoring-media-badge">حلقات كبس ستانلس</span>
+            </div>
+            <h3>حلقات وبكرات كبس هيدروليك (Eyelet Rings)</h3>
+            <p>حلقات ستانلس ستيل ونحاس معالجة ضد الصدأ والبهتان، حركة انزلاق فائقة السلاسة على المواسير الدائرية بجميع أقطارها.</p>
+            <span class="tailoring-pill">سهولة الحركة والغسيل ✓</span>
+            <div class="tailoring-card-actions">
+              <button class="btn btn-outline-gold" onclick="window.scrollToSection('fabrics-catalog-section', event)">أقمشة ستائر الحلقات 👈</button>
+              <button class="btn btn-subtle" onclick="window.openSmartCalculator('rings', event)">📐 احسب أمتار الحلقات</button>
+            </div>
+          </div>
+
+          <div class="tailoring-card highlight-card">
+            <div class="tailoring-card-media">
+              <img src="assets/images/tailoring_installation.jpg" alt="خدمة المعاينة والتركيب في الموقع" class="tailoring-img" loading="lazy">
+              <span class="tailoring-media-badge" style="background: rgba(146, 64, 14, 0.85); color: #fff;">تركيب ومعاينة ميدانية</span>
+            </div>
+            <h3>خدمة المعاينة والتركيب في الموقع</h3>
+            <p>فريق فني متخصص لرفع المقاسات وتركيب السكك والستائر داخل منزلك مباشرة، بدون أي عناء وبضمان شامل على التثبيت.</p>
+            <span class="tailoring-pill" style="background: #fef3c7; color: #92400e;">فنيون معتمدون في كل المدن ✓</span>
+            <div class="tailoring-card-actions">
+              <button class="btn btn-gold btn-sm" onclick="window.openSmartCalculator(null, event)">📐 احسب مقاساتك الآن</button>
+              <button class="btn btn-outline btn-sm" onclick="window.scrollToSection('contacts-section', event)">📞 جدول أرقام الفنيين والإدارة</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Catalog Section -->
+    <section class="catalog-toolbar-section" id="fabrics-catalog-section">
+      <div class="container">
+        <!-- Toolbar: Filters & Search -->
+        <div class="catalog-toolbar">
+          <!-- Categories Nav -->
+          <div class="category-tabs-nav">
+            <button class="category-tab-btn active" data-category="all" onclick="window.naseejCustomer.filterCategory('all', this)">
+              كافة أقمشة الستائر
+            </button>
+            <button class="category-tab-btn" data-category="crepe" onclick="window.naseejCustomer.filterCategory('crepe', this)">
+              كريب ستائر مسدل
+            </button>
+            <button class="category-tab-btn" data-category="linen" onclick="window.naseejCustomer.filterCategory('linen', this)">
+              كتان طبيعي راقي
+            </button>
+            <button class="category-tab-btn" data-category="tulle" onclick="window.naseejCustomer.filterCategory('tulle', this)">
+              تول وشيفون فوال
+            </button>
+            <button class="category-tab-btn" data-category="velvet" onclick="window.naseejCustomer.filterCategory('velvet', this)">
+              مخمل وبلاك آوت
+            </button>
+            <button class="category-tab-btn" data-category="brocade" onclick="window.naseejCustomer.filterCategory('brocade', this)">
+              بروكار وجاكار كلاسيك
+            </button>
+            <button class="category-tab-btn" data-category="tarsoon" onclick="window.naseejCustomer.filterCategory('tarsoon', this)" style="border-color: var(--gold-primary); color: #92400e; font-weight: 700;">
+              ستائر الترسون (بالمتر المربع)
+            </button>
+          </div>
+
+          <!-- Search Input -->
+          <div class="search-box-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="catalog-search-input" class="catalog-search-input" placeholder="ابحث باسم القماش، المادة، أو المنشأ...">
+          </div>
+        </div>
+
+        <!-- Products Cards Grid -->
+        <div id="products-grid" class="products-grid">
+          <!-- Products injected dynamically via customer.js -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- 2. ADMIN / VENDOR DASHBOARD VIEW           -->
+  <!-- ========================================== -->
+  <section id="admin-view" class="admin-view-container" style="display: none;">
+    <div class="container">
+      <!-- Admin Top Bar -->
+      <!-- Admin Top Bar -->
+      <div class="admin-top-bar">
+        <div class="admin-title-group">
+          <div class="admin-badge-title-row">
+            <h2>لوحة تحكم المسؤول | تزويد وإدارة أقمشة الستائر</h2>
+            <span class="badge badge-gold">🛡️ مدير النظام المعتمد</span>
+            <span class="admin-current-user-tag" id="admin-profile-name">مدير النظام (Balalem Co)</span>
+          </div>
+          <p>إدارة مخزون أقمشة الستائر، تزويد أصناف جديدة، إدارة وتحديث طلبات الزبائن، ومتابعة ورشة التفصيل والتركيب</p>
+        </div>
+        <div class="admin-actions-group" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+          <button class="btn btn-outline" onclick="window.naseejApp.openStorefrontView()" title="الرجوع لمعاينة المتجر الرسمي">
+            <span>👁️ معاينة المتجر كمدير</span>
+          </button>
+          <button type="button" class="btn btn-primary" onclick="window.openWalkinOrderModal(event)" style="box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);">
+            <span>➕ تسجيل طلبية من المعرض</span>
+          </button>
+          <button type="button" class="btn btn-gold" onclick="window.openAddProductModal(event)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>➕ تزويد قماش جديد</span>
+          </button>
+          <button class="btn btn-danger-soft" onclick="window.naseejApp.logoutUser()" title="تسجيل الخروج من لوحة الإدارة">
+            <span>🚪 تسجيل الخروج</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Low Stock Warning Alert -->
+      <div id="admin-stock-alert" class="admin-stock-alert" style="display: none;">
+        <!-- Injected dynamically -->
+      </div>
+
+      <!-- KPI Statistics Grid -->
+      <div class="admin-kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon-wrap kpi-icon-sales">💰</div>
+          <div class="kpi-content">
+            <span class="kpi-label">إجمالي المبيعات</span>
+            <span id="admin-stat-sales" class="kpi-val">0 شيكل</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon-wrap kpi-icon-orders">📦</div>
+          <div class="kpi-content">
+            <span class="kpi-label">إجمالي طلبات التفصيل</span>
+            <span id="admin-stat-orders" class="kpi-val">0</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon-wrap kpi-icon-meters">📐</div>
+          <div class="kpi-content">
+            <span class="kpi-label">إجمالي الأمتار المباعة</span>
+            <span id="admin-stat-meters" class="kpi-val">0 م</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon-wrap kpi-icon-products">🪟</div>
+          <div class="kpi-content">
+            <span class="kpi-label">أصناف الأقمشة بالمستودع</span>
+            <span id="admin-stat-products" class="kpi-val">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Navigation Tabs -->
+      <div class="admin-nav-tabs">
+        <button class="admin-nav-btn active" data-tab="products" onclick="window.naseejAdmin.switchTab('products')">
+          🪟 إدارة الأقمشة والمخزون
+        </button>
+        <button class="admin-nav-btn" data-tab="orders" onclick="window.naseejAdmin.switchTab('orders')">
+          📋 طلبات الزبائن والتجهيز
+        </button>
+        <button class="admin-nav-btn" data-tab="schedule" onclick="window.naseejAdmin.switchTab('schedule')">
+          📅 جدول مواعيد العمل وتوزيع الطلبيات
+        </button>
+        <button class="admin-nav-btn" data-tab="customers" onclick="window.naseejAdmin.switchTab('customers')">
+          👥 دليل الزبائن المسجلين
+        </button>
+      </div>
+
+      <!-- Tab 1: Products Table -->
+      <div id="admin-tab-products" class="admin-tab-pane">
+        <div class="admin-card">
+          <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h3 class="admin-card-title">قائمة أقمشة الستائر المتوفرة في المتجر</h3>
+              <span class="badge badge-category">يمكنك تعديل الأسعار، تزويد الأمتار، أو إضافة أقمشة جديدة</span>
+            </div>
+            <button type="button" class="btn btn-gold btn-sm" onclick="window.openAddProductModal(event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>➕ تزويد قماش جديد للمتجر</span>
+            </button>
+          </div>
+          <div class="admin-table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>القماش</th>
+                  <th>سعر المتر</th>
+                  <th>المخزون المتوفر</th>
+                  <th>عرض الطاقة</th>
+                  <th>الألوان المتوفرة</th>
+                  <th>عزل الضوء</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="admin-products-tbody">
+                <!-- Injected via admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Orders Table -->
+      <div id="admin-tab-orders" class="admin-tab-pane" style="display: none;">
+        <div class="admin-card">
+          <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h3 class="admin-card-title">طلبات الزبائن الواردة لمتابعة القص والتسليم</h3>
+              <span class="badge badge-category">قم بتغيير حالة الطلب أو يوم الجدولة لمزامنتها مباشرة</span>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.openWalkinOrderModal(event)">
+              <span>➕ تسجيل طلبية جديدة من المعرض</span>
+            </button>
+          </div>
+          <div class="admin-table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>رقم الطلب والجدولة</th>
+                  <th>بيانات الزبون (الجوال والإيميل)</th>
+                  <th>طريقة الاستلام / التوصيل</th>
+                  <th>الأقمشة والتفاصيل</th>
+                  <th>إجمالي الأمتار</th>
+                  <th>المبلغ الإجمالي</th>
+                  <th>حالة الطلب والتجهيز</th>
+                  <th>الإجراء</th>
+                </tr>
+              </thead>
+              <tbody id="admin-orders-tbody">
+                <!-- Injected via admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Weekly Production & Installation Schedule Board -->
+      <div id="admin-tab-schedule" class="admin-tab-pane" style="display: none;">
+        <div class="admin-card">
+          <!-- Schedule View Sub-nav Switcher -->
+          <div class="schedule-view-switcher-bar">
+            <div class="schedule-sub-nav">
+              <button id="btn-schedule-tailoring" class="schedule-sub-nav-btn active" onclick="window.naseejAdmin.switchScheduleSubTab('tailoring')">
+                <span class="sub-nav-icon">✂️</span>
+                <span>جدول ورشة القص والتفصيل الأسبوعي (من السبت للخميس)</span>
+              </button>
+              <button id="btn-schedule-installation" class="schedule-sub-nav-btn" onclick="window.naseejAdmin.switchScheduleSubTab('installation')">
+                <span class="sub-nav-icon">🔧</span>
+                <span>جدول مواعيد التركيب الميداني (أسامة / عز / فني 3)</span>
+                <span id="badge-installations-count" class="badge badge-gold" style="font-size: 11px; padding: 2px 7px; margin-right: 6px;">0</span>
+              </button>
+            </div>
+            <div class="schedule-quick-add-btn">
+              <button type="button" class="btn btn-sm btn-primary" onclick="window.openWalkinOrderModal(event)" title="إضافة طلبية زبون حضر للمعرض">
+                <span>➕ طلبية زبون من المعرض</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Calendar Navigator & Period Controller Bar -->
+          <div class="calendar-navigator-bar">
+            <!-- Navigation & Month Selector -->
+            <div class="calendar-nav-controls">
+              <div class="calendar-date-selector-group">
+                <span class="cal-label">📅 اختيار الشهر:</span>
+                <select id="cal-month-select" class="form-control cal-select" onchange="window.naseejAdmin.handleMonthChange(this.value)">
+                  <!-- Populated dynamically via admin.js -->
+                </select>
+                <select id="cal-year-select" class="form-control cal-select" onchange="window.naseejAdmin.handleYearChange(this.value)">
+                  <option value="2026">2026</option>
+                  <option value="2027">2027</option>
+                  <option value="2025">2025</option>
+                </select>
+              </div>
+
+              <div class="calendar-week-nav-group">
+                <button class="btn-cal-nav" onclick="window.naseejAdmin.navigateWeek(-1)" title="الانتقال للأسبوع السابق">
+                  <span>◀ الأسبوع السابق</span>
+                </button>
+                <button class="btn-cal-nav btn-cal-today" onclick="window.naseejAdmin.goToTodayWeek()" title="الرجوع للأسبوع الحالي (تاريخ اليوم)">
+                  <span>📍 أسبوع اليوم الحالي</span>
+                </button>
+                <button class="btn-cal-nav" onclick="window.naseejAdmin.navigateWeek(1)" title="الانتقال للأسبوع التالي">
+                  <span>الأسبوع التالي ▶</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Active Date Range Display -->
+            <div class="calendar-active-range-pill">
+              <span id="calendar-active-week-label" class="range-text">أسبوع العمل: جاري التحميل...</span>
+            </div>
+
+            <!-- View Mode Switcher: Weekly 6-Day Board vs Monthly Full Grid -->
+            <div class="calendar-view-mode-toggle">
+              <button id="btn-mode-weekly" class="btn-mode-tab active" onclick="window.naseejAdmin.setCalendarViewMode('weekly')" title="عرض تفصيلي لأيام الأسبوع الستة (السبت للخميس)">
+                <span>📋 عرض الأسبوع التفصيلي</span>
+              </button>
+              <button id="btn-mode-monthly" class="btn-mode-tab" onclick="window.naseejAdmin.setCalendarViewMode('monthly')" title="عرض تقويم الشهر الكامل وتوزيع أمتار القص والمواعيد">
+                <span>📆 مخطط الشهر الكامل (التقويم)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Monthly Calendar View Container (shown in monthly mode) -->
+          <div id="admin-view-monthly-calendar" class="monthly-calendar-wrapper" style="display: none;">
+            <!-- Injected dynamically via admin.js -->
+          </div>
+
+          <!-- Sub-Tab 1: Tailoring Workshop Schedule Board -->
+          <div id="admin-subview-tailoring" class="schedule-subview-pane">
+            <div class="admin-card-header schedule-card-header">
+              <div>
+                <h3 class="admin-card-title">✂️ جدول ورشة القص وتجهيز الستائر الأسبوعي (من السبت إلى الخميس)</h3>
+                <p class="schedule-subtitle">تنظيم وتوزيع كميات تفصيل الأقمشة على 6 أيام عمل لمنع تراكم الأيام وتعبئة الفراغات لضمان أداء مستمر</p>
+              </div>
+              <div class="schedule-actions-bar">
+                <button class="btn btn-gold auto-balance-btn" onclick="window.naseejAdmin.autoBalanceSchedule()" title="توزيع الطلبيات آلياً بالتساوي لملء الأيام الشاغرة وموازنة كميات الشغل">
+                  <span>🪄 موازنة أسبوعية ذكية للقص والتفصيل</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Schedule Week Overview Bar -->
+            <div id="admin-schedule-kpi-bar" class="schedule-kpi-bar">
+              <!-- Injected via admin.js -->
+            </div>
+
+            <!-- Weekly Columns Board (Saturday to Thursday - 6 Days) -->
+            <div id="admin-weekly-schedule-board" class="weekly-schedule-board">
+              <!-- Injected via admin.js -->
+            </div>
+          </div>
+
+          <!-- Sub-Tab 2: Installation Schedule Board -->
+          <div id="admin-subview-installation" class="schedule-subview-pane" style="display: none;">
+            <div class="admin-card-header schedule-card-header">
+              <div>
+                <h3 class="admin-card-title">🔧 جدول مواعيد التركيب الميداني لفرق الفنيين</h3>
+                <p class="schedule-subtitle">متابعة طلبيات الستائر التي تتطلب تركيباً منزلياً وتوزيعها على الفنيين المعتمدين (أسامة، عز، فني تركيب 3) من السبت للخميس</p>
+              </div>
+              <div class="schedule-actions-bar">
+                <button class="btn btn-gold auto-balance-btn" onclick="window.naseejAdmin.autoBalanceInstallationSchedule()" title="توزيع مواعيد التركيب وفق النسبة المعتمدة (70% لأسامة و30% لباقي الفنيين)">
+                  <span>🪄 موازنة مواعيد التركيب (70% أسامة)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Technicians Filter Pills -->
+            <div class="technician-filter-bar">
+              <span class="tech-filter-title">تصفية حسب فني التركيب:</span>
+              <button class="tech-filter-pill active" data-tech="all" onclick="window.naseejAdmin.filterInstallers('all')">
+                👥 جميع الفنيين
+              </button>
+              <button class="tech-filter-pill tech-osama" data-tech="osama" onclick="window.naseejAdmin.filterInstallers('osama')">
+                🔧 الفني أسامة (70%) <span id="badge-tech-osama-count" class="tech-count-badge">0</span>
+              </button>
+              <button class="tech-filter-pill tech-ezz" data-tech="ezz" onclick="window.naseejAdmin.filterInstallers('ezz')">
+                🔧 الفني عِـز (15%) <span id="badge-tech-ezz-count" class="tech-count-badge">0</span>
+              </button>
+              <button class="tech-filter-pill tech-tech3" data-tech="tech3" onclick="window.naseejAdmin.filterInstallers('tech3')">
+                🔧 فني تركيب 3 (15%) <span id="badge-tech-tech3-count" class="tech-count-badge">0</span>
+              </button>
+            </div>
+
+            <!-- Installation Schedule KPI Bar -->
+            <div id="admin-install-kpi-bar" class="schedule-kpi-bar">
+              <!-- Injected via admin.js -->
+            </div>
+
+            <!-- Weekly Installation Board (Saturday to Thursday) -->
+            <div id="admin-installation-schedule-board" class="weekly-schedule-board">
+              <!-- Injected via admin.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Customers Directory Table -->
+      <div id="admin-tab-customers" class="admin-tab-pane" style="display: none;">
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">قاعدة بيانات الزبائن المسجلين</h3>
+            <span class="badge badge-category">مسجلون بأرقام هواتفهم وإيميلاتهم الشخصية</span>
+          </div>
+          <div class="admin-table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>اسم الزبون</th>
+                  <th>رقم الجوال الشخصي</th>
+                  <th>البريد الإلكتروني</th>
+                  <th>عدد الطلبات والأمتار</th>
+                  <th>إجمالي المشتريات</th>
+                </tr>
+              </thead>
+              <tbody id="admin-customers-tbody">
+                <!-- Injected via admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- MODALS & DRAWERS                           -->
+  <!-- ========================================== -->
+
+  <!-- Modal: Fabric Detail & Smart Curtain Calculator -->
+  <div id="product-modal" class="naseej-modal">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-header">
+        <h3 id="modal-fabric-name" class="modal-title">تفاصيل القماش وحاسبة الأمتار</h3>
+        <button class="modal-close" onclick="window.naseejCustomer.closeProductModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="calc-grid-layout">
+          <!-- Column 1: Media & Specifications -->
+          <div class="calc-media-col">
+            <img id="modal-fabric-img" src="" alt="" class="calc-modal-img">
+            <div class="fabric-tech-specs">
+              <div class="tech-spec-row">
+                <span class="tech-spec-label">التصنيف:</span>
+                <span id="modal-fabric-category" class="tech-spec-val"></span>
+              </div>
+              <div class="tech-spec-row">
+                <span class="tech-spec-label">سعر المتر الطولي:</span>
+                <span class="tech-spec-val"><strong id="modal-fabric-price"></strong> شيكل</span>
+              </div>
+              <div class="tech-spec-row">
+                <span class="tech-spec-label">عرض طاقة القماش:</span>
+                <span id="modal-fabric-width" class="tech-spec-val"></span>
+              </div>
+              <div class="tech-spec-row">
+                <span class="tech-spec-label">بلد المنشأ:</span>
+                <span id="modal-fabric-origin" class="tech-spec-val"></span>
+              </div>
+              <div class="tech-spec-row">
+                <span class="tech-spec-label">التركيب والخامة:</span>
+                <span id="modal-fabric-composition" class="tech-spec-val"></span>
+              </div>
+              <div class="tech-spec-row">
+                <span class="tech-spec-label">نسبة حجب الضوء:</span>
+                <span id="modal-fabric-light" class="tech-spec-val"></span>
+              </div>
+              <div class="tech-spec-row">
+                <span class="tech-spec-label">المخزون الحالي:</span>
+                <span id="modal-fabric-stock" class="tech-spec-val text-emerald"></span>
+              </div>
+            </div>
+            <p id="modal-fabric-desc" class="text-muted" style="font-size: 13.5px;"></p>
+            <ul id="modal-fabric-features" style="list-style: none; padding: 0; font-size: 12.5px; color: #475569;"></ul>
+          </div>
+
+          <!-- Column 2: Interactive Smart Curtain Calculator -->
+          <div class="calc-form-col">
+            <!-- Mode Switcher -->
+            <div class="calc-mode-tabs">
+              <button id="calc-tab-window" class="calc-mode-tab active" onclick="window.naseejCustomer.setCalculatorMode('window')">
+                🪟 تفصيل حسب المقاس
+              </button>
+              <button id="calc-tab-direct" class="calc-mode-tab" onclick="window.naseejCustomer.setCalculatorMode('direct')">
+                📏 شراء بالأمتار (طلب بالجملة)
+              </button>
+            </div>
+
+            <!-- Color Swatches Selector -->
+            <div class="calc-field-group">
+              <label class="calc-label">اختر لون القماش المطلوب:</label>
+              <div id="modal-colors-selector" class="colors-grid-selector">
+                <!-- Color options injected dynamically -->
+              </div>
+            </div>
+
+            <!-- Mode A: Window Dimensions / Tarsoon Calculator -->
+            <div id="calc-section-window">
+              <!-- Tarsoon Info Banner (shown dynamically for Tarsoon products) -->
+              <div id="tarsoon-banner-note" style="display: none; background: rgba(212, 175, 55, 0.12); border: 1.5px solid var(--gold-primary); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; font-size: 13.5px; color: #856404;">
+                ✨ <strong>ستائر الترسون (حساب المتر المربع):</strong> يتم حساب التكلفة بضرب <strong>الطول (الارتفاع) × العرض</strong> بسعر المتر المربع.
+              </div>
+
+              <!-- Window / Room Designation Field -->
+              <div class="calc-field-group" style="margin-bottom: 14px;">
+                <label for="window-room-input" class="calc-label" style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>🪟 شباك لأي غرفة؟ (تحديد موقع الستارة):</span>
+                  <span style="font-size: 11.5px; color: #10b981; font-weight: normal;">🔒 بياناتك مشفرة ومحفوظة بأمان</span>
+                </label>
+                <div class="room-input-container">
+                  <input type="text" id="window-room-input" class="calc-input" placeholder="اكتب اسم الغرفة (مثال: شباك الصالة، غرفة النوم الماستر، صالون الضيوف...)" oninput="window.naseejCustomer.updateCalculatorCalculation()" style="font-size: 13.5px;">
+                </div>
+                <div class="room-quick-picker">
+                  <span class="room-quick-chip" onclick="window.naseejCustomer.setRoomTag('الصالة الرئيسية')">الصالة الرئيسية</span>
+                  <span class="room-quick-chip" onclick="window.naseejCustomer.setRoomTag('غرفة النوم الماستر')">غرفة النوم الماستر</span>
+                  <span class="room-quick-chip" onclick="window.naseejCustomer.setRoomTag('صالون الضيوف')">صالون الضيوف</span>
+                  <span class="room-quick-chip" onclick="window.naseejCustomer.setRoomTag('غرفة الأطفال')">غرفة الأطفال</span>
+                  <span class="room-quick-chip" onclick="window.naseejCustomer.setRoomTag('المطبخ')">المطبخ</span>
+                  <span class="room-quick-chip" onclick="window.naseejCustomer.setRoomTag('غرفة الجلوس')">غرفة الجلوس</span>
+                </div>
+              </div>
+
+              <div class="calc-field-group">
+                <label id="calc-dimensions-label" class="calc-label">مقاسات النافذة أو الجدار (بالمتر):</label>
+                <div class="calc-input-pair">
+                  <div class="number-input-wrap">
+                    <input type="number" id="window-width-input" class="calc-input" value="3.0" step="0.1" min="0.5" max="25" oninput="window.naseejCustomer.updateCalculatorCalculation()">
+                    <span id="window-width-suffix" class="input-suffix">متر عرض</span>
+                  </div>
+                  <div class="number-input-wrap">
+                    <input type="number" id="window-height-input" class="calc-input" value="2.8" step="0.1" min="0.5" max="6" oninput="window.naseejCustomer.updateCalculatorCalculation()">
+                    <span id="window-height-suffix" class="input-suffix">متر ارتفاع</span>
+                  </div>
+                </div>
+                <small id="calc-dimensions-hint" class="text-muted">عرض طاقة هذا القماش كافٍ لتغطية الارتفاع دون وصلات أفقية.</small>
+              </div>
+
+              <!-- Fullness and Sewing Density (Hidden for Tarsoon) -->
+              <div class="calc-field-group" id="calc-field-fullness" style="margin-top: 14px;">
+                <label class="calc-label">كثافة الكسرات ونوع الخياطة (لكل متر حائط):</label>
+                <div class="fullness-options-row">
+                  <div class="fullness-btn" onclick="window.naseejCustomer.setFullness(1.5, 'رنج فرد', this)">
+                    <span class="fullness-title">رنج فرد</span>
+                    <span class="fullness-ratio">1.5 م قماش / م حيط</span>
+                  </div>
+                  <div class="fullness-btn" onclick="window.naseejCustomer.setFullness(2.5, 'رنج مزموم', this)">
+                    <span class="fullness-title">رنج مزموم</span>
+                    <span class="fullness-ratio">2.5 م قماش / م حيط</span>
+                  </div>
+                  <div class="fullness-btn active" onclick="window.naseejCustomer.setFullness(2.8, 'كسرات أمريكي / شتوح', this)">
+                    <span class="fullness-title">كسرات أمريكي / شتوح</span>
+                    <span class="fullness-ratio">2.8 م قماش / م حيط</span>
+                  </div>
+                  <div class="fullness-btn" onclick="window.naseejCustomer.setFullness(3.0, 'ويفي (Wave)', this)">
+                    <span class="fullness-title">ويفي (Wave)</span>
+                    <span class="fullness-ratio">3.0 م قماش / م حيط</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mode B: Direct / Wholesale (With Red Warning & Contact Table) -->
+            <div id="calc-section-direct" style="display: none;">
+              <!-- Red Notice Banner -->
+              <div class="wholesale-red-box">
+                <div class="wholesale-red-title">⚠️ يفضل التواصل معنا لشراء قماش بالجملة</div>
+                <div class="wholesale-red-subtitle">
+                  للطلبات الكبيرة وشراء طاقات الأقمشة بالأمتار بأسعار الجملة التفضيلية، يرجى التواصل مباشرة مع أحد مسؤولي المبيعات المعتمدين:
+                </div>
+              </div>
+
+              <!-- Small & Clear Wholesale Contacts Table inside Modal -->
+              <div class="wholesale-modal-table-wrap">
+                <table class="wholesale-modal-table">
+                  <thead>
+                    <tr>
+                      <th>المسؤول</th>
+                      <th>رقم الجوال</th>
+                      <th>اتصال سريع</th>
+                      <th>محادثة واتساب</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>هشام بلالم</strong></td>
+                      <td dir="ltr" class="phone-num-style">0599842231</td>
+                      <td><a href="tel:0599842231" class="btn-sm-call">📞 0599842231</a></td>
+                      <td><a href="https://wa.me/970599842231?text=مرحباً%20هشام%20بلالم،%20أود%20الاستفسار%20عن%20شراء%20قماش%20بالجملة" target="_blank" class="btn-sm-wa">💬 واتساب</a></td>
+                    </tr>
+                    <tr>
+                      <td><strong>هباب بلالم</strong></td>
+                      <td dir="ltr" class="phone-num-style">0599360015</td>
+                      <td><a href="tel:0599360015" class="btn-sm-call">📞 0599360015</a></td>
+                      <td><a href="https://wa.me/970599360015?text=مرحباً%20هباب%20بلالم،%20أود%20الاستفسار%20عن%20شراء%20قماش%20بالجملة" target="_blank" class="btn-sm-wa">💬 واتساب</a></td>
+                    </tr>
+                    <tr>
+                      <td><strong>أسامه بلالم</strong></td>
+                      <td dir="ltr" class="phone-num-style">0599072201</td>
+                      <td><a href="tel:0599072201" class="btn-sm-call">📞 0599072201</a></td>
+                      <td><a href="https://wa.me/970599072201?text=مرحباً%20أسامه%20بلالم،%20أود%20الاستفسار%20عن%20شراء%20قماش%20بالجملة" target="_blank" class="btn-sm-wa">💬 واتساب</a></td>
+                    </tr>
+                    <tr>
+                      <td><strong>احمد بلالم</strong></td>
+                      <td dir="ltr" class="phone-num-style">0599552065</td>
+                      <td><a href="tel:0599552065" class="btn-sm-call">📞 0599552065</a></td>
+                      <td><a href="https://wa.me/970599552065?text=مرحباً%20أحمد%20بلالم،%20أود%20الاستفسار%20عن%20شراء%20قماش%20بالجملة" target="_blank" class="btn-sm-wa">💬 واتساب</a></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Live Calculation Summary Card -->
+            <div id="calc-summary-card" class="calc-summary-card">
+              <div class="calc-summary-header">ملخص المقاسات والتكلفة الفورية:</div>
+              <div class="calc-summary-values">
+                <div>
+                  <small id="calc-meters-label" style="color: #94a3b8;">إجمالي الأمتار:</small>
+                  <div id="calc-result-meters" class="calc-meters-highlight">6 متر</div>
+                </div>
+                <div style="text-align: left;">
+                  <small style="color: #94a3b8;">التكلفة الإجمالية:</small>
+                  <div id="calc-result-price" class="calc-price-highlight">390 شيكل</div>
+                </div>
+              </div>
+              <div id="calc-result-summary" class="calc-summary-note">
+                نافذة بعرض 3 م × ارتفاع 2.8 م مع كسرات
+              </div>
+            </div>
+
+            <!-- Modal Action 1: Add to Cart (Window / Tarsoon mode) -->
+            <button id="modal-add-to-cart-btn" class="btn btn-gold btn-lg w-100" style="padding: 14px; font-size: 16px;" onclick="window.naseejCustomer.addCurrentModalToCart()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              <span id="modal-add-to-cart-text">إضافة إلى سلة المشتريات</span>
+            </button>
+
+            <!-- Modal Action 2: Wholesale Direct WhatsApp Contact (No direct buy online) -->
+            <div id="modal-wholesale-actions" style="display: none; margin-top: 10px;">
+              <a href="https://wa.me/970599842231?text=مرحباً،%20أود%20الاستفسار%20عن%20شراء%20قماش%20بالجملة" target="_blank" class="btn-wholesale-main-wa">
+                <span>💬</span>
+                <span>تواصل واتساب مباشر لطلب القماش بالجملة الآن</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawer: Shopping Cart -->
+  <div id="drawer-overlay" class="drawer-overlay" onclick="window.naseejCustomer.closeCartDrawer()"></div>
+  <aside id="cart-drawer" class="cart-drawer">
+    <div class="cart-drawer-header">
+      <h4>سلة المشتريات <span id="cart-total-meters-badge" class="badge badge-gold">0 متر</span></h4>
+      <button class="modal-close" onclick="window.naseejCustomer.closeCartDrawer()">✕</button>
+    </div>
+    <div id="cart-drawer-items" class="cart-drawer-items">
+      <!-- Injected dynamically -->
+    </div>
+    <div id="cart-drawer-footer" class="cart-drawer-footer">
+      <div class="cart-summary-line">
+        <span>المجموع الفرعي:</span>
+        <span id="cart-subtotal">0 شيكل</span>
+      </div>
+      <div class="cart-summary-line">
+        <span>رسوم الشحن والتغليف:</span>
+        <span id="cart-shipping">مجاني</span>
+      </div>
+      <div class="cart-summary-line total">
+        <span>المجموع الإجمالي:</span>
+        <span id="cart-grandtotal" class="gold-text">0 شيكل</span>
+      </div>
+      <button class="btn btn-gold w-100 mt-3" style="padding: 12px;" onclick="window.naseejCustomer.openCheckoutModal()">
+        <span>متابعة إتمام الطلب الشحن</span>
+        <span>←</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Modal: Checkout -->
+  <div id="checkout-modal" class="naseej-modal">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-header">
+        <h3 class="modal-title">إتمام الطلب وتأكيد بيانات العميل</h3>
+        <button class="modal-close" onclick="window.naseejCustomer.closeCheckoutModal()">✕</button>
+      </div>
+      <form id="checkout-form" onsubmit="window.naseejCustomer.submitOrder(event)">
+        <div class="modal-body">
+          <div class="checkout-form-grid">
+            <!-- Customer Details Form -->
+            <div>
+              <div style="background: rgba(212, 175, 55, 0.1); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: #856404;">
+                📱 <strong>تنبيه:</strong> سيتم استخدام رقم الهاتف والبريد الإلكتروني لإرسال تحديثات قص الستائر وموعد التسليم.
+              </div>
+
+              <!-- Customer Contact -->
+              <div class="form-group">
+                <label class="form-label">رقم الهاتف الشخصي (الجوال) *</label>
+                <input type="tel" id="checkout-phone" class="form-control" placeholder="0599842231" required dir="ltr" style="text-align: right;">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">البريد الإلكتروني الشخصي *</label>
+                <input type="email" id="checkout-email" class="form-control" placeholder="name@example.com" required dir="ltr" style="text-align: right;">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">الاسم الكامل *</label>
+                <input type="text" id="checkout-name" class="form-control" placeholder="اسم المستلم الكريم" required>
+              </div>
+
+              <!-- Fulfillment Mode Selection (Pickup vs Delivery) -->
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 14px; margin-bottom: 8px;">
+                  طريقة الاستلام أو التوصيل: *
+                </label>
+                <div class="fulfillment-type-selector">
+                  <label class="fulfillment-option-card active" id="fulfillment-card-pickup" onclick="window.naseejCustomer.setFulfillmentType('pickup')">
+                    <input type="radio" name="checkout-fulfillment" value="pickup" checked onchange="window.naseejCustomer.handleFulfillmentChange()">
+                    <div class="card-radio-icon">🏪</div>
+                    <div class="card-radio-body">
+                      <strong>استلام من المحل (الفرع)</strong>
+                      <span class="fee-badge free-badge">مجاناً (0 شيكل)</span>
+                      <small>استلم مباشرة من أحد فرعينا في نابلس</small>
+                    </div>
+                  </label>
+
+                  <label class="fulfillment-option-card" id="fulfillment-card-delivery" onclick="window.naseejCustomer.setFulfillmentType('delivery')">
+                    <input type="radio" name="checkout-fulfillment" value="delivery" onchange="window.naseejCustomer.handleFulfillmentChange()">
+                    <div class="card-radio-icon">🚚</div>
+                    <div class="card-radio-body">
+                      <strong>توصيل وشحن للعنوان</strong>
+                      <span class="fee-badge" id="fulfillment-delivery-badge">حسب المنطقة</span>
+                      <small>شحن لباب بيتك (الضفة، القدس، الداخل)</small>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Sub-section 1: Store Pickup Branches -->
+              <div id="checkout-pickup-section" class="fulfillment-sub-section">
+                <div class="form-group mb-0">
+                  <label class="form-label">اختر فرع الاستلام المناسب لك في نابلس: *</label>
+                  <select id="checkout-pickup-branch" class="form-control branch-select" onchange="window.naseejCustomer.updateCheckoutSummary()">
+                    <option value="نابلس - باب الساحة" selected>📍 نابلس - باب الساحة (البلدة القديمة)</option>
+                    <option value="نابلس - بيت وزن بجانب طلعة برافو">📍 نابلس - بيت وزن (بجانب طلعة برافو)</option>
+                  </select>
+                  <div class="pickup-helper-note">
+                    ✨ <strong>السعر الأصلي:</strong> يحسب لك السعر العادي للأقمشة دون أي أجور شحن إضافية (0 شيكل). ستستلم الستائر جاهزة ومفصلة ومكوية من الفرع.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sub-section 2: Delivery Regions & Address -->
+              <div id="checkout-delivery-section" class="fulfillment-sub-section" style="display: none;">
+                <div class="form-group">
+                  <label class="form-label">اختر منطقة التوصيل: *</label>
+                  <select id="checkout-delivery-region" class="form-control" onchange="window.naseejCustomer.updateCheckoutSummary()">
+                    <option value="الضفة الغربية" data-fee="20" selected>🏙️ مدن وقرى الضفة الغربية (أجور التوصيل: 20 شيكل)</option>
+                    <option value="القدس" data-fee="35">🕌 القدس الشريف وضواحيها (أجور التوصيل: 35 شيكل)</option>
+                    <option value="الداخل الفلسطيني (مناطق 48)" data-fee="80">📍 الداخل الفلسطيني / مناطق 48 (أجور التوصيل: 80 شيكل)</option>
+                  </select>
+                </div>
+
+                <div class="calc-input-pair form-group">
+                  <div>
+                    <label class="form-label">المدينة / البلدة *</label>
+                    <input type="text" id="checkout-city-input" class="form-control" placeholder="مثال: رام الله، الخليل، جنين، أم الفحم..." value="نابلس">
+                  </div>
+                  <div>
+                    <label class="form-label">المنطقة والشارع بالتفصيل *</label>
+                    <input type="text" id="checkout-address" class="form-control" placeholder="مثال: شارع رفيديا، قرب المستشفى، عمارة 4">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Installation Service Option (Free Delivery with Installation & Variable Fee) -->
+              <div class="form-group" style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: var(--radius-md); padding: 14px; margin-top: 14px; margin-bottom: 14px;">
+                <label style="display: flex; align-items: flex-start; justify-content: space-between; cursor: pointer; margin-bottom: 0; gap: 12px;">
+                  <div style="display: flex; align-items: flex-start; gap: 10px;">
+                    <input type="checkbox" id="checkout-install-toggle" onchange="window.naseejCustomer.updateCheckoutSummary()" style="width: 20px; height: 20px; accent-color: var(--gold-primary); cursor: pointer; margin-top: 3px;">
+                    <div>
+                      <strong style="color: var(--primary); font-size: 14px;">🔧 هل ترغب بخدمة تركيب الستائر في الموقع؟ (داخل مدن وقرى الضفة)</strong>
+                      <div style="font-size: 12.5px; color: #15803d; margin-top: 3px; font-weight: 700;">
+                        🚚 أجور التوصيل مجانية (0 شيكل): الفني يأخذ الستائر مباشرة من المعرض لتركيبها بموقعك!
+                      </div>
+                      <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                        سعر أجور التركيب متراوح حسب عدد الشبابيك والمقاسات (يحدد ويتفق عليه بالتواصل معكم عند التجهيز).
+                      </div>
+                    </div>
+                  </div>
+                  <span class="fee-badge" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-weight: 800; padding: 5px 12px; border-radius: 6px; white-space: nowrap;">
+                    توصيل مجاني ✓ (أجور التركيب متراوحة)
+                  </span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">ملاحظات خاصة للورشة / الخياط (اختياري)</label>
+                <textarea id="checkout-notes" class="form-control" rows="2" placeholder="أي تفاصيل تخص نوع الكسرات، مقاسات الارتفاع، أو موعد الاستلام المفضل"></textarea>
+              </div>
+
+              <!-- Payment Method Selection -->
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 14px;">طريقة الدفع:</label>
+                <div style="margin-top: 6px;">
+                  <label class="payment-method-badge-active" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 2px solid var(--gold); background: rgba(212, 175, 55, 0.08); padding: 12px 16px; border-radius: var(--radius-md); cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <input type="radio" name="checkout-payment" value="الدفع عند الاستلام" checked>
+                      <div>
+                        <strong style="color: var(--primary);">💵 الدفع عند الاستلام (الخيار المعتمد والمفضل)</strong>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 2px;">ادفع نقداً عند استلام الستائر والتأكد من جودة القماش والمقاسات</div>
+                      </div>
+                    </div>
+                    <span class="badge" style="background: #10b981; color: #fff; font-size: 11px; padding: 4px 8px;">مفضل ومتاح ✓</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Order Items Review Box -->
+            <div>
+              <div class="checkout-summary-box">
+                <h4 style="margin-bottom: 14px; font-size: 15px;">ملخص الطلب وتكلفة الشحن:</h4>
+                <div id="checkout-items-summary">
+                  <!-- Injected via customer.js -->
+                </div>
+                <div style="margin-top: 20px; font-size: 12px; color: #64748b;">
+                  🔒 الدفع نقداً عند الاستلام، ويتم قص الأقمشة وتفصيلها في ورش متخصصة بأحدث المكائن لضمان أعلى مقاييس الجودة.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="window.naseejCustomer.closeCheckoutModal()">إلغاء</button>
+          <button type="submit" class="btn btn-gold" style="padding: 12px 28px;">تأكيد الطلب وإرساله للقص الآن ✓</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Order Success -->
+  <div id="order-success-modal" class="naseej-modal">
+    <div class="modal-dialog" style="max-width: 520px; text-align: center;">
+      <div class="modal-body" style="padding: 40px 30px;">
+        <div style="font-size: 56px; margin-bottom: 16px;">🎉</div>
+        <h3 style="font-size: 24px; color: var(--primary); margin-bottom: 8px;">تهانينا! تم استلام طلبك بنجاح</h3>
+        <p style="color: var(--text-muted); font-size: 14.5px; margin-bottom: 24px;">
+          تم تسجيل طلب أقمشة الستائر وإرساله مباشرة إلى ورشة القص والتجهيز. ستصلك رسالة تأكيد ومتابعة عبر الجوال والإيميل.
+        </p>
+
+        <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; text-align: right; margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span class="text-muted">رقم الطلب:</span>
+            <strong id="success-order-id" class="order-id-highlight" style="font-size: 16px;"></strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span class="text-muted">العميل:</span>
+            <strong id="success-customer-name"></strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span class="text-muted">الجوال الشخصي:</span>
+            <span id="success-customer-phone" dir="ltr"></span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span class="text-muted">البريد الإلكتروني:</span>
+            <span id="success-customer-email" dir="ltr"></span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span class="text-muted">طريقة التسليم:</span>
+            <strong id="success-order-fulfillment" style="color: var(--primary);"></strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span class="text-muted">إجمالي الأمتار:</span>
+            <strong id="success-order-meters"></strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 8px;">
+            <span>المبلغ الإجمالي (الدفع عند الاستلام):</span>
+            <strong id="success-order-total" class="gold-text" style="font-size: 18px;"></strong>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button class="btn btn-outline" onclick="window.naseejCustomer.closeOrderSuccessModal(); window.naseejCustomer.openMyOrdersModal();">
+            متابعة حالة الطلب في (طلباتي)
+          </button>
+          <button class="btn btn-primary" onclick="window.naseejCustomer.closeOrderSuccessModal()">
+            العودة للمتجر
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Unified Auth (Login & Customer Registration with distinct Admin Account) -->
+  <div id="auth-modal" class="naseej-modal">
+    <div class="modal-dialog" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 id="auth-modal-title" class="modal-title">تسجيل الدخول إلى حسابك</h3>
+        <button class="modal-close" onclick="window.naseejCustomer.closeAuthModal()">✕</button>
+      </div>
+
+      <!-- Auth Tabs Switcher -->
+      <div class="auth-tabs-nav">
+        <button id="tab-btn-login" class="auth-tab-btn active" type="button" onclick="window.naseejCustomer.switchAuthTab('login')">
+          🔑 تسجيل الدخول
+        </button>
+        <button id="tab-btn-register" class="auth-tab-btn" type="button" onclick="window.naseejCustomer.switchAuthTab('register')">
+          ✨ إنشاء حساب عميل جديد
+        </button>
+      </div>
+
+      <!-- PANE 1: LOGIN (Admin or Customer) -->
+      <div id="auth-pane-login" class="auth-tab-pane active">
+        <form onsubmit="window.naseejCustomer.handleLoginSubmit(event)">
+          <div class="modal-body">
+            <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 18px;">
+              أهلاً بك مجدداً في متجر Balalem co! أدخل بيانات حسابك للوصول إلى طلباتك وسلتك أو لوحة التحكم.
+            </p>
+
+            <div class="form-group">
+              <label class="form-label">البريد الإلكتروني / اسم المستخدم / الهاتف *</label>
+              <input type="text" id="login-identifier" class="form-control" placeholder="اسم المستخدم، البريد، أو رقم الهاتف" required dir="ltr" style="text-align: right;">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">كلمة المرور *</label>
+              <div class="password-input-group">
+                <input type="password" id="login-password" class="form-control" placeholder="أدخل كلمة المرور" required dir="ltr" style="text-align: right;">
+                <button type="button" class="btn-toggle-pwd" onclick="window.naseejCustomer.togglePasswordVisibility('login-password', this)" title="إظهار/إخفاء كلمة المرور">👁️</button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="window.naseejCustomer.closeAuthModal()">إلغاء</button>
+            <button type="submit" class="btn btn-gold w-100" style="padding: 12px; font-weight: 700;">دخول إلى الحساب ✓</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- PANE 2: REGISTER (Strictly Customer Role) -->
+      <div id="auth-pane-register" class="auth-tab-pane" style="display: none;">
+        <form onsubmit="window.naseejCustomer.handleRegisterSubmit(event)">
+          <div class="modal-body">
+            <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 18px;">
+              أنشئ حساب عميل جديد لحفظ مقاسات النوافذ وسلة المشتريات ومتابعة أمتار وتفصيل ستائرك بدقة.
+            </p>
+
+            <div class="form-group">
+              <label class="form-label">الاسم الكامل الكريم *</label>
+              <input type="text" id="reg-name" class="form-control" placeholder="مثال: يوسف محمود" required>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">رقم الهاتف الشخصي (الجوال) *</label>
+                <input type="tel" id="reg-phone" class="form-control" placeholder="0599842231" required dir="ltr" style="text-align: right;">
+              </div>
+              <div class="form-group">
+                <label class="form-label">المدينة / المحافظة *</label>
+                <select id="reg-city" class="form-control">
+                  <option value="نابلس">نابلس</option>
+                  <option value="القدس">القدس الشريف</option>
+                  <option value="رام الله والبيرة">رام الله والبيرة</option>
+                  <option value="الخليل">الخليل</option>
+                  <option value="جنين">جنين</option>
+                  <option value="بيت لحم">بيت لحم</option>
+                  <option value="طولكرم">طولكرم</option>
+                  <option value="قلقيلية">قلقيلية</option>
+                  <option value="أريحا والأغوار">أريحا والأغوار</option>
+                  <option value="طوباس">طوباس</option>
+                  <option value="سلفيت">سلفيت</option>
+                  <option value="مدن الداخل الفلسطيني (48)">مدن الداخل الفلسطيني (48)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">البريد الإلكتروني الشخصي *</label>
+              <input type="email" id="reg-email" class="form-control" placeholder="name@example.com" required dir="ltr" style="text-align: right;">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">كلمة المرور (5 خانات على الأقل) *</label>
+              <div class="password-input-group">
+                <input type="password" id="reg-password" class="form-control" placeholder="أنشئ كلمة مرور لحسابك" required minlength="5" dir="ltr" style="text-align: right;">
+                <button type="button" class="btn-toggle-pwd" onclick="window.naseejCustomer.togglePasswordVisibility('reg-password', this)" title="إظهار/إخفاء كلمة المرور">👁️</button>
+              </div>
+            </div>
+
+            <div class="role-notice-card">
+              <span>🛍️ يتم تسجيل حسابك تلقائياً برول <strong>عميل موثوق (Customer)</strong> يتيح لك كافة مزايا التسوق وتتبع طلبيات الستائر.</span>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="window.naseejCustomer.closeAuthModal()">إلغاء</button>
+            <button type="submit" class="btn btn-primary w-100" style="padding: 12px; font-weight: 700;">إنشاء حساب العميل وتفعيله ✓</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: My Orders (طلباتي) -->
+  <div id="my-orders-modal" class="naseej-modal">
+    <div class="modal-dialog" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 class="modal-title">طلباتي السابقة وحالة التفصيل</h3>
+        <button class="modal-close" onclick="window.naseejCustomer.closeMyOrdersModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="my-orders-list">
+          <!-- Injected via customer.js -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="window.naseejCustomer.closeMyOrdersModal()">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Admin Add / Edit Product (تزويد وتعديل قماش) -->
+  <div id="admin-product-modal" class="naseej-modal">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-header">
+        <h3 id="admin-product-modal-title" class="modal-title">تزويد قماش ستائر جديد للمتجر</h3>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button type="submit" form="admin-product-form" class="btn btn-gold btn-sm" style="padding: 9px 20px; font-weight: 700; font-size: 14px; box-shadow: 0 3px 10px rgba(212, 175, 55, 0.35);">
+            💾 حفظ القماش الآن
+          </button>
+          <button type="button" class="modal-close" onclick="window.naseejAdmin.closeProductModal()">✕</button>
+        </div>
+      </div>
+      <form id="admin-product-form" onsubmit="window.naseejAdmin.handleProductFormSubmit(event)">
+        <input type="hidden" id="prod-form-id" value="">
+        <div class="modal-body">
+          <!-- 1-Click Quick Preset Chips -->
+          <div class="modal-presets-bar">
+            <span class="preset-bar-title">⚡ تعبئة سريعة لقماش جاهز (بنقرة واحدة للمدير):</span>
+            <div class="preset-pills-row">
+              <button type="button" class="preset-pill-btn" onclick="window.naseejAdmin.applyProductPreset('crepe_royal')">✨ كريب تركي رويال (65 ₪)</button>
+              <button type="button" class="preset-pill-btn" onclick="window.naseejAdmin.applyProductPreset('linen_sage')">🌾 كتان ريفي مسدل (75 ₪)</button>
+              <button type="button" class="preset-pill-btn" onclick="window.naseejAdmin.applyProductPreset('tulle_sheer')">🪟 تول مطرز وشيفون (50 ₪)</button>
+              <button type="button" class="preset-pill-btn" onclick="window.naseejAdmin.applyProductPreset('velvet_blackout')">👑 مخمل ملكي عازل (95 ₪)</button>
+              <button type="button" class="preset-pill-btn" onclick="window.naseejAdmin.applyProductPreset('tarsoon_zebra')">📐 ستائر ترسون زيبرا (85 ₪/م²)</button>
+            </div>
+          </div>
+
+          <div class="admin-form-grid">
+            <div class="form-group">
+              <label class="form-label">اسم قماش الستارة *</label>
+              <input type="text" id="prod-name" class="form-control" placeholder="مثال: كريب ستائر إسطنبولي فاخر" required oninput="window.naseejAdmin.updateProductLivePreview()">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">التصنيف والنوع *</label>
+              <select id="prod-category" class="form-control" onchange="window.naseejAdmin.updateProductLivePreview()">
+                <option value="crepe">كريب ستائر (Crepe)</option>
+                <option value="linen">كتان ستائر طبيعي (Linen)</option>
+                <option value="tulle">تول وفوال وشيفون (Tulle & Sheer)</option>
+                <option value="velvet">مخمل وبلاك آوت (Velvet & Blackout)</option>
+                <option value="brocade">بروكار وجاكار مطرز (Brocade & Jacquard)</option>
+                <option value="tarsoon">ستائر الترسون بالمتر المربع (Tarsoon Blinds)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">سعر المتر الطولي (شيكل) *</label>
+              <input type="number" id="prod-price" class="form-control" placeholder="65" min="5" max="2000" required oninput="window.naseejAdmin.updateProductLivePreview()">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">عرض طاقة القماش (سم) *</label>
+              <input type="number" id="prod-width" class="form-control" placeholder="280 أو 300 أو 320" value="300" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">المخزون المتوفر في المستودع (بالمتر) *</label>
+              <input type="number" id="prod-stock" class="form-control" placeholder="500" min="0" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">بلد المنشأ والتصنيع</label>
+              <input type="text" id="prod-origin" class="form-control" placeholder="مثال: تركيا، إيطاليا، بلجيكا" oninput="window.naseejAdmin.updateProductLivePreview()">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">التركيب ونوع الخيوط</label>
+              <input type="text" id="prod-composition" class="form-control" placeholder="مثال: 100% كريب بوليستر معالج ضد الانكماش">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">نسبة حجب وعزل الضوء</label>
+              <input type="text" id="prod-light" class="form-control" placeholder="مثال: 70% حجب، أو 100% بلاك آوت تام">
+            </div>
+
+            <div class="admin-form-full form-group">
+              <label class="form-label">الألوان المتاحة (الاسم : كود اللون Hex مفصولة بفاصلة)</label>
+              <input type="text" id="prod-colors" class="form-control" placeholder="مثال: بيج رملي:#d2b48c, أوف وايت:#fdfbf7, رمادي:#c5c6c7" dir="ltr" style="text-align: right;" oninput="window.naseejAdmin.updateProductLivePreview()">
+            </div>
+
+            <div class="admin-form-full form-group">
+              <label class="form-label">صورة القماش (اختر من الصور المتاحة أو الصق رابطاً أو ارفع صورة):</label>
+              <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+                <select class="form-control" onchange="document.getElementById('prod-image-url').value = this.value; document.getElementById('prod-image-preview').src = this.value; window.naseejAdmin.updateProductLivePreview();">
+                  <option value="assets/images/curtain_crepe.jpg">كريب ستائر تركي (curtain_crepe.jpg)</option>
+                  <option value="assets/images/curtain_linen_sage.jpg">كتان ستائر سيج (curtain_linen_sage.jpg)</option>
+                  <option value="assets/images/curtain_tulle.jpg">تول ستائر شفاف فوال (curtain_tulle.jpg)</option>
+                  <option value="assets/images/curtain_velvet.jpg">مخمل نبيذي بلاك آوت (curtain_velvet.jpg)</option>
+                  <option value="assets/images/curtain_brocade.jpg">بروكار جاكار مذهب (curtain_brocade.jpg)</option>
+                  <option value="assets/images/curtain_linen_natural.jpg">كتان ريفي طبيعي (curtain_linen_natural.jpg)</option>
+                  <option value="assets/images/curtain_silk_emerald.jpg">حرير دوشيس زمردي (curtain_silk_emerald.jpg)</option>
+                </select>
+                <input type="file" id="prod-image-file" accept="image/*" style="display: none;" onchange="window.naseejAdmin.handleImageUpload(this)">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('prod-image-file').click()" style="white-space: nowrap;">
+                  📁 رفع صورة
+                </button>
+              </div>
+              <input type="text" id="prod-image-url" class="form-control" value="assets/images/curtain_crepe.jpg" dir="ltr" oninput="document.getElementById('prod-image-preview').src = this.value; window.naseejAdmin.updateProductLivePreview();">
+              <div class="image-preview-box">
+                <img id="prod-image-preview" src="assets/images/curtain_crepe.jpg" alt="معاينة الصورة">
+              </div>
+            </div>
+
+            <!-- Live Preview of the Fabric Card -->
+            <div class="admin-form-full form-group live-preview-section">
+              <label class="form-label">✨ المعاينة الحية لبطاقة القماش كما ستظهر للزبائن في المتجر:</label>
+              <div class="modal-live-preview-box">
+                <div class="preview-mini-card">
+                  <div class="preview-img-wrap">
+                    <img id="preview-card-img" src="assets/images/curtain_crepe.jpg" alt="معاينة">
+                    <span class="preview-badge-luxury">صنف فاخر ✦</span>
+                  </div>
+                  <div class="preview-info-wrap">
+                    <div id="preview-card-name" class="preview-name">كريب ستائر رويال إسطنبولي فاخر</div>
+                    <div class="preview-meta-row">
+                      <span id="preview-card-origin" class="preview-origin">تركيا</span>
+                      <span class="preview-dot">•</span>
+                      <span id="preview-card-unit" class="preview-unit">لكل متر طولي</span>
+                    </div>
+                    <div class="preview-colors-row" id="preview-card-colors">
+                      <span class="preview-color-dot" style="background-color: #d2b48c;"></span>
+                      <span class="preview-color-dot" style="background-color: #fdfbf7;"></span>
+                      <span class="preview-color-dot" style="background-color: #c5c6c7;"></span>
+                    </div>
+                    <div class="preview-price-row">
+                      <span id="preview-card-price" class="preview-price">65 ₪</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-form-full form-group">
+              <label class="form-label">وصف القماش ومميزاته</label>
+              <textarea id="prod-desc" class="form-control" rows="3" placeholder="اكتب وصفاً جذاباً يشرح ملمس القماش وانسيابيته للستائر..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="position: sticky; bottom: 0; background: #ffffff; border-top: 2px solid var(--border-color); z-index: 50; box-shadow: 0 -4px 15px rgba(0,0,0,0.06);">
+          <button type="button" class="btn btn-outline" onclick="window.naseejAdmin.closeProductModal()">إلغاء</button>
+          <button type="submit" class="btn btn-gold" style="padding: 12px 34px; font-size: 15px; font-weight: 800;">
+            💾 حفظ وتزويد القماش للمتجر ✓
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Admin Add Walk-in Showroom Order (طلبية زبون من داخل المعرض) -->
+  <div id="admin-walkin-order-modal" class="naseej-modal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">➕ تسجيل طلبية جديدة من المعرض مباشرة (زبون بالمحل)</h3>
+        <button type="button" class="modal-close" onclick="window.naseejAdmin.closeWalkinOrderModal()">✕</button>
+      </div>
+      <form id="admin-walkin-form" onsubmit="window.naseejAdmin.submitWalkinOrder(event)">
+        <div class="modal-body">
+          <div style="background: rgba(212, 175, 55, 0.1); border-right: 4px solid var(--gold-primary); border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; font-size: 13.5px; color: #856404;">
+            🏪 <strong>طلبيات المعرض المباشرة:</strong> إدخال وتوثيق طلبات الزبائن الذين حضروا للمحل دون الحاجة لدخولهم على الموقع، وتوزيعها مباشرة على جدول ورشة القص وجدول فنيي التركيب.
+          </div>
+
+          <div class="admin-form-grid">
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label class="form-label" style="margin-bottom: 0;">اسم الزبون الكريم *</label>
+                <button type="button" class="btn btn-xs btn-outline" onclick="window.naseejAdmin.quickFillWalkinGuest()" style="font-size: 11px; padding: 2px 8px; border-radius: 20px;">
+                  👤 تعبئة زبون سريع
+                </button>
+              </div>
+              <input type="text" id="walkin-cust-name" class="form-control" placeholder="مثال: محمد سليمان" required style="margin-top: 4px;">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">رقم الجوال *</label>
+              <input type="tel" id="walkin-cust-phone" class="form-control" placeholder="0599123456" required dir="ltr" style="text-align: right;">
+            </div>
+
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label class="form-label" style="margin-bottom: 0;">المدينة / المحافظة *</label>
+                <div class="quick-city-pills-row">
+                  <button type="button" class="city-pill-sm" onclick="document.getElementById('walkin-cust-city').value='نابلس';">نابلس</button>
+                  <button type="button" class="city-pill-sm" onclick="document.getElementById('walkin-cust-city').value='الخليل';">الخليل</button>
+                  <button type="button" class="city-pill-sm" onclick="document.getElementById('walkin-cust-city').value='رام الله';">رام الله</button>
+                  <button type="button" class="city-pill-sm" onclick="document.getElementById('walkin-cust-city').value='القدس';">القدس</button>
+                  <button type="button" class="city-pill-sm" onclick="document.getElementById('walkin-cust-city').value='جنين';">جنين</button>
+                  <button type="button" class="city-pill-sm" onclick="document.getElementById('walkin-cust-city').value='الداخل 48';">الداخل 48</button>
+                </div>
+              </div>
+              <input type="text" id="walkin-cust-city" class="form-control" value="نابلس" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">العنوان أو الحي</label>
+              <input type="text" id="walkin-cust-address" class="form-control" placeholder="مثال: رفيديا - شارع الجامعة">
+            </div>
+
+            <!-- Dynamic Windows & Curtains Repeater Section -->
+            <div class="admin-form-full form-group walkin-windows-section">
+              <div class="walkin-windows-header">
+                <div>
+                  <div class="walkin-windows-title">
+                    🪟 تفاصيل الشبابيك والستائر المطلوبة للزبون
+                    <span id="walkin-windows-count-badge" class="badge badge-gold" style="font-size: 12px; margin-right: 8px;">1 شباك</span>
+                  </div>
+                  <div class="walkin-windows-subtitle">
+                    أضف أي عدد من الشبابيك والستائر بحسب رغبة الزبون (شباك، شباكين، 6، 8، 12، 14 أو ورشة كاملة).
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-gold" onclick="window.naseejAdmin.addWalkinItem()" style="box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);">
+                  ➕ إضافة شباك / ستارة أخرى
+                </button>
+              </div>
+
+              <!-- Container for dynamic window cards -->
+              <div id="walkin-items-container" class="walkin-items-list">
+                <!-- Dynamically populated by window.naseejAdmin.renderWalkinItems() -->
+              </div>
+
+              <div style="margin-top: 10px; text-align: center;">
+                <button type="button" class="btn btn-outline btn-add-window-bottom" onclick="window.naseejAdmin.addWalkinItem()">
+                  ➕ إضافة شباك أو غرفة أخرى للطلبية
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">طريقة الاستلام / التسليم *</label>
+              <select id="walkin-delivery-type" class="form-control" onchange="window.naseejAdmin.handleWalkinDeliveryChange()">
+                <option value="pickup_babsaha">🏪 استلام من الفرع: نابلس - باب الساحة (مجاني 0 ₪)</option>
+                <option value="pickup_beitwazan">🏪 استلام من الفرع: نابلس - بيت وزن طلعة برافو (مجاني 0 ₪)</option>
+                <option value="delivery_wb">🚚 توصيل للضفة الغربية (+20 ₪)</option>
+                <option value="delivery_jer">🚚 توصيل للقدس الشريف (+35 ₪)</option>
+                <option value="delivery_48">🚚 توصيل للداخل الفلسطيني 48 (+80 ₪)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>📅 تاريخ ويوم القص بالورشة *</span>
+                <span id="walkin-schedule-day-badge" class="badge badge-gold" style="font-size: 11.5px;">السبت</span>
+              </label>
+              <input type="date" id="walkin-schedule-date" class="form-control" required onchange="window.naseejAdmin.handleWalkinDateChange(this.value)">
+              <div id="walkin-friday-warn" style="display: none; color: #b91c1c; font-size: 11.5px; margin-top: 4px; font-weight: bold;">
+                ⚠️ يوم الجمعة عطلة رسمية للورشة! يرجى اختيار يوم عمل من السبت إلى الخميس.
+              </div>
+            </div>
+
+            <div class="admin-form-full form-group" style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: var(--radius-md); padding: 14px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer; margin-bottom: 0;">
+                  <input type="checkbox" id="walkin-install-toggle" onchange="window.naseejAdmin.handleWalkinInstallToggle()" style="width: 18px; height: 18px; accent-color: var(--gold-primary);">
+                  <span>🔧 إضافة خدمة تركيب الستائر في الموقع (التوصيل مجاني 0 ₪ مع الفني)</span>
+                </label>
+                <span class="fee-badge" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-weight: 700; padding: 4px 8px; border-radius: 6px;">توصيل مجاني مع التركيب ✓</span>
+              </div>
+              <div style="font-size: 12px; color: #64748b; margin-bottom: 6px;">
+                💡 عند طلب التركيب، يأخذ الفني الستائر من المعرض مباشرة ويركبها لدى الزبون، وبالتالي لا تُحسب أجور توصيل.
+              </div>
+              
+              <div id="walkin-install-fields" style="display: none; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 12px;">
+                <div>
+                  <label class="form-label" style="font-size: 12.5px;">فني التركيب المسؤول:</label>
+                  <select id="walkin-installer-select" class="form-control" style="font-size: 13px;">
+                    <option value="osama" selected>🔧 أسامة (الفني المعتمد الأول - 70%)</option>
+                    <option value="ezz">🔧 عز (15%)</option>
+                    <option value="tech3">🔧 فني تركيب 3 (15%)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 12.5px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>تاريخ التركيب:</span>
+                    <span id="walkin-install-day-badge" class="badge badge-gold" style="font-size: 11px;">السبت</span>
+                  </label>
+                  <input type="date" id="walkin-install-date" class="form-control" style="font-size: 13px;" onchange="window.naseejAdmin.handleWalkinInstallDateChange(this.value)">
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 12.5px;">أجور التركيب المتفق عليها (شيكل):</label>
+                  <input type="number" id="walkin-install-fee" class="form-control" value="0" min="0" placeholder="أدخل أجور التركيب (أو 0 إن كانت متراوحة)" oninput="window.naseejAdmin.recalcWalkinTotal()" style="font-size: 13px;">
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-form-full form-group">
+              <label class="form-label">ملاحظات خاصة بالتفصيل والتركيب</label>
+              <textarea id="walkin-notes" class="form-control" rows="2" placeholder="نوع الكسرات، مقاسات الارتفاع، رغبة الزبون، موعد محدد..."></textarea>
+            </div>
+          </div>
+
+          <!-- Walkin Order Live Calculation Box -->
+          <div style="background: #ffffff; border: 1.5px solid var(--gold); border-radius: var(--radius-md); padding: 14px 18px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span style="font-size: 13px; color: #64748b;">إجمالي حساب الزبون:</span>
+              <div id="walkin-calc-breakdown" style="font-size: 12px; color: #0f172a; margin-top: 2px;">8 متر × 65 ₪ = 520 ₪</div>
+            </div>
+            <div style="text-align: left;">
+              <span style="font-size: 12px; color: #64748b;">المجموع المطلوب نقداً:</span>
+              <div id="walkin-calc-grandtotal" style="font-size: 22px; font-weight: 800; color: #b45309;">520 شيكل</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="window.naseejAdmin.closeWalkinOrderModal()">إلغاء</button>
+          <button type="submit" class="btn btn-gold" style="padding: 12px 28px; font-weight: 800;">
+            💾 إدراج الطلبية بالجداول فوراً ✓
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h4>الولاء لستائر Balalem co</h4>
+          <p>
+            متجر الولاء لستائر Balalem co - الوجهة الأولى لتجارة وتفصيل أقمشة الستائر والمفروشات الفاخرة. نقدم أجود أنواع الكريب، الكتان الأوروبي، التول والفوال، والمخمل العازل للضوء مع حاسبة ذكية لاحتساب الأمتار بدقة وخدمة قص وتوصيل سريع لكافة المدن الفلسطينية.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h5>أقمشة الستائر</h5>
+          <ul>
+            <li>كريب ستائر مسدل</li>
+            <li>كتان هولندي طبيعي</li>
+            <li>تول وشيفون فوال</li>
+            <li>مخمل ملكي بلاك آوت</li>
+            <li>بروكار وجاكار كلاسيك</li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>خدمات المتجر</h5>
+          <ul>
+            <li>حاسبة أمتار النوافذ الذكية</li>
+            <li>قص القماش وتفصيله</li>
+            <li>توصيل سريع للمدن والمحافظات</li>
+            <li>لوحة تحكم وتزويد المنتجات</li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>التواصل والصفحات الرسمية</h5>
+          <p style="font-size: 12.5px; color: var(--gold-light); margin-bottom: 8px; font-weight: 700;">شركة الولاء للستائر BalalemCo</p>
+          <ul>
+            <li><a href="https://www.facebook.com/search/top?q=شركة%20الولاء%20للستائر%20BalalemCo" target="_blank" rel="noopener noreferrer" style="color: #60a5fa; text-decoration: none; font-weight: 600;">🔵 فيسبوك: BalalemCo</a></li>
+            <li><a href="https://www.instagram.com/explore/tags/BalalemCo/" target="_blank" rel="noopener noreferrer" style="color: #f472b6; text-decoration: none; font-weight: 600;">📸 إنستغرام: BalalemCo</a></li>
+            <li><a href="tel:0599842231" style="color: #ffffff; text-decoration: none; font-weight: 700;">📱 اتصال: <span dir="ltr">0599842231</span></a></li>
+            <li><a href="https://wa.me/970599842231" target="_blank" style="color: #10b981; text-decoration: none; font-weight: 700;">💬 واتساب: <span dir="ltr">0599842231</span></a></li>
+            <li>📍 فلسطين (نابلس • رام الله • الخليل • القدس • جنين)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 شركة الولاء للستائر BalalemCo. جميع الحقوق محفوظة | أقمشة ستائر فاخرة وتفصيل دقيق.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Mobile Bottom Sticky Navigation Bar (للتحكم المريح عبر الجوال) -->
+  <nav class="mobile-bottom-nav" aria-label="شريط التنقل السفلي للجوال">
+    <button class="mobile-nav-item active" onclick="window.scrollToSection('storefront-view', event)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>الرئيسية</span>
+    </button>
+    <button class="mobile-nav-item" onclick="window.scrollToSection('fabrics-catalog-section', event)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>الأقمشة</span>
+    </button>
+    <button class="mobile-nav-item" onclick="window.scrollToSection('tailoring-services-section', event)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+      <span>التفصيل</span>
+    </button>
+    <button class="mobile-nav-item" onclick="window.openSmartCalculator(null, event)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+      <span>الحاسبة</span>
+    </button>
+    <button class="mobile-nav-item" onclick="window.scrollToSection('contacts-section', event)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      <span>الأرقام</span>
+    </button>
+    <button class="mobile-nav-item" onclick="window.naseejCustomer ? window.naseejCustomer.openCartDrawer() : null">
+      <div class="mobile-nav-icon-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span class="cart-count-badge mobile-badge" style="display: none;">0</span>
+      </div>
+      <span>السلة</span>
+    </button>
+  </nav>
+
+  <!-- Floating Social Quick Dock (Mobile & Desktop Responsive) -->
+  <aside class="floating-social-dock" aria-label="شريط التواصل الاجتماعي شركة الولاء للستائر BalalemCo">
+    <div class="dock-badge-title">شركة الولاء BalalemCo</div>
+    <a href="https://www.facebook.com/search/top?q=شركة%20الولاء%20للستائر%20BalalemCo" target="_blank" rel="noopener noreferrer" class="dock-btn dock-fb" title="فيسبوك - شركة الولاء للستائر BalalemCo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      <span class="dock-tooltip">فيسبوك BalalemCo</span>
+    </a>
+    <a href="https://www.instagram.com/explore/tags/BalalemCo/" target="_blank" rel="noopener noreferrer" class="dock-btn dock-insta" title="إنستغرام - شركة الولاء للستائر BalalemCo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      <span class="dock-tooltip">إنستغرام BalalemCo</span>
+    </a>
+    <a href="https://wa.me/970599842231" target="_blank" rel="noopener noreferrer" class="dock-btn dock-wa" title="واتساب مبيعات - شركة الولاء للستائر BalalemCo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.044c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z"/></svg>
+      <span class="dock-tooltip">واتساب مبيعات</span>
+    </a>
+  </aside>
+
+  <!-- Scripts -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
