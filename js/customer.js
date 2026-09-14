@@ -780,7 +780,7 @@ class NaseejCustomer {
               <div>
                 <strong style="color: #166534;">رصيدك مؤهل للخصم! (متوفر لديك ${userPoints} نقطة ولاء)</strong>
                 <div style="font-size: 12px; color: #15803d; margin-top: 2px;">
-                  يمكنك استبدال ${pointsToUse} نقطة والحصول على خصم <strong>${eligibleDiscount} شيكل</strong> (كل 100 نقطة = 5 ₪، بحد أقصى 15%)
+                  يمكنك استبدال نقاطك والحصول على خصم مباشر بقيمة <strong>${eligibleDiscount} شيكل</strong> من هذه الطلبية.
                 </div>
               </div>
             </div>
@@ -797,7 +797,6 @@ class NaseejCustomer {
       if (loyaltyContainer) {
         if (isCustomer) {
           const needed = MIN_REDEEM_POINTS - userPoints;
-          const willEarn = Math.floor((subtotal / 100) * 50);
           loyaltyContainer.style.background = 'linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05))';
           loyaltyContainer.style.borderColor = '#d4af37';
           loyaltyContainer.innerHTML = `
@@ -805,7 +804,7 @@ class NaseejCustomer {
             <div>
               <div style="font-weight: 700; color: #856404;">رصيد نقاط الولاء الحالي: <strong>${userPoints} نقطة</strong></div>
               <div style="font-size: 12px; color: #785800; margin-top: 2px;">
-                تحتاج إلى <strong>${needed} نقطة إضافية</strong> لتفعيل الخصم (حد التفعيل: 250 نقطة تعادل مشتريات 500 ₪). طلبيتك الحالية ستمنحك <strong>+${willEarn} نقطة</strong>!
+                يبدأ استبدال النقاط بمبالغ تُخصم من الطلبية عند وصول رصيدك إلى 250 نقطة (يلزمك ${needed} نقطة).
               </div>
             </div>
           `;
@@ -815,9 +814,9 @@ class NaseejCustomer {
           loyaltyContainer.innerHTML = `
             <span style="font-size: 22px;">🎁</span>
             <div>
-              <div style="font-weight: 700; color: #856404;">برنامج الولاء لزبائن شركة الولاء: اكسب 50 نقطة لكل 100 ₪!</div>
+              <div style="font-weight: 700; color: #856404;">برنامج نقاط الولاء لزبائن شركة الولاء</div>
               <div style="font-size: 12px; color: #785800; margin-top: 2px;">
-                يتفعّل رصيد الخصومات عند جمع 250 نقطة (مشتريات 500 ₪ فأكثر) بقيمة 5 ₪ لكل 100 نقطة، وحد أقصى للخصم 15% من الفاتورة.
+                استبدال نقاط الولاء بمبالغ تُخصم من الطلبية، يبدأ الاستبدال عند وصول رصيدك إلى 250 نقطة.
               </div>
             </div>
           `;
@@ -1145,12 +1144,12 @@ class NaseejCustomer {
             </div>
             <div>
               <span class="badge" style="background: ${userPoints >= 250 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)'}; color: ${userPoints >= 250 ? '#34d399' : '#fbbf24'}; border: 1px solid ${userPoints >= 250 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)'}; font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: 700;">
-                ${userPoints >= 250 ? '✓ مؤهل للخصم' : `يلزمك ${250 - userPoints} نقطة`}
+                ${userPoints >= 250 ? '✓ مؤهل للخصم' : 'يلزمك 250 نقطة'}
               </span>
             </div>
           </div>
           <div style="font-size: 11.5px; color: #94a3b8; line-height: 1.5; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 8px;">
-            💡 <strong style="color: #e2e8f0;">طريقة الاستبدال:</strong> كل 100 نقطة = 5 ₪ خصم مباشر عند الدفع (يبدأ الاستبدال من 250 نقطة). تكسب 50 نقطة لكل 100 ₪ مشتريات.
+            💡 <strong style="color: #e2e8f0;">طريقة الاستبدال:</strong> استبدال نقاط الولاء بمبالغ تُخصم من الطلبية، يبدأ الاستبدال من 250 نقطة.
           </div>
         </div>
       `;
