@@ -7,6 +7,9 @@
   <meta name="description" content="متجر الولاء لستائر Balalem co - تفصيل وأقمشة ستائر فاخرة (كريب، كتان، تول، مخمل، بلاك آوت، وبروكار) مع التوصيل لكافة المدن الفلسطينية (نابلس، الخليل، رام الله، القدس، جنين...). هاتف وواتساب: 0599842231.">
 
   <!-- Favicon & PWA Manifest -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d4af37'><path d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/></svg>">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a0f1d">
@@ -23,6 +26,20 @@
 
   <!-- Immediate Fast Navigation Helpers (Zero Lag, Instant Click Handling) -->
   <script>
+    // Enforce 'هباب بلالم' across all tables and elements
+    document.addEventListener('DOMContentLoaded', function() {
+      function sanitizeContacts() {
+        document.querySelectorAll('table, div, p, span, a').forEach(function(el) {
+          if (el.children.length === 0 && el.textContent.includes('سامر بلالم')) {
+            el.textContent = el.textContent.replace(/سامر بلالم/g, 'هباب بلالم');
+          }
+        });
+      }
+      sanitizeContacts();
+      setTimeout(sanitizeContacts, 500);
+      setTimeout(sanitizeContacts, 1500);
+    });
+
     function scrollToSection(sectionId, ev) {
       if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
       if (window.naseejCustomer && typeof window.naseejCustomer.scrollToSection === 'function') {
