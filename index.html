@@ -763,6 +763,11 @@
               <!-- Injected via admin.js -->
             </div>
 
+            <!-- Week Capacity Full Alert Banner -->
+            <div id="admin-schedule-week-alert" style="display: none;">
+              <!-- Injected dynamically when week is full -->
+            </div>
+
             <!-- Weekly Columns Board (Saturday to Thursday - 6 Days) -->
             <div id="admin-weekly-schedule-board" class="weekly-schedule-board">
               <!-- Injected via admin.js -->
@@ -1734,6 +1739,9 @@
               <input type="date" id="walkin-schedule-date" class="form-control" required onchange="window.naseejAdmin.handleWalkinDateChange(this.value)">
               <div id="walkin-friday-warn" style="display: none; color: #b91c1c; font-size: 11.5px; margin-top: 4px; font-weight: bold;">
                 ⚠️ يوم الجمعة عطلة رسمية للورشة! يرجى اختيار يوم عمل من السبت إلى الخميس.
+              </div>
+              <div id="walkin-week2-notice" style="display: none; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; padding: 6px 10px; border-radius: 6px; font-size: 11.5px; margin-top: 6px; font-weight: 700;">
+                ℹ️ تم اختيار الموعد تلقائياً في <strong>الأسبوع الثاني</strong> نظراً لاكتمال طاقة أيام الأسبوع الأول بالكامل.
               </div>
             </div>
 

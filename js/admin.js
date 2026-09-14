@@ -381,7 +381,27 @@ class NaseejAdmin {
     const weekDates = store.getWeekDates(this.currentSaturdayDate);
     const start = weekDates[0];
     const end = weekDates[5];
-    label.innerHTML = `أسبوع العمل: <strong>${start.dayName} (${start.dayNum} ${start.monthName.split('/')[0].trim()})</strong> ➔ <strong>${end.dayName} (${end.dayNum} ${end.monthName.split('/')[0].trim()} ${this.currentScheduleYear})</strong>`;
+
+    const currentSat = store.getSaturdayOfWeek(new Date());
+    const dView = new Date(this.currentSaturdayDate);
+    dView.setHours(0, 0, 0, 0);
+    const dCur = new Date(currentSat);
+    dCur.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((dView.getTime() - dCur.getTime()) / (1000 * 60 * 60 * 24));
+
+    let weekBadge = '';
+    if (diffDays === 0) {
+      weekBadge = '<span class="badge" style="background:#e0f2fe; color:#0369a1; font-weight:800; font-size:11.5px; padding:3px 9px; border-radius:6px; margin-left:8px;">📌 الأسبوع الأول (الحالي)</span>';
+    } else if (diffDays === 7) {
+      weekBadge = '<span class="badge" style="background:#fef3c7; color:#92400e; font-weight:800; font-size:11.5px; padding:3px 9px; border-radius:6px; margin-left:8px;">⏩ الأسبوع الثاني (القادم)</span>';
+    } else if (diffDays > 7) {
+      const weekIndex = Math.floor(diffDays / 7) + 1;
+      weekBadge = `<span class="badge" style="background:#f3e8ff; color:#6b21a8; font-weight:800; font-size:11.5px; padding:3px 9px; border-radius:6px; margin-left:8px;">الأسبوع (${weekIndex})</span>`;
+    } else if (diffDays < 0) {
+      weekBadge = '<span class="badge" style="background:#f1f5f9; color:#64748b; font-weight:800; font-size:11.5px; padding:3px 9px; border-radius:6px; margin-left:8px;">أسبوع سابق</span>';
+    }
+
+    label.innerHTML = `${weekBadge} أسبوع العمل: <strong>${start.dayName} (${start.dayNum} ${start.monthName.split('/')[0].trim()})</strong> ➔ <strong>${end.dayName} (${end.dayNum} ${end.monthName.split('/')[0].trim()} ${this.currentScheduleYear})</strong>`;
 
     const monthSelect = document.getElementById('cal-month-select');
     if (monthSelect && monthSelect.value != start.monthNum) {
@@ -574,9 +594,13 @@ class NaseejAdmin {
   // Smart Auto-Balance Weekly Schedule
   autoBalanceSchedule() {
     const weekDates = store.getWeekDates(this.currentSaturdayDate);
-    const success = store.autoBalanceWeeklySchedule(weekDates);
-    if (success) {
-      window.naseejCustomer.showToast('✨ تم توزيع وضبط كميات الشغل والطلبيات بالتساوي على أيام الأسبوع المحدد بنجاح! ✓', 'success');
+    const result = store.autoBalanceWeeklySchedule(weekDates);
+    if (result && result.success) {
+      if (result.overflowCount > 0) {
+        window.naseejCustomer.showToast(`✨ تم ضبط العمل: اكتمل الأسبوع الأول، وتم ترحيل (${result.overflowCount}) طلبيات تلقائياً إلى الأسبوع الثاني! ✓`, 'info');
+      } else {
+        window.naseejCustomer.showToast('✨ تم توزيع وضبط كميات الشغل بالتساوي على أيام الأسبوع بنجاح! ✓', 'success');
+      }
       this.renderWeeklySchedule();
       this.renderOrdersTable();
       this.renderKPIs();
@@ -673,6 +697,36 @@ class NaseejAdmin {
       `;
     }
 
+    // Check if this entire week is 100% full
+    const isThisWeekFull = store.isWeekFull(weekDates);
+    const alertBox = document.getElementById('admin-schedule-week-alert');
+    if (alertBox) {
+      if (isThisWeekFull) {
+        alertBox.style.display = 'block';
+        alertBox.innerHTML = `
+          <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1.5px solid #f59e0b; border-radius: 8px; padding: 12px 18px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 14px; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 26px;">🔥</span>
+              <div>
+                <div style="font-weight: 800; font-size: 14px; color: #92400e;">
+                  تنبيه سعة الورشة: هذا الأسبوع ممتلئ بنسبة 100% (جميع أيام العمل محجوزة بالكامل)
+                </div>
+                <div style="font-size: 12.5px; color: #b45309; margin-top: 2px;">
+                  وصلت أيام هذا الأسبوع لكامل طاقتها التشغيلية. أي طلبيات جديدة يتم جدولتها آلياً ستنتقل تلقائياً ومباشرة إلى <strong>الأسبوع الثاني</strong>!
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-sm" onclick="window.naseejAdmin.navigateWeek(1)" style="background: #ffffff; color: #92400e; font-weight: 800; border: 1.5px solid #f59e0b; padding: 7px 16px; border-radius: 6px; cursor: pointer; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+              الانتقال لجدول الأسبوع التالي (2) ▶
+            </button>
+          </div>
+        `;
+      } else {
+        alertBox.style.display = 'none';
+        alertBox.innerHTML = '';
+      }
+    }
+
     // Render 6 Columns (Saturday to Thursday) with real calendar dates
     board.innerHTML = weekDates.map(dayObj => {
       const dayInfo = scheduleData[dayObj.dateStr] || { orders: [], totalOrders: 0, totalMeters: 0, status: 'free', statusLabel: 'شاغر', statusClass: 'day-free' };
@@ -704,9 +758,23 @@ class NaseejAdmin {
           ? `<span class="schedule-fulfillment-badge badge-pickup">🏪 استلام: ${order.pickupBranch || 'باب الساحة'}</span>`
           : `<span class="schedule-fulfillment-badge badge-delivery">🚚 توصيل: ${order.deliveryRegion || order.customer.city} (+${order.shippingFee} ₪)</span>`;
 
-        const otherDaysOptions = weekDates.map(d => `
-          <option value="${d.dateStr}" ${d.dateStr === dayObj.dateStr ? 'selected' : ''}>نقل لـ: ${d.dayName} (${d.dayNum}/${String(d.monthNum).padStart(2, '0')})</option>
+        const nextSatDate = new Date(dayObj.dateObj);
+        nextSatDate.setDate(nextSatDate.getDate() + 7);
+        const nextWeekDates = store.getWeekDates(nextSatDate);
+
+        const currentWeekOpts = weekDates.map(d => `
+          <option value="${d.dateStr}" ${d.dateStr === dayObj.dateStr ? 'selected' : ''}>
+            ${d.dateStr === dayObj.dateStr ? `📅 مسجل: ${d.dayName} (${d.dayNum}/${String(d.monthNum).padStart(2, '0')})` : `نقل لـ: ${d.dayName} (${d.dayNum}/${String(d.monthNum).padStart(2, '0')})`}
+          </option>
         `).join('');
+
+        const nextWeekOpts = nextWeekDates.map(d => `
+          <option value="${d.dateStr}">
+            ⏩ نقل للأسبوع 2: ${d.dayName} (${d.dayNum}/${String(d.monthNum).padStart(2, '0')})
+          </option>
+        `).join('');
+
+        const otherDaysOptions = `<optgroup label="أيام هذا الأسبوع">${currentWeekOpts}</optgroup><optgroup label="أيام الأسبوع التالي (2)">${nextWeekOpts}</optgroup>`;
 
         return `
           <div class="schedule-order-card" draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${order.id}')">
@@ -1149,14 +1217,9 @@ class NaseejAdmin {
     const installFeeInput = document.getElementById('walkin-install-fee');
     if (installFeeInput) installFeeInput.value = 0;
 
-    // Reset date fields to today or next workday
-    const today = new Date();
-    let defaultScheduleDate = store.formatDateISO(today);
-    if (today.getDay() === 5) {
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
-      defaultScheduleDate = store.formatDateISO(tomorrow);
-    }
+    // Reset date fields using smart slot finder: if Week 1 is full, default automatically to Week 2!
+    const slot = store.getNextAvailableSlot(8);
+    const defaultScheduleDate = slot.dateStr;
     const scheduleDateInput = document.getElementById('walkin-schedule-date');
     if (scheduleDateInput) {
       scheduleDateInput.value = defaultScheduleDate;
@@ -1380,7 +1443,20 @@ class NaseejAdmin {
     const isFriday = d.getDay() === 5;
     const badge = document.getElementById('walkin-schedule-day-badge');
     const warn = document.getElementById('walkin-friday-warn');
-    if (badge) badge.textContent = `يوم ${dayName}`;
+    const noticeWeek2 = document.getElementById('walkin-week2-notice');
+
+    if (badge) {
+      const currentSat = store.getSaturdayOfWeek(new Date());
+      const nextSat = new Date(currentSat);
+      nextSat.setDate(nextSat.getDate() + 7);
+      const isNextWeek = d >= nextSat;
+      const weekLabel = isNextWeek ? '<span style="background: #fef3c7; color: #92400e; padding: 2px 7px; border-radius: 4px; font-size: 11px; margin-right: 6px; font-weight: 800;">⏩ الأسبوع الثاني</span>' : '<span style="background: #e0f2fe; color: #0369a1; padding: 2px 7px; border-radius: 4px; font-size: 11px; margin-right: 6px; font-weight: 800;">📌 الأسبوع الأول</span>';
+      badge.innerHTML = `يوم ${dayName} ${weekLabel}`;
+
+      if (noticeWeek2) {
+        noticeWeek2.style.display = isNextWeek ? 'block' : 'none';
+      }
+    }
     if (warn) warn.style.display = isFriday ? 'block' : 'none';
   }
 

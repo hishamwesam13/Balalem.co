@@ -366,16 +366,15 @@ class NaseejStore {
     
     let scheduledDate = orderData.scheduledDate;
     let scheduledDay = orderData.scheduledDay;
-    if (!scheduledDate) {
-      if (orderData.date) {
-        scheduledDate = orderData.date.substring(0, 10);
-      } else {
-        scheduledDate = this.formatDateISO(new Date());
-      }
-    }
-    if (!scheduledDay) {
-      const d = new Date(scheduledDate);
-      scheduledDay = this.getDayNameFromDate(d) || this.getNextAvailableWorkDay();
+    
+    // If date or day is not explicitly provided (e.g. online orders or unassigned walk-in),
+    // allocate to the next available production slot.
+    // If Week 1 is full, it immediately rolls over to Week 2!
+    if (!scheduledDate || !scheduledDay) {
+      const orderMeters = Number(orderData.totalMeters) || 0;
+      const slot = this.getNextAvailableSlot(orderMeters);
+      if (!scheduledDate) scheduledDate = slot.dateStr;
+      if (!scheduledDay) scheduledDay = slot.dayName;
     }
 
     const requiresInstallation = Boolean(orderData.requiresInstallation);
@@ -711,28 +710,77 @@ class NaseejStore {
     return ezzCount <= tech3Count ? 'ezz' : 'tech3';
   }
 
-  getNextAvailableWorkDay() {
-    const days = this.getWorkDays();
-    const orders = this.getOrders().filter(o => o.orderStatus !== 'cancelled' && o.orderStatus !== 'delivered');
-    
-    const dayMeters = {};
-    days.forEach(d => dayMeters[d] = 0);
-    orders.forEach(o => {
-      const day = o.scheduledDay || 'السبت';
-      if (dayMeters[day] !== undefined) {
-        dayMeters[day] += (o.totalMeters || 0);
-      }
-    });
+  isDayFull(totalMeters, totalOrders) {
+    return (Number(totalMeters) >= 40) || (Number(totalOrders) >= 3);
+  }
 
-    let minDay = days[0];
-    let minMeters = Infinity;
-    days.forEach(d => {
-      if (dayMeters[d] < minMeters) {
-        minMeters = dayMeters[d];
-        minDay = d;
-      }
+  isWeekFull(weekDates) {
+    if (!weekDates || weekDates.length === 0) return false;
+    const scheduleData = this.getWeeklyScheduleData(weekDates);
+    return weekDates.every(d => {
+      const day = scheduleData[d.dateStr];
+      return day && (day.status === 'full' || day.totalMeters >= 40 || day.totalOrders >= 3);
     });
-    return minDay;
+  }
+
+  // Smart slot allocator: finds the next open day for tailoring.
+  // If all days in the first/current week are full, it immediately rolls over to the second week!
+  getNextAvailableSlot(orderMeters = 0, fromDate = new Date()) {
+    const todayStr = this.formatDateISO(new Date());
+    let currentSaturday = this.getSaturdayOfWeek(fromDate);
+    const maxWeeksToCheck = 8;
+
+    for (let w = 0; w < maxWeeksToCheck; w++) {
+      const weekDates = this.getWeekDates(currentSaturday);
+      const scheduleData = this.getWeeklyScheduleData(weekDates);
+
+      // Check available days in this week (Saturday to Thursday)
+      for (let i = 0; i < weekDates.length; i++) {
+        const day = weekDates[i];
+        // Don't assign to days in the past
+        if (day.dateStr < todayStr) continue;
+
+        const dayInfo = scheduleData[day.dateStr] || { totalOrders: 0, totalMeters: 0 };
+        const prospectiveMeters = dayInfo.totalMeters + (orderMeters || 0);
+        const prospectiveOrders = dayInfo.totalOrders + 1;
+
+        // Day is available if prospective meters <= 40 and prospective orders <= 3 (or day has 0 orders)
+        if ((prospectiveOrders <= 3 && prospectiveMeters <= 40) || dayInfo.totalOrders === 0) {
+          return {
+            dateStr: day.dateStr,
+            dayName: day.dayName,
+            weekNumber: w + 1, // 1 = First week, 2 = Second week, etc.
+            isWeekRollover: w > 0,
+            formattedDisplay: day.formattedDisplay,
+            saturdayDate: new Date(currentSaturday),
+            reason: w > 0 ? `تم التحويل تلقائياً للأسبوع ${w + 1} نظراً لامتلاء الأسبوع الأول` : 'ضمن الأسبوع الأول'
+          };
+        }
+      }
+
+      // If week w is completely full or passed, advance immediately to next week!
+      currentSaturday = new Date(currentSaturday);
+      currentSaturday.setDate(currentSaturday.getDate() + 7);
+    }
+
+    // Fallback if all weeks full: assign to next week's Saturday
+    const fallbackSat = new Date(this.getSaturdayOfWeek(new Date()));
+    fallbackSat.setDate(fallbackSat.getDate() + 7);
+    const fallbackDays = this.getWeekDates(fallbackSat);
+    return {
+      dateStr: fallbackDays[0].dateStr,
+      dayName: fallbackDays[0].dayName,
+      weekNumber: 2,
+      isWeekRollover: true,
+      formattedDisplay: fallbackDays[0].formattedDisplay,
+      saturdayDate: fallbackSat,
+      reason: 'تم التحويل للأسبوع الثاني'
+    };
+  }
+
+  getNextAvailableWorkDay() {
+    const slot = this.getNextAvailableSlot(0);
+    return slot.dayName;
   }
 
   assignOrderDay(orderId, dateOrDayName, dayName) {
@@ -763,35 +811,64 @@ class NaseejStore {
       const sat = this.getSaturdayOfWeek(new Date());
       weekDates = this.getWeekDates(sat);
     }
+    const nextSat = new Date(weekDates[0].dateObj);
+    nextSat.setDate(nextSat.getDate() + 7);
+    const week2Dates = this.getWeekDates(nextSat);
+
     const orders = this.getOrders();
     const activeOrders = orders.filter(o => o.orderStatus !== 'cancelled' && o.orderStatus !== 'delivered');
 
-    if (activeOrders.length === 0) return false;
+    if (activeOrders.length === 0) return { success: false, overflowCount: 0 };
 
     // Sort by largest meter size first to perform balanced bin packing
     activeOrders.sort((a, b) => (b.totalMeters || 0) - (a.totalMeters || 0));
 
-    // Track total meters and count per day in this week
-    const dayTotals = weekDates.map(w => ({ 
+    // Track total meters and count per day in Week 1 and Week 2
+    const week1Days = weekDates.map(w => ({ 
       dateStr: w.dateStr, 
       dayName: w.dayName, 
       meters: 0, 
-      count: 0 
+      count: 0,
+      weekNum: 1
     }));
 
+    const week2Days = week2Dates.map(w => ({
+      dateStr: w.dateStr,
+      dayName: w.dayName,
+      meters: 0,
+      count: 0,
+      weekNum: 2
+    }));
+
+    let overflowCount = 0;
+
     activeOrders.forEach(order => {
-      dayTotals.sort((a, b) => a.meters - b.meters || a.count - b.count);
-      const targetDay = dayTotals[0];
-      
-      order.scheduledDate = targetDay.dateStr;
-      order.scheduledDay = targetDay.dayName;
-      targetDay.meters += (order.totalMeters || 0);
-      targetDay.count += 1;
+      const m = order.totalMeters || 0;
+      // Prefer Week 1 if it has room (under 40m and under 3 orders)
+      const availableInWeek1 = week1Days.filter(d => (d.meters + m <= 40) && d.count < 3);
+
+      if (availableInWeek1.length > 0) {
+        availableInWeek1.sort((a, b) => a.meters - b.meters || a.count - b.count);
+        const targetDay = availableInWeek1[0];
+        order.scheduledDate = targetDay.dateStr;
+        order.scheduledDay = targetDay.dayName;
+        targetDay.meters += m;
+        targetDay.count += 1;
+      } else {
+        // Week 1 is completely full! Automatically roll over to Week 2!
+        week2Days.sort((a, b) => a.meters - b.meters || a.count - b.count);
+        const targetDay = week2Days[0];
+        order.scheduledDate = targetDay.dateStr;
+        order.scheduledDay = targetDay.dayName;
+        targetDay.meters += m;
+        targetDay.count += 1;
+        overflowCount++;
+      }
     });
 
     localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
-    window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: { action: 'balanced' } }));
-    return true;
+    window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: { action: 'balanced', overflowCount } }));
+    return { success: true, overflowCount };
   }
 
   getWeeklyScheduleData(weekDates) {
