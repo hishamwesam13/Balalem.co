@@ -33,6 +33,10 @@ class NaseejAdmin {
     this.initCalendarControls();
     this.renderAll();
     window.addEventListener('naseej:products_updated', () => this.renderProductsTable());
+    window.addEventListener('naseej:categories_updated', () => {
+      this.renderCategoriesTable();
+      this.populateCategorySelect();
+    });
     window.addEventListener('naseej:orders_updated', () => {
       this.renderOrdersTable();
       this.renderWeeklySchedule();
@@ -49,6 +53,8 @@ class NaseejAdmin {
     this.renderWeeklySchedule();
     this.renderInstallationSchedule();
     this.renderCustomersTable();
+    this.renderCategoriesTable();
+    this.populateCategorySelect();
   }
 
   renderKPIs() {
@@ -96,6 +102,7 @@ class NaseejAdmin {
       this.renderInstallationSchedule();
     }
     if (tabName === 'customers') this.renderCustomersTable();
+    if (tabName === 'categories') this.renderCategoriesTable();
   }
 
   // Render Admin Products Table
@@ -687,7 +694,7 @@ class NaseejAdmin {
             </div>
             <div class="schedule-phone-sub" style="display: flex; justify-content: space-between; align-items: center;">
               <span>📱 <a href="tel:${order.customer.phone}" style="color: inherit; text-decoration: none;">${order.customer.phone}</a></span>
-              <a href="https://wa.me/970${(order.customer.phone || '').replace(/\D/g, '').replace(/^0+/, '')}" target="_blank" rel="noopener noreferrer" class="schedule-wa-btn" title="مراسلة واتساب فورية">
+              <a href="https://wa.me/972${(order.customer.phone || '').replace(/\D/g, '').replace(/^0+/, '')}?text=${encodeURIComponent(`السلام عليكم ${order.customer.name || ''}، معك إدارة شركة الولاء للستائر Balalem co بخصوص طلبيتكم رقم (${order.id || ''})`)}" target="_blank" rel="noopener noreferrer" class="schedule-wa-btn" title="مراسلة واتساب فورية">
                 💬 واتساب
               </a>
             </div>
@@ -987,7 +994,7 @@ class NaseejAdmin {
             </div>
             <div class="schedule-phone-sub" style="display: flex; justify-content: space-between; align-items: center;">
               <span>📱 <a href="tel:${order.customer.phone}" style="color: inherit; text-decoration: none;">${order.customer.phone}</a></span>
-              <a href="https://wa.me/970${(order.customer.phone || '').replace(/\D/g, '').replace(/^0+/, '')}" target="_blank" rel="noopener noreferrer" class="schedule-wa-btn" title="مراسلة واتساب فورية">
+              <a href="https://wa.me/972${(order.customer.phone || '').replace(/\D/g, '').replace(/^0+/, '')}?text=${encodeURIComponent(`السلام عليكم ${order.customer.name || ''}، معك إدارة شركة الولاء للستائر Balalem co بخصوص موعد تركيب الستائر لطلبيتكم (${order.id || ''})`)}" target="_blank" rel="noopener noreferrer" class="schedule-wa-btn" title="مراسلة واتساب فورية">
                 💬 واتساب
               </a>
             </div>
@@ -1820,6 +1827,7 @@ class NaseejAdmin {
   // Open "Add Product" Modal (تزويد منتج جديد)
   openAddProductModal() {
     this.editingProductId = null;
+    this.populateCategorySelect();
     const titleEl = document.getElementById('admin-product-modal-title');
     if (titleEl) titleEl.textContent = 'تزويد قماش ستائر جديد للمتجر';
     const formEl = document.getElementById('admin-product-form');
@@ -1849,6 +1857,7 @@ class NaseejAdmin {
     if (!product) return;
 
     this.editingProductId = productId;
+    this.populateCategorySelect();
     document.getElementById('admin-product-modal-title').textContent = `تعديل قماش (${product.name})`;
     document.getElementById('prod-form-id').value = product.id;
     document.getElementById('prod-name').value = product.name;
@@ -1928,6 +1937,10 @@ class NaseejAdmin {
       tarsoon: 'ستائر الترسون (بالمتر المربع)'
     };
 
+    const allCats = store.getCategories();
+    const foundCat = allCats.find(c => c.id === category);
+    const categoryName = foundCat ? foundCat.name : (categoryNames[category] || 'أقمشة ستائر ومفروشات');
+
     // Parse colors string e.g. "بيج:#d2b48c, أبيض:#ffffff"
     let parsedColors = [];
     if (colorsInput) {
@@ -1946,7 +1959,7 @@ class NaseejAdmin {
     const productPayload = {
       name,
       category,
-      categoryName: categoryNames[category] || 'أقمشة ستائر',
+      categoryName: categoryName,
       pricePerMeter,
       rollWidth,
       stockMeters,
@@ -1989,6 +2002,100 @@ class NaseejAdmin {
         document.getElementById('prod-image-preview').src = e.target.result;
       };
       reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  // --- Category & Bubbles Management (إدارة التصنيفات والفقاعات) ---
+  renderCategoriesTable() {
+    const tbody = document.getElementById('admin-categories-tbody');
+    if (!tbody) return;
+
+    const categories = store.getCategories();
+    const products = store.getProducts();
+
+    if (categories.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding: 30px; color: #64748b;">لا توجد تصنيفات مضافة حالياً.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = categories.map(cat => {
+      const isAll = cat.id === 'all';
+      const count = isAll ? products.length : products.filter(p => p.category === cat.id).length;
+      const isDefault = cat.isDefault || isAll;
+      const typeBadge = isDefault
+        ? `<span class="badge" style="background: #e2e8f0; color: #475569; font-size: 11px;">أساسي بالنظام</span>`
+        : `<span class="badge badge-gold" style="font-size: 11px;">✨ مخصص مضاف</span>`;
+      
+      const deleteBtn = isDefault
+        ? `<button type="button" class="btn btn-sm" disabled style="opacity: 0.4; cursor: not-allowed;" title="التصنيفات الافتراضية محمية من الحذف">🔒 أساسي</button>`
+        : `<button type="button" class="btn btn-danger btn-sm" onclick="window.naseejAdmin.deleteCategory('${cat.id}', '${cat.name.replace(/'/g, "\\'")}')" title="حذف هذا التصنيف">🗑️ حذف</button>`;
+
+      return `
+        <tr>
+          <td style="text-align: center; font-size: 20px;">${cat.icon || '🏷️'}</td>
+          <td><strong>${cat.name}</strong></td>
+          <td><code style="font-size: 12px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #0284c7;">${cat.id}</code></td>
+          <td><span class="badge" style="background: rgba(212, 175, 55, 0.15); color: #856404; font-weight: 700;">${count} صنف</span></td>
+          <td>${typeBadge}</td>
+          <td style="text-align: center;">${deleteBtn}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  handleAddCategorySubmit(event) {
+    if (event) event.preventDefault();
+    const nameInput = document.getElementById('new-cat-name');
+    const iconInput = document.getElementById('new-cat-icon');
+    if (!nameInput) return;
+
+    const name = nameInput.value.trim();
+    const icon = iconInput ? iconInput.value.trim() : '🏷️';
+
+    if (!name) {
+      if (window.naseejCustomer) window.naseejCustomer.showToast('يرجى إدخال اسم التصنيف الجديد', 'error');
+      return;
+    }
+
+    const newCat = store.addCategory({ name, icon });
+    if (newCat) {
+      if (window.naseejCustomer) {
+        window.naseejCustomer.showToast(`✨ تم بنجاح إضافة تصنيف (${name}) لفقاعات المتجر!`, 'success');
+      }
+      nameInput.value = '';
+      if (iconInput) iconInput.value = '🏷️';
+      this.renderCategoriesTable();
+      this.populateCategorySelect();
+    }
+  }
+
+  deleteCategory(categoryId, categoryName) {
+    if (!categoryId || categoryId === 'all') return;
+    if (confirm(`هل أنت متأكد من حذف تصنيف (${categoryName || categoryId}) من فقاعات المتجر؟`)) {
+      const ok = store.deleteCategory(categoryId);
+      if (ok) {
+        if (window.naseejCustomer) {
+          window.naseejCustomer.showToast(`تم حذف التصنيف بنجاح`, 'info');
+        }
+        this.renderCategoriesTable();
+        this.populateCategorySelect();
+      }
+    }
+  }
+
+  populateCategorySelect() {
+    const select = document.getElementById('prod-category');
+    if (!select) return;
+
+    const currentVal = select.value;
+    const categories = store.getCategories().filter(c => c.id !== 'all');
+
+    select.innerHTML = categories.map(c => `
+      <option value="${c.id}">${c.icon ? c.icon + ' ' : ''}${c.name}</option>
+    `).join('');
+
+    if (currentVal && categories.some(c => c.id === currentVal)) {
+      select.value = currentVal;
     }
   }
 }

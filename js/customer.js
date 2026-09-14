@@ -21,6 +21,11 @@ class NaseejCustomer {
       selectedColor: null,
       hangingStyle: 'تفصيل وخياطة جاهزة للتركيب'
     };
+
+    // Auto update storefront category bubbles when admin updates categories
+    window.addEventListener('naseej:categories_updated', () => {
+      this.renderCategoryTabs();
+    });
   }
 
   loadCart() {
@@ -845,8 +850,8 @@ class NaseejCustomer {
       return;
     }
 
-    if (!email || !email.includes('@')) {
-      this.showToast('يرجى إدخال بريد إلكتروني صحيح', 'error');
+    if (email && !email.includes('@')) {
+      this.showToast('يرجى إدخال بريد إلكتروني صحيح أو ترك الحقل فارغاً', 'error');
       emailInput.focus();
       return;
     }
@@ -877,12 +882,6 @@ class NaseejCustomer {
       }
     }
 
-    // Auto-login customer with Phone and Email if not yet authenticated
-    let user = auth.getCurrentUser();
-    if (!user || user.phone !== phone) {
-      user = auth.loginCustomer({ name, phone, email, city });
-    }
-
     const installCheckbox = document.getElementById('checkout-install-toggle');
     const requiresInstallation = installCheckbox ? installCheckbox.checked : false;
 
@@ -894,11 +893,32 @@ class NaseejCustomer {
     const totalMeters = Math.round(this.cart.reduce((sum, item) => sum + item.meters, 0) * 10) / 10;
     const grandTotal = subtotal + shippingFee;
 
+    // Loyalty Points: 50 points per 100 ₪
+    const pointsEarned = Math.floor((grandTotal / 100) * 50);
+
+    // If customer is logged in, credit points to account
+    let user = auth.getCurrentUser();
+    if (user && user.role === 'customer') {
+      try {
+        const users = auth.getRegisteredUsers();
+        const found = users.find(u => u.id === user.userId || u.phone === user.phone);
+        if (found) {
+          found.points = (found.points || 0) + pointsEarned;
+          auth.saveRegisteredUsers(users);
+          user.points = found.points;
+          auth.saveSession(user);
+          this.updateUserUI();
+        }
+      } catch (err) {
+        console.warn('Could not update loyalty points:', err);
+      }
+    }
+
     const orderData = {
       customer: {
-        name: name || user.name,
+        name: name || (user ? user.name : 'عميل زائر'),
         phone: phone,
-        email: email,
+        email: email || '',
         city: city,
         address: address,
         notes: notes
@@ -909,6 +929,7 @@ class NaseejCustomer {
       requiresInstallation: requiresInstallation,
       installationFee: installationFee,
       source: 'online',
+      loyaltyPoints: pointsEarned,
       items: this.cart.map(item => ({
         productId: item.productId,
         productName: item.productName,
@@ -945,7 +966,7 @@ class NaseejCustomer {
     document.getElementById('success-order-id').textContent = order.id;
     document.getElementById('success-customer-name').textContent = order.customer.name;
     document.getElementById('success-customer-phone').textContent = order.customer.phone;
-    document.getElementById('success-customer-email').textContent = order.customer.email;
+    document.getElementById('success-customer-email').textContent = order.customer.email || 'طلب كزائر (بدون إيميل)';
 
     const fulfillmentEl = document.getElementById('success-order-fulfillment');
     if (fulfillmentEl) {
@@ -960,6 +981,11 @@ class NaseejCustomer {
 
     document.getElementById('success-order-meters').textContent = `${order.totalMeters} متر`;
     document.getElementById('success-order-total').textContent = `${order.grandTotal.toLocaleString()} شيكل`;
+
+    const pointsEl = document.getElementById('success-loyalty-points');
+    if (pointsEl) {
+      pointsEl.textContent = `+${order.loyaltyPoints || 0} نقطة ولاء`;
+    }
 
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -1337,14 +1363,16 @@ class NaseejCustomer {
       }
     } else {
       // Customer
+      const userPoints = user.points || 0;
       if (userBtn) {
         userBtn.classList.add('is-logged-in');
         userBtn.classList.remove('is-admin');
       }
       if (userNameEl) userNameEl.textContent = user.name.split(' ')[0] || user.name;
       if (userRoleBadge) {
-        userRoleBadge.textContent = '🛍️ عميل موثوق';
+        userRoleBadge.textContent = `🎁 ${userPoints} نقطة`;
         userRoleBadge.className = 'role-badge-customer';
+        userRoleBadge.style.display = 'inline-flex';
       }
       if (dropdownBody) {
         dropdownBody.innerHTML = `
@@ -1353,7 +1381,11 @@ class NaseejCustomer {
             <div class="user-info">
               <strong>${user.name}</strong>
               <div class="role-pill-teal">🛍️ عميل موثوق (${user.city || 'فلسطين'})</div>
-              <span class="user-email-meta">${user.phone}</span>
+              <div style="margin-top: 6px; font-size: 12.5px; background: rgba(212, 175, 55, 0.15); color: #856404; font-weight: 700; border-radius: 6px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 5px;">
+                <span>🎁 رصيد نقاط الولاء:</span>
+                <strong style="color: #b45309;">${userPoints.toLocaleString()} نقطة</strong>
+              </div>
+              <span class="user-email-meta" style="margin-top: 4px;">${user.phone}</span>
             </div>
           </div>
           <div class="account-menu-actions">
@@ -1367,6 +1399,25 @@ class NaseejCustomer {
         `;
       }
     }
+  }
+
+  // Render dynamic category tabs / filter bubbles from store
+  renderCategoryTabs() {
+    const container = document.querySelector('.category-tabs-nav');
+    if (!container) return;
+
+    const categories = store.getCategories();
+    container.innerHTML = categories.map(cat => {
+      const isActive = this.currentCategory === cat.id;
+      const isTarsoon = cat.id === 'tarsoon';
+      const specialStyle = isTarsoon ? 'border-color: var(--gold-primary); color: #92400e; font-weight: 700;' : '';
+      const iconSpan = cat.icon ? `<span class="cat-pill-icon" style="margin-left: 5px;">${cat.icon}</span>` : '';
+      return `
+        <button class="category-tab-btn ${isActive ? 'active' : ''}" data-category="${cat.id}" onclick="window.naseejCustomer.filterCategory('${cat.id}', this)" style="${specialStyle}">
+          ${iconSpan}${cat.name}
+        </button>
+      `;
+    }).join('');
   }
 
   filterCategory(category, targetElement) {
@@ -1383,10 +1434,7 @@ class NaseejCustomer {
     this.searchQuery = '';
     const searchInput = document.getElementById('catalog-search-input');
     if (searchInput) searchInput.value = '';
-    document.querySelectorAll('.category-tab-btn').forEach(btn => {
-      if (btn.dataset.category === 'all') btn.classList.add('active');
-      else btn.classList.remove('active');
-    });
+    this.renderCategoryTabs();
     this.renderCatalog();
   }
 }

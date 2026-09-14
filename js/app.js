@@ -22,6 +22,7 @@ class NaseejApp {
     console.log('Initializing Balalem Co Luxury Curtain Fabrics Platform...');
 
     // Render Initial Catalog & UI
+    customer.renderCategoryTabs();
     customer.renderCatalog();
     customer.updateCartBadges();
     customer.updateUserUI();
@@ -80,6 +81,7 @@ class NaseejApp {
       if (storeSection) storeSection.style.display = 'block';
       if (adminSection) adminSection.style.display = 'none';
 
+      customer.renderCategoryTabs();
       customer.renderCatalog();
       customer.updateUserUI();
       window.scrollTo({ top: 0, behavior: 'smooth' });

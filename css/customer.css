@@ -75,11 +75,36 @@
   font-size: 13.5px;
   font-weight: 500;
   color: #f1f5f9;
+  transition: all 0.25s ease;
+}
+
+.hero-feature-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(212, 175, 55, 0.4);
+  transform: translateY(-2px);
 }
 
 .hero-feature-item span.icon {
   color: var(--gold-primary);
   font-size: 18px;
+}
+
+.feature-svg-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold-primary, #d4af37);
+  flex-shrink: 0;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.hero-feature-item:hover .feature-svg-wrap {
+  transform: scale(1.1);
+  background: rgba(212, 175, 55, 0.3);
 }
 
 /* Catalog Filter & Search Toolbar */
@@ -2243,3 +2268,51 @@
     font-size: 20px;
   }
 }
+
+/* ========================================================================= */
+/* ULTRA-RESPONSIVE POLISH FOR SMARTPHONES (max-width: 768px & 480px)       */
+/* ========================================================================= */
+@media (max-width: 768px) {
+  .category-tabs-nav {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+  }
+  .category-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  .feature-svg-wrap {
+    width: 28px;
+    height: 28px;
+  }
+  .feature-svg-wrap svg {
+    width: 17px;
+    height: 17px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-features-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .hero-feature-item {
+    padding: 10px 14px;
+    font-size: 12.5px;
+    justify-content: flex-start;
+  }
+  .products-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .fabric-card-media {
+    height: 200px;
+  }
+}
+

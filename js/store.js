@@ -8,8 +8,20 @@ const STORAGE_KEYS = {
   ORDERS: 'naseej_fabrics_orders',
   CURRENT_USER: 'naseej_current_user',
   CUSTOMERS: 'naseej_customers',
-  CART: 'naseej_cart'
+  CART: 'naseej_cart',
+  CATEGORIES: 'naseej_categories'
 };
+
+// Initial Store Categories & Filter Bubbles (الفقاعات)
+const INITIAL_CATEGORIES = [
+  { id: 'all', name: 'كافة أقمشة الستائر', icon: '🪟', isDefault: true },
+  { id: 'crepe', name: 'كريب ستائر مسدل', icon: '✨', isDefault: true },
+  { id: 'linen', name: 'كتان طبيعي راقي', icon: '🌾', isDefault: true },
+  { id: 'tulle', name: 'تول وشيفون فوال', icon: '🪡', isDefault: true },
+  { id: 'velvet', name: 'مخمل وبلاك آوت', icon: '👑', isDefault: true },
+  { id: 'brocade', name: 'بروكار وجاكار كلاسيك', icon: '🏛️', isDefault: true },
+  { id: 'tarsoon', name: 'ستائر الترسون (بالمتر المربع)', icon: '📐', isDefault: true }
+];
 
 // Initial Seed Data: Premium Curtain & Drapery Fabrics
 const INITIAL_PRODUCTS = [
@@ -807,6 +819,7 @@ class NaseejStore {
       shippingFee: shippingFee,
       discount: discount,
       grandTotal: grandTotal,
+      loyaltyPoints: orderData.loyaltyPoints !== undefined ? orderData.loyaltyPoints : Math.floor((grandTotal / 100) * 50),
       paymentMethod: orderData.paymentMethod || 'الدفع عند الاستلام',
       paymentStatus: orderData.paymentMethod === 'الدفع عند الاستلام' 
         ? (orderData.deliveryType === 'pickup' ? 'عند الاستلام في الفرع' : 'عند الاستلام')
@@ -1211,6 +1224,13 @@ class NaseejStore {
 
     weekDates.forEach(d => {
       const item = schedule[d.dateStr];
+      // Sort orders chronologically from oldest to newest (من الأقدم إلى الأحدث - من وصى قبل يظهر أولاً)
+      item.orders.sort((a, b) => {
+        const timeA = new Date(a.createdAt || a.date || 0).getTime();
+        const timeB = new Date(b.createdAt || b.date || 0).getTime();
+        return timeA - timeB;
+      });
+
       item.totalMeters = Math.round(item.totalMeters * 10) / 10;
       if (item.totalOrders === 0) {
         item.status = 'free';
@@ -1370,6 +1390,17 @@ class NaseejStore {
       }
     });
 
+    weekDates.forEach(d => {
+      if (schedule[d.dateStr] && schedule[d.dateStr].orders) {
+        // Sort orders chronologically from oldest to newest (FIFO)
+        schedule[d.dateStr].orders.sort((a, b) => {
+          const timeA = new Date(a.createdAt || a.date || 0).getTime();
+          const timeB = new Date(b.createdAt || b.date || 0).getTime();
+          return timeA - timeB;
+        });
+      }
+    });
+
     return schedule;
   }
 
@@ -1403,6 +1434,49 @@ class NaseejStore {
 
     localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
     return customerInfo;
+  }
+
+  // --- Category / Bubbles Management (إدارة التصنيفات والفقاعات للمتجر) ---
+  getCategories() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(INITIAL_CATEGORIES));
+      return INITIAL_CATEGORIES;
+    } catch (e) {
+      return INITIAL_CATEGORIES;
+    }
+  }
+
+  addCategory({ name, icon = '🏷️' }) {
+    if (!name || !name.trim()) return null;
+    const categories = this.getCategories();
+    const cleanName = name.trim();
+    // Generate clean unique ID
+    const cleanId = 'cat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 5);
+    const newCat = {
+      id: cleanId,
+      name: cleanName,
+      icon: (icon || '🏷️').trim(),
+      isCustom: true,
+      createdAt: new Date().toISOString()
+    };
+    categories.push(newCat);
+    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+    window.dispatchEvent(new CustomEvent('naseej:categories_updated', { detail: newCat }));
+    return newCat;
+  }
+
+  deleteCategory(categoryId) {
+    if (!categoryId || categoryId === 'all') return false;
+    let categories = this.getCategories();
+    categories = categories.filter(c => c.id !== categoryId);
+    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+    window.dispatchEvent(new CustomEvent('naseej:categories_updated', { detail: { id: categoryId } }));
+    return true;
   }
 
   // --- Statistics for Admin ---
