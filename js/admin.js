@@ -1391,11 +1391,13 @@ class NaseejAdmin {
     const deliveryType = document.getElementById('walkin-delivery-type')?.value || 'pickup_babsaha';
     const installToggle = document.getElementById('walkin-install-toggle')?.checked || false;
 
-    // Delivery fee is determined by selected delivery type (West Bank 20, Jerusalem 45, Interior 80, Pickup 0)
+    // When installation is requested: road delivery fee is 0 (free with technician) while installation fee is added
     let deliveryFee = 0;
-    if (deliveryType === 'delivery_wb') deliveryFee = 20;
-    else if (deliveryType === 'delivery_jer') deliveryFee = 45;
-    else if (deliveryType === 'delivery_48') deliveryFee = 80;
+    if (!installToggle) {
+      if (deliveryType === 'delivery_wb') deliveryFee = 20;
+      else if (deliveryType === 'delivery_jer') deliveryFee = 45;
+      else if (deliveryType === 'delivery_48') deliveryFee = 80;
+    }
 
     const installFeeInput = document.getElementById('walkin-install-fee');
     const installFee = installToggle ? (parseFloat(installFeeInput?.value) || 0) : 0;
@@ -1412,14 +1414,14 @@ class NaseejAdmin {
         `إجمالي الأمتار: <strong>${totalMeters} متر</strong>`,
         `مجموع الأقمشة: <strong>${fabricsSubtotal.toLocaleString()} ₪</strong>`
       ];
-      if (deliveryFee > 0) {
+      if (installToggle) {
+        parts.push(`أجور الطريق: مجاناً (0 ₪ مع الفني)`);
+        if (installFee > 0) parts.push(`أجور التركيب: +${installFee} ₪`);
+        else parts.push(`أجور التركيب: متراوحة`);
+      } else if (deliveryFee > 0) {
         parts.push(`أجور التوصيل: +${deliveryFee} ₪`);
       } else {
         parts.push(`استلام من الفرع: مجاني (0 ₪)`);
-      }
-      if (installToggle) {
-        if (installFee > 0) parts.push(`أجور التركيب: +${installFee} ₪`);
-        else parts.push(`أجور التركيب: متراوحة`);
       }
       breakdownEl.innerHTML = parts.join(' | ');
     }
@@ -1489,8 +1491,8 @@ class NaseejAdmin {
       baseShippingFee = 80;
     }
 
-    // Shipping fee applies based on delivery region or branch pickup
-    const shippingFee = baseShippingFee;
+    // When installation is requested: road delivery fee is 0 ₪, installation fee is added
+    const shippingFee = installToggle ? 0 : baseShippingFee;
     const installFeeInput = document.getElementById('walkin-install-fee');
     const installFee = installToggle ? (parseFloat(installFeeInput?.value) || 0) : 0;
 

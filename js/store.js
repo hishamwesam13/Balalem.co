@@ -284,7 +284,7 @@ const INITIAL_ORDERS = [
     deliveryType: 'delivery',
     deliveryRegion: 'الضفة الغربية',
     pickupBranch: '',
-    shippingFee: 20,
+    shippingFee: 0,
     requiresInstallation: true,
     installationFee: 100,
     installationDay: 'الأحد',
@@ -316,7 +316,7 @@ const INITIAL_ORDERS = [
     totalMeters: 28,
     subtotal: 1582,
     discount: 0,
-    grandTotal: 1702,
+    grandTotal: 1682,
     paymentMethod: 'الدفع عند الاستلام',
     paymentStatus: 'عند الاستلام',
     orderStatus: 'in_tailoring', // pending, in_tailoring, ready, shipped, delivered
@@ -453,7 +453,7 @@ const INITIAL_ORDERS = [
     deliveryType: 'delivery',
     deliveryRegion: 'الضفة الغربية',
     pickupBranch: '',
-    shippingFee: 20,
+    shippingFee: 0,
     requiresInstallation: true,
     installationFee: 90,
     installationDay: 'الإثنين',
@@ -476,7 +476,7 @@ const INITIAL_ORDERS = [
     totalMeters: 20,
     subtotal: 1300,
     discount: 0,
-    grandTotal: 1410,
+    grandTotal: 1390,
     paymentMethod: 'الدفع عند الاستلام',
     paymentStatus: 'عند الاستلام',
     orderStatus: 'pending',
@@ -674,31 +674,28 @@ class NaseejStore {
         localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(INITIAL_ORDERS));
       } else {
         const orders = JSON.parse(existingOrdersRaw);
-        let orderChanged = false;
         orders.forEach(o => {
-          if (o.deliveryType === 'delivery') {
+          if (o.requiresInstallation) {
+            // With installation: road delivery fee is 0 (free with technician) while installation fee applies
+            o.shippingFee = 0;
+            if (o.installationFee === undefined || o.installationFee === null) {
+              o.installationFee = (o.id === 'ORD-101' ? 100 : (o.id === 'ORD-105' ? 90 : 80));
+            }
+          } else if (o.deliveryType === 'delivery') {
             let correctFee = 20;
             if (o.deliveryRegion && o.deliveryRegion.includes('القدس')) correctFee = 45;
             else if (o.deliveryRegion && (o.deliveryRegion.includes('الداخل') || o.deliveryRegion.includes('48'))) correctFee = 80;
-
-            if (o.shippingFee !== correctFee) {
-              const oldFee = Number(o.shippingFee) || 0;
-              o.shippingFee = correctFee;
-              o.grandTotal = Math.max(0, (Number(o.grandTotal) || 0) - oldFee + correctFee);
-              orderChanged = true;
-            }
+            o.shippingFee = correctFee;
           } else if (o.deliveryType === 'pickup') {
-            if (o.shippingFee !== 0) {
-              const oldFee = Number(o.shippingFee) || 0;
-              o.shippingFee = 0;
-              o.grandTotal = Math.max(0, (Number(o.grandTotal) || 0) - oldFee);
-              orderChanged = true;
-            }
+            o.shippingFee = 0;
           }
+          const sub = Number(o.subtotal) || 0;
+          const ship = Number(o.shippingFee) || 0;
+          const inst = Number(o.installationFee) || 0;
+          const disc = Number(o.discount) || 0;
+          o.grandTotal = Math.max(0, sub + ship + inst - disc);
         });
-        if (orderChanged) {
-          localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
-        }
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
       }
     } catch (e) {
       localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(INITIAL_ORDERS));
@@ -816,10 +813,12 @@ class NaseejStore {
     }
 
     const requiresInstallation = Boolean(orderData.requiresInstallation);
-    // Shipping fee applies based on fulfillment delivery region (20 WB, 45 Jerusalem, 80 Interior) or pickup (0)
-    const shippingFee = Number(orderData.shippingFee) !== undefined && !isNaN(Number(orderData.shippingFee))
-      ? Number(orderData.shippingFee)
-      : (orderData.deliveryType === 'delivery' ? 20 : 0);
+    // When installation is requested: road delivery fee is 0 (free with technician) while installation fee applies
+    const shippingFee = requiresInstallation
+      ? 0
+      : (Number(orderData.shippingFee) !== undefined && !isNaN(Number(orderData.shippingFee))
+          ? Number(orderData.shippingFee)
+          : (orderData.deliveryType === 'delivery' ? 20 : 0));
     const installationFee = requiresInstallation ? (Number(orderData.installationFee) || 0) : 0;
     const installationDate = orderData.installationDate || (requiresInstallation ? scheduledDate : '');
     const installationDay = orderData.installationDay || (requiresInstallation ? scheduledDay : '');

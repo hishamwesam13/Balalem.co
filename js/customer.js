@@ -741,8 +741,8 @@ class NaseejCustomer {
     const installCheckbox = document.getElementById('checkout-install-toggle');
     const requiresInstallation = installCheckbox ? installCheckbox.checked : false;
 
-    // Delivery fee is determined by fulfillment selection (West Bank 20, Jerusalem 45, Interior 80, Pickup 0)
-    const effectiveShippingFee = fulfillment.fee;
+    // When installation is requested: road delivery fee is 0 ₪ (free with technician) while installation fee applies
+    const effectiveShippingFee = requiresInstallation ? 0 : fulfillment.fee;
     const subtotal = Math.round(this.cart.reduce((sum, item) => sum + item.total, 0));
 
     // Loyalty Points Logic: threshold 250 pts (500 ₪ spend), 100 pts = 5 ₪, max 15% discount
@@ -849,16 +849,21 @@ class NaseejCustomer {
         <span>-${actualDiscount.toLocaleString()} شيكل</span>
       </div>
       ` : ''}
+      ${requiresInstallation ? `
+      <div class="checkout-summary-row" style="color: #15803d; font-weight: 700; background: #ecfdf5; padding: 7px 10px; border-radius: 6px; margin: 4px 0;">
+        <span>🚚 أجور الطريق / التوصيل (مع خدمة التركيب):</span>
+        <span>مجاناً (0 شيكل - الفني يحضر الستائر)</span>
+      </div>
+      <div class="checkout-summary-row" style="color: #3730a3; font-weight: 700; background: #e0e7ff; padding: 7px 10px; border-radius: 6px; margin: 4px 0;">
+        <span>🔧 أجور خدمة التركيب في الموقع:</span>
+        <span style="font-size: 12.5px;">تُضاف حسب عدد الشبابيك والمقاسات (متراوحة وتدفع عند التركيب)</span>
+      </div>
+      ` : `
       <div class="checkout-summary-row" style="color: ${fulfillment.fee === 0 ? '#15803d' : '#0f172a'}; font-weight: 600;">
         <span>${fulfillment.summaryLabel}:</span>
         <span>${fulfillment.fee === 0 ? 'مجاناً (0 شيكل)' : `+${fulfillment.fee} شيكل`}</span>
       </div>
-      ${requiresInstallation ? `
-      <div class="checkout-summary-row" style="color: #3730a3; font-weight: 700; background: #e0e7ff; padding: 7px 10px; border-radius: 6px; margin: 4px 0;">
-        <span>🔧 أجور خدمة التركيب في الموقع:</span>
-        <span style="font-size: 12.5px;">متراوحة حسب عدد الشبابيك (تحدد وتدفع عند التركيب)</span>
-      </div>
-      ` : ''}
+      `}
       <div class="checkout-summary-row total-row">
         <span>المجموع الإجمالي (الدفع عند الاستلام):</span>
         <span class="gold-text">${grandTotal.toLocaleString()} شيكل</span>
@@ -972,8 +977,8 @@ class NaseejCustomer {
     const installCheckbox = document.getElementById('checkout-install-toggle');
     const requiresInstallation = installCheckbox ? installCheckbox.checked : false;
 
-    // Shipping fee applies based on delivery region or showroom pickup
-    const shippingFee = fulfillment.fee;
+    // When installation is requested: road delivery fee is 0 ₪, installation fee is determined by windows
+    const shippingFee = requiresInstallation ? 0 : fulfillment.fee;
     const installationFee = 0; // variable / agreed based on windows
 
     const subtotal = Math.round(this.cart.reduce((sum, item) => sum + item.total, 0));
@@ -1169,9 +1174,11 @@ class NaseejCustomer {
           };
           const statusClass = statusClasses[order.orderStatus] || 'badge-status-pending';
 
-          const fulfillmentBadge = order.deliveryType === 'pickup'
-            ? `<span class="badge" style="background: #dcfce7; color: #15803d; font-size: 11.5px; padding: 3px 8px;">🏪 استلام: ${order.pickupBranch || 'نابلس'}</span>`
-            : `<span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 11.5px; padding: 3px 8px;">🚚 توصيل: ${order.deliveryRegion || order.customer.city} (${order.shippingFee} ₪)</span>`;
+          const fulfillmentBadge = order.requiresInstallation
+            ? `<span class="badge" style="background: #eff6ff; color: #1e40af; font-size: 11.5px; padding: 3px 8px;">🔧 تركيب في الموقع: ${order.deliveryRegion || order.customer.city} (أجور الطريق 0 ₪)</span>`
+            : (order.deliveryType === 'pickup'
+              ? `<span class="badge" style="background: #dcfce7; color: #15803d; font-size: 11.5px; padding: 3px 8px;">🏪 استلام من الفرع: ${order.pickupBranch || 'نابلس'} (0 ₪)</span>`
+              : `<span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 11.5px; padding: 3px 8px;">🚚 توصيل: ${order.deliveryRegion || order.customer.city} (${order.shippingFee} ₪)</span>`);
 
           const itemsHtml = (order.items || []).map(it => `
             <div class="order-item-chip" style="margin-bottom: 6px;">
@@ -1203,7 +1210,9 @@ class NaseejCustomer {
 
               <div class="order-card-footer" style="flex-wrap: wrap; gap: 10px;">
                 <span>إجمالي الأمتار: <strong>${order.totalMeters} متر</strong></span>
-                <span>طريقة التسليم: ${fulfillmentBadge}</span>
+                <span>طريقة الاستلام: ${fulfillmentBadge}</span>
+                ${order.requiresInstallation ? `<span>أجور التركيب: <strong style="color: #2563eb;">${order.installationFee ? order.installationFee + ' شيكل' : 'متراوحة'}</strong></span>` : ''}
+                ${!order.requiresInstallation && order.deliveryType === 'delivery' ? `<span>أجور التوصيل: <strong>${order.shippingFee} شيكل</strong></span>` : ''}
                 <span>طريقة الدفع: <strong>${order.paymentMethod}</strong></span>
                 <span class="order-total-highlight">الإجمالي: ${order.grandTotal.toLocaleString()} شيكل</span>
               </div>
