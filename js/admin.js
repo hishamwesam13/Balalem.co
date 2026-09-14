@@ -220,7 +220,7 @@ class NaseejAdmin {
     const orders = store.getOrders();
 
     if (orders.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4">لا توجد طلبات حتى الآن. ستظهر هنا فور إتمام الزبائن لطلباتهم.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4" style="padding: 40px 20px; font-size: 14px; color: #64748b;"><div style="font-size: 32px; margin-bottom: 6px;">📋</div><strong>لا توجد طلبيات حالياً في النظام</strong><p style="margin-top: 4px; font-size: 12.5px;">الجدول مصفر وجاهز لاستقبال طلبيات الزبائن الجديدة من المتجر الإلكتروني أو تسجيل طلبية يدوية من المعرض.</p></td></tr>`;
       return;
     }
 
@@ -297,17 +297,21 @@ class NaseejAdmin {
           </td>
           <td>
             <select class="order-status-select" onchange="window.naseejAdmin.handleOrderStatusChange('${order.id}', this.value)">
-              <option value="pending" ${order.orderStatus === 'pending' ? 'selected' : ''}>⏳ قيد المراجعة</option>
-              <option value="in_tailoring" ${order.orderStatus === 'in_tailoring' ? 'selected' : ''}>✂️ جاري قص القماش والتجهيز</option>
-              <option value="ready" ${order.orderStatus === 'ready' ? 'selected' : ''}>📦 تم التجهيز للشحن</option>
-              <option value="shipped" ${order.orderStatus === 'shipped' ? 'selected' : ''}>🚚 قيد الشحن مع المندوب</option>
+              <option value="pending" ${order.orderStatus === 'pending' ? 'selected' : ''}>⏳ قيد المراجعة وتأكيد المقاسات</option>
+              <option value="in_cutting" ${order.orderStatus === 'in_cutting' ? 'selected' : ''}>✂️ جاري قص القماش بالورشة</option>
+              <option value="in_tailoring" ${order.orderStatus === 'in_tailoring' ? 'selected' : ''}>🧵 تم القص - انتقلت للخياطة</option>
+              <option value="ready" ${order.orderStatus === 'ready' ? 'selected' : ''}>📦 تم التجهيز للشحن / الاستلام</option>
+              <option value="shipped" ${order.orderStatus === 'shipped' ? 'selected' : ''}>🚚 قيد التوصيل مع المندوب</option>
               <option value="delivered" ${order.orderStatus === 'delivered' ? 'selected' : ''}>✅ تم التسليم بنجاح</option>
-              <option value="cancelled" ${order.orderStatus === 'cancelled' ? 'selected' : ''}>❌ ملغي</option>
+              <option value="cancelled" ${order.orderStatus === 'cancelled' ? 'selected' : ''}>❌ ملغي من الزبون</option>
             </select>
           </td>
-          <td>
+          <td style="white-space: nowrap;">
             <button class="btn btn-sm btn-outline" onclick="window.naseejAdmin.printOrderReceipt('${order.id}')" title="طباعة فاتورة تفصيل">
               🖨️ إيصال
+            </button>
+            <button class="btn btn-sm" onclick="window.naseejAdmin.confirmDeleteOrder('${order.id}')" title="حذف وإلغاء الطلبية من الورشة نهائياً" style="color: #dc2626; border: 1px solid #fecaca; background: #fef2f2; margin-right: 4px; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 700;">
+              🗑️ حذف
             </button>
           </td>
         </tr>
@@ -320,7 +324,33 @@ class NaseejAdmin {
     if (updated) {
       window.naseejCustomer.showToast(`تم تحديث حالة الطلب ${orderId} إلى "${updated.statusText}"`, 'success');
       this.renderKPIs();
+      this.renderOrdersTable();
       this.renderWeeklySchedule();
+      this.renderInstallationSchedule();
+      if (this.calendarViewMode === 'monthly') this.renderMonthlyCalendar();
+    }
+  }
+
+  confirmDeleteOrder(orderId) {
+    const orders = store.getOrders();
+    const order = orders.find(o => o.id === orderId);
+    const custName = order && order.customer ? order.customer.name : '';
+    const confirmMsg = `هل أنت متأكد من حذف وإلغاء الطلبية (${orderId})${custName ? ` للزبون "${custName}"` : ''} نهائياً من الورشة وجداول العمل؟`;
+    
+    if (confirm(confirmMsg)) {
+      const ok = store.deleteOrder(orderId);
+      if (ok) {
+        window.naseejCustomer.showToast(`تم حذف الطلبية (${orderId}) من الورشة والجداول بنجاح ✓`, 'info');
+        this.renderAll();
+      }
+    }
+  }
+
+  confirmClearAllOrders() {
+    if (confirm('هل تريد تصفير كافة الطلبيات الوهمية لتصبح إحصائيات المبيعات والأمتار والطلبيات (0) والبدء بجدول عمل نظيف تماماً؟')) {
+      store.clearAllOrders();
+      window.naseejCustomer.showToast('تم تصفير كافة الطلبيات وتصفير المبيعات والأمتار بنجاح ✓', 'success');
+      this.renderAll();
     }
   }
 
@@ -562,8 +592,9 @@ class NaseejAdmin {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
-    let nextStatus = 'in_tailoring';
-    if (order.orderStatus === 'pending') nextStatus = 'in_tailoring';
+    let nextStatus = 'in_cutting';
+    if (order.orderStatus === 'pending') nextStatus = 'in_cutting';
+    else if (order.orderStatus === 'in_cutting') nextStatus = 'in_tailoring';
     else if (order.orderStatus === 'in_tailoring') nextStatus = 'ready';
     else if (order.orderStatus === 'ready') nextStatus = 'shipped';
     else if (order.orderStatus === 'shipped') nextStatus = 'delivered';
@@ -684,9 +715,15 @@ class NaseejAdmin {
                 <span class="schedule-order-num">${order.id}</span>
                 ${order.source === 'showroom' ? '<span class="badge badge-source badge-source-showroom">معرض</span>' : ''}
               </div>
-              <span class="badge" style="font-size: 11px; background: #f1f5f9; color: #334155;">
-                ${statusBadges[order.orderStatus] || order.orderStatus}
-              </span>
+              <select class="schedule-status-mini-select" onchange="window.naseejAdmin.handleOrderStatusChange('${order.id}', this.value)" style="font-size: 11px; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbd5e1; background: #ffffff; color: #1e293b; font-weight: 700; cursor: pointer;">
+                <option value="pending" ${order.orderStatus === 'pending' ? 'selected' : ''}>⏳ قيد المراجعة</option>
+                <option value="in_cutting" ${order.orderStatus === 'in_cutting' ? 'selected' : ''}>✂️ جاري القص</option>
+                <option value="in_tailoring" ${order.orderStatus === 'in_tailoring' ? 'selected' : ''}>🧵 انتقلت للخياطة</option>
+                <option value="ready" ${order.orderStatus === 'ready' ? 'selected' : ''}>📦 تم التجهيز</option>
+                <option value="shipped" ${order.orderStatus === 'shipped' ? 'selected' : ''}>🚚 قيد التوصيل</option>
+                <option value="delivered" ${order.orderStatus === 'delivered' ? 'selected' : ''}>✅ تم التسليم</option>
+                <option value="cancelled" ${order.orderStatus === 'cancelled' ? 'selected' : ''}>❌ ملغي</option>
+              </select>
             </div>
 
             <div class="schedule-cust-row">
@@ -718,15 +755,18 @@ class NaseejAdmin {
               <span class="schedule-price-chip">${order.grandTotal.toLocaleString()} شيكل</span>
             </div>
 
-            <div class="schedule-move-row">
-              <select class="schedule-move-select" onchange="window.naseejAdmin.changeOrderScheduleDay('${order.id}', this.value)">
+            <div class="schedule-move-row" style="display: flex; gap: 5px; align-items: center;">
+              <select class="schedule-move-select" style="flex: 1;" onchange="window.naseejAdmin.changeOrderScheduleDay('${order.id}', this.value)" title="نقل ليوم آخر">
                 ${otherDaysOptions}
               </select>
-              <button class="btn-mini-status" onclick="window.naseejAdmin.quickAdvanceOrderStatus('${order.id}')" title="تحديث مرحلة التجهيز (قص / جاهز)">
+              <button class="btn-mini-status" onclick="window.naseejAdmin.quickAdvanceOrderStatus('${order.id}')" title="ترقية المرحلة">
                 ✂️
               </button>
               <button class="btn-mini-status" onclick="window.naseejAdmin.printOrderReceipt('${order.id}')" title="طباعة الإيصال">
                 🖨️
+              </button>
+              <button class="btn-mini-status btn-mini-delete" onclick="window.naseejAdmin.confirmDeleteOrder('${order.id}')" title="حذف وإلغاء الطلبية من الورشة والجداول" style="color: #dc2626; background: #fee2e2; border-color: #fca5a5; font-size: 12px;">
+                🗑️
               </button>
             </div>
           </div>
@@ -1024,6 +1064,9 @@ class NaseejAdmin {
                 </button>
                 <button class="btn-mini-status" onclick="window.naseejAdmin.printOrderReceipt('${order.id}')" title="طباعة الإيصال">
                   🖨️
+                </button>
+                <button class="btn-mini-status btn-mini-delete" onclick="window.naseejAdmin.confirmDeleteOrder('${order.id}')" title="حذف وإلغاء الطلبية نهائياً" style="color: #dc2626; background: #fee2e2; border-color: #fca5a5;">
+                  🗑️
                 </button>
               </div>
             </div>

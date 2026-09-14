@@ -224,413 +224,8 @@ const INITIAL_PRODUCTS = [
     isFeatured: false
   }
 ];
-
-// Initial Seed Orders for Realistic Admin Demonstration & Weekly Production Schedule
-const INITIAL_ORDERS = [
-  {
-    id: 'ORD-100',
-    date: '2026-09-12T09:15:00.000Z',
-    customer: {
-      name: 'سامي عبد الله',
-      phone: '0599554433',
-      email: 'sami.a@gmail.com',
-      city: 'نابلس',
-      address: 'شارع المعاجين'
-    },
-    deliveryType: 'pickup',
-    deliveryRegion: '',
-    pickupBranch: 'نابلس - باب الساحة',
-    shippingFee: 0,
-    requiresInstallation: true,
-    installationFee: 80,
-    installationDay: 'السبت',
-    installationDate: '2026-09-12',
-    installerId: 'osama',
-    installerName: 'أسامة',
-    installationStatus: 'pending_install',
-    source: 'showroom',
-    items: [
-      {
-        productId: 'fab-1',
-        productName: 'كريب ستائر رويال مسدل',
-        color: 'بيج رملي',
-        meters: 15,
-        pricePerMeter: 65,
-        total: 975,
-        notes: 'صالة المعيشة'
-      }
-    ],
-    totalMeters: 15,
-    subtotal: 975,
-    discount: 0,
-    grandTotal: 1055,
-    paymentMethod: 'الدفع عند الاستلام',
-    paymentStatus: 'عند الاستلام في الفرع',
-    orderStatus: 'in_tailoring',
-    statusText: 'جاري قص وتجهيز القماش في الورشة',
-    scheduledDay: 'السبت',
-    scheduledDate: '2026-09-12'
-  },
-  {
-    id: 'ORD-101',
-    date: '2026-09-12T11:30:00.000Z',
-    customer: {
-      name: 'طارق الزغير',
-      phone: '0599842231',
-      email: 'tariq@balalem-curtains.com',
-      city: 'الخليل',
-      address: 'شارع عين سارة، مجمع النور'
-    },
-    deliveryType: 'delivery',
-    deliveryRegion: 'الضفة الغربية',
-    pickupBranch: '',
-    shippingFee: 0,
-    requiresInstallation: true,
-    installationFee: 100,
-    installationDay: 'الأحد',
-    installationDate: '2026-09-13',
-    installerId: 'ezz',
-    installerName: 'عز',
-    installationStatus: 'pending_install',
-    source: 'online',
-    items: [
-      {
-        productId: 'fab-1',
-        productName: 'كريب ستائر رويال مسدل',
-        color: 'بيج رملي',
-        meters: 14,
-        pricePerMeter: 65,
-        total: 910,
-        notes: 'نافذة الصالة (عرض 3.5 م × ارتفاع 2.8 م - كسرات ويفي)'
-      },
-      {
-        productId: 'fab-3',
-        productName: 'تول ستائر فوال إيطالي مطرّز',
-        color: 'أبيض ثلجي',
-        meters: 14,
-        pricePerMeter: 48,
-        total: 672,
-        notes: 'ستارة خلفية ناعمة لنفس النافذة'
-      }
-    ],
-    totalMeters: 28,
-    subtotal: 1582,
-    discount: 0,
-    grandTotal: 1682,
-    paymentMethod: 'الدفع عند الاستلام',
-    paymentStatus: 'عند الاستلام',
-    orderStatus: 'in_tailoring', // pending, in_tailoring, ready, shipped, delivered
-    statusText: 'جاري قص وتجهيز القماش في الورشة',
-    scheduledDay: 'الأحد',
-    scheduledDate: '2026-09-13'
-  },
-  {
-    id: 'ORD-102',
-    date: '2026-09-12T14:45:00.000Z',
-    customer: {
-      name: 'هدى النابلسي',
-      phone: '0598765432',
-      email: 'huda.n@example.com',
-      city: 'نابلس',
-      address: 'حي رفيديا، قرب دوار النجاح'
-    },
-    deliveryType: 'pickup',
-    deliveryRegion: '',
-    pickupBranch: 'نابلس - باب الساحة',
-    shippingFee: 0,
-    requiresInstallation: false,
-    installationFee: 0,
-    installationDay: '',
-    installationDate: '',
-    installerId: '',
-    installerName: '',
-    installationStatus: 'not_required',
-    source: 'online',
-    items: [
-      {
-        productId: 'fab-4',
-        productName: 'مخمل ملكي بلاك آوت عازل',
-        color: 'نبيذي ملكي (بورغندي)',
-        meters: 18,
-        pricePerMeter: 98,
-        total: 1764,
-        notes: 'غرفة النوم الماستر - عازل 100%'
-      }
-    ],
-    totalMeters: 18,
-    subtotal: 1764,
-    discount: 0,
-    grandTotal: 1764,
-    paymentMethod: 'الدفع عند الاستلام',
-    paymentStatus: 'عند الاستلام في الفرع',
-    orderStatus: 'in_tailoring',
-    statusText: 'جاري قص وتجهيز القماش في الورشة',
-    scheduledDay: 'الأحد',
-    scheduledDate: '2026-09-13'
-  },
-  {
-    id: 'ORD-103',
-    date: '2026-09-12T16:15:00.000Z',
-    customer: {
-      name: 'محمود الصالحي',
-      phone: '0595123456',
-      email: 'salehi.m@gmail.com',
-      city: 'نابلس',
-      address: 'شارع بيت وزن، قرب سوبرماركت برافو'
-    },
-    deliveryType: 'pickup',
-    deliveryRegion: '',
-    pickupBranch: 'نابلس - بيت وزن بجانب طلعة برافو',
-    shippingFee: 0,
-    items: [
-      {
-        productId: 'fab-2',
-        productName: 'كتان هولندي ثقيل للستائر',
-        color: 'رمادي حجري دافئ',
-        meters: 12,
-        pricePerMeter: 75,
-        total: 900,
-        notes: 'شباك غرفة الضيوف'
-      }
-    ],
-    totalMeters: 12,
-    subtotal: 900,
-    discount: 0,
-    grandTotal: 900,
-    paymentMethod: 'الدفع عند الاستلام',
-    paymentStatus: 'عند الاستلام في الفرع',
-    orderStatus: 'pending',
-    statusText: 'قيد المراجعة وتأكيد المقاسات',
-    scheduledDay: 'الأحد',
-    scheduledDate: '2026-09-13'
-  },
-  {
-    id: 'ORD-104',
-    date: '2026-09-13T09:00:00.000Z',
-    customer: {
-      name: 'ميسون الدجاني',
-      phone: '0528990112',
-      email: 'mayson.d@yahoo.com',
-      city: 'القدس',
-      address: 'الشيخ جراح، قرب القنصلية'
-    },
-    deliveryType: 'delivery',
-    deliveryRegion: 'القدس',
-    pickupBranch: '',
-    shippingFee: 45,
-    items: [
-      {
-        productId: 'fab-6',
-        productName: 'كتان خام ريفي بألياف طبيعية',
-        color: 'بيج كتاني طبيعي',
-        meters: 16,
-        pricePerMeter: 75,
-        total: 1200,
-        notes: 'تفصيل صالون ريفي'
-      }
-    ],
-    totalMeters: 16,
-    subtotal: 1200,
-    discount: 0,
-    grandTotal: 1245,
-    paymentMethod: 'الدفع عند الاستلام',
-    paymentStatus: 'عند الاستلام',
-    orderStatus: 'in_tailoring',
-    statusText: 'جاري قص وتجهيز القماش في الورشة',
-    scheduledDay: 'الإثنين',
-    scheduledDate: '2026-09-14'
-  },
-  {
-    id: 'ORD-105',
-    date: '2026-09-13T11:30:00.000Z',
-    customer: {
-      name: 'خالد عبد الرحيم',
-      phone: '0597334455',
-      email: 'khaled.ar@gmail.com',
-      city: 'رام الله والبيرة',
-      address: 'شارع الإرسال، مقابل برج فلسطين'
-    },
-    deliveryType: 'delivery',
-    deliveryRegion: 'الضفة الغربية',
-    pickupBranch: '',
-    shippingFee: 0,
-    requiresInstallation: true,
-    installationFee: 90,
-    installationDay: 'الإثنين',
-    installationDate: '2026-09-14',
-    installerId: 'tech3',
-    installerName: 'فني تركيب 3',
-    installationStatus: 'pending_install',
-    source: 'showroom',
-    items: [
-      {
-        productId: 'fab-1',
-        productName: 'كريب ستائر رويال مسدل',
-        color: 'أوف وايت ناعم',
-        meters: 20,
-        pricePerMeter: 65,
-        total: 1300,
-        notes: 'واجهة صالة جلوس عريضة'
-      }
-    ],
-    totalMeters: 20,
-    subtotal: 1300,
-    discount: 0,
-    grandTotal: 1390,
-    paymentMethod: 'الدفع عند الاستلام',
-    paymentStatus: 'عند الاستلام',
-    orderStatus: 'pending',
-    statusText: 'قيد المراجعة وتأكيد المقاسات',
-    scheduledDay: 'الإثنين',
-    scheduledDate: '2026-09-14'
-  },
-  {
-    id: 'ORD-106',
-    date: '2026-09-13T15:00:00.000Z',
-    customer: {
-      name: 'أحمد الخطيب',
-      phone: '0547665544',
-      email: 'alkhateeb48@outlook.com',
-      city: 'الناصرة',
-      address: 'الحي الشرقي، قرب كنيسة البشارة'
-    },
-    deliveryType: 'delivery',
-    deliveryRegion: 'الداخل الفلسطيني (مناطق 48)',
-    pickupBranch: '',
-    shippingFee: 80,
-    items: [
-      {
-        productId: 'fab-7',
-        productName: 'ستائر ترسون زيبرا مودرن عازلة',
-        color: 'أبيض عاجي أنيق',
-        meters: 10,
-        unitLabel: 'م²',
-        pricePerMeter: 85,
-        total: 850,
-        notes: 'نظام زيبرا لغرفتي نوم'
-      }
-    ],
-    totalMeters: 10,
-    subtotal: 850,
-    discount: 0,
-    grandTotal: 930,
-    paymentMethod: 'الدفع عند الاستلام',
-    paymentStatus: 'عند الاستلام',
-    orderStatus: 'in_tailoring',
-    statusText: 'جاري قص وتجهيز القماش في الورشة',
-    scheduledDay: 'الإثنين',
-    scheduledDate: '2026-09-14'
-  },
-  {
-    id: 'ORD-107',
-    date: '2026-09-14T09:40:00.000Z',
-    customer: {
-      name: 'رنا الجعبري',
-      phone: '0592887766',
-      email: 'rana.jabari@hotmail.com',
-      city: 'الخليل',
-      address: 'منطقة الحاووز الثاني'
-    },
-    deliveryType: 'delivery',
-    deliveryRegion: 'الضفة الغربية',
-    pickupBranch: '',
-    shippingFee: 20,
-    items: [
-      {
-        productId: 'fab-8',
-        productName: 'ستائر ترسون رول سكرين بلاك آوت',
-        color: 'رصاصي داكن',
-        meters: 15,
-        unitLabel: 'م²',
-        pricePerMeter: 95,
-        total: 1425,
-        notes: 'مجلس ضيوف فخم'
-      }
-    ],
-    totalMeters: 15,
-    subtotal: 1425,
-    discount: 0,
-    grandTotal: 1445,
-    paymentMethod: 'الدفع عند الاستلام',
-    paymentStatus: 'عند الاستلام',
-    orderStatus: 'pending',
-    statusText: 'قيد المراجعة وتأكيد المقاسات',
-    scheduledDay: 'الثلاثاء',
-    scheduledDate: '2026-09-15'
-  },
-  {
-    id: 'ORD-108',
-    date: '2026-09-15T11:10:00.000Z',
-    customer: {
-      name: 'عمر القواسمي',
-      phone: '0599114422',
-      email: 'omar.q@example.com',
-      city: 'بيت لحم',
-      address: 'شارع المهد، قرب فندق البرادايس'
-    },
-    deliveryType: 'delivery',
-    deliveryRegion: 'الضفة الغربية',
-    pickupBranch: '',
-    shippingFee: 20,
-    items: [
-      {
-        productId: 'fab-4',
-        productName: 'مخمل ملكي بلاك آوت عازل',
-        color: 'رمادي غرافيت فخم',
-        meters: 14,
-        pricePerMeter: 98,
-        total: 1372,
-        notes: 'ستائر بلاك آوت لغرفة معيشة'
-      }
-    ],
-    totalMeters: 14,
-    subtotal: 1372,
-    discount: 0,
-    grandTotal: 1392,
-    paymentMethod: 'الدفع عند الاستلام',
-    paymentStatus: 'عند الاستلام',
-    orderStatus: 'pending',
-    statusText: 'قيد المراجعة وتأكيد المقاسات',
-    scheduledDay: 'الخميس',
-    scheduledDate: '2026-09-17'
-  },
-  {
-    id: 'ORD-109',
-    date: '2026-09-15T13:20:00.000Z',
-    customer: {
-      name: 'فادي طوقان',
-      phone: '0598223311',
-      email: 'fadi.touqan@gmail.com',
-      city: 'نابلس',
-      address: 'شارع المريج'
-    },
-    deliveryType: 'pickup',
-    deliveryRegion: '',
-    pickupBranch: 'نابلس - باب الساحة',
-    shippingFee: 0,
-    items: [
-      {
-        productId: 'fab-1',
-        productName: 'كريب ستائر رويال مسدل',
-        color: 'أزرق بترولي أنيق',
-        meters: 12,
-        pricePerMeter: 65,
-        total: 780,
-        notes: 'صالون مودرن'
-      }
-    ],
-    totalMeters: 12,
-    subtotal: 780,
-    discount: 0,
-    grandTotal: 780,
-    paymentMethod: 'الدفع عند الاستلام',
-    paymentStatus: 'عند الاستلام في الفرع',
-    orderStatus: 'pending',
-    statusText: 'قيد المراجعة وتأكيد المقاسات',
-    scheduledDay: 'الخميس',
-    scheduledDate: '2026-09-17'
-  }
-];
+// Empty initial orders - ready for genuine store and walk-in customer orders
+const INITIAL_ORDERS = [];
 
 class NaseejStore {
   constructor() {
@@ -667,46 +262,17 @@ class NaseejStore {
     } catch (e) {
       localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(INITIAL_PRODUCTS));
     }
-    // Update existing orders to ensure accurate Palestinian shipping fees (West Bank 20, Jerusalem 45, Interior 80, Pickup 0)
+    // Reset/clear fake demo orders so the store starts clean with 0 sales and 0 orders
     try {
       const existingOrdersRaw = localStorage.getItem(STORAGE_KEYS.ORDERS);
-      if (!existingOrdersRaw || existingOrdersRaw.includes('الرياض') || !existingOrdersRaw.includes('ORD-100') || !existingOrdersRaw.includes('tech3') || !existingOrdersRaw.includes('scheduledDate')) {
-        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(INITIAL_ORDERS));
-      } else {
-        const orders = JSON.parse(existingOrdersRaw);
-        orders.forEach(o => {
-          if (o.requiresInstallation) {
-            // With installation: road delivery fee is 0 (free with technician) while installation fee applies
-            o.shippingFee = 0;
-            if (o.installationFee === undefined || o.installationFee === null) {
-              o.installationFee = (o.id === 'ORD-101' ? 100 : (o.id === 'ORD-105' ? 90 : 80));
-            }
-          } else if (o.deliveryType === 'delivery') {
-            let correctFee = 20;
-            if (o.deliveryRegion && o.deliveryRegion.includes('القدس')) correctFee = 45;
-            else if (o.deliveryRegion && (o.deliveryRegion.includes('الداخل') || o.deliveryRegion.includes('48'))) correctFee = 80;
-            o.shippingFee = correctFee;
-          } else if (o.deliveryType === 'pickup') {
-            o.shippingFee = 0;
-          }
-          const sub = Number(o.subtotal) || 0;
-          const ship = Number(o.shippingFee) || 0;
-          const inst = Number(o.installationFee) || 0;
-          const disc = Number(o.discount) || 0;
-          o.grandTotal = Math.max(0, sub + ship + inst - disc);
-        });
-        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+      if (!existingOrdersRaw || existingOrdersRaw.includes('ORD-100') || existingOrdersRaw.includes('الرياض') || existingOrdersRaw.includes('سامي عبد الله')) {
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify([]));
       }
     } catch (e) {
-      localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(INITIAL_ORDERS));
+      localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify([]));
     }
-    if (!localStorage.getItem(STORAGE_KEYS.CUSTOMERS) || localStorage.getItem(STORAGE_KEYS.CUSTOMERS).includes('الرياض')) {
-      const defaultCustomers = [
-        { name: 'طارق الزغير', phone: '0599842231', email: 'tariq@balalem-curtains.com', city: 'الخليل', registeredAt: '2026-08-15' },
-        { name: 'هدى النابلسي', phone: '0598765432', email: 'huda.n@example.com', city: 'نابلس', registeredAt: '2026-08-28' },
-        { name: 'باسم عبدالحق', phone: '0569112233', email: 'bassem.a@example.com', city: 'رام الله والبيرة', registeredAt: '2026-09-01' }
-      ];
-      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(defaultCustomers));
+    if (!localStorage.getItem(STORAGE_KEYS.CUSTOMERS) || localStorage.getItem(STORAGE_KEYS.CUSTOMERS).includes('الرياض') || localStorage.getItem(STORAGE_KEYS.CUSTOMERS).includes('طارق الزغير')) {
+      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify([]));
     }
   }
 
@@ -892,11 +458,12 @@ class NaseejStore {
 
     const statusMap = {
       pending: 'قيد المراجعة وتأكيد المقاسات',
-      in_tailoring: 'جاري قص وتجهيز القماش',
+      in_cutting: 'جاري قص وتجهيز القماش بالورشة',
+      in_tailoring: 'تم تجهيز القماش - انتقلت للخياطة',
       ready: 'تم التجهيز وبانتظار مندوب الشحن / الاستلام',
-      shipped: 'قيد الشحن مع شركة التوصيل',
+      shipped: 'قيد التوصيل مع شركة الشحن',
       delivered: 'تم التوصيل للعميل بنجاح',
-      cancelled: 'تم إلغاء الطلب'
+      cancelled: 'تم إلغاء الطلبية'
     };
 
     order.orderStatus = newStatus;
@@ -905,6 +472,23 @@ class NaseejStore {
     localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
     window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: order }));
     return order;
+  }
+
+  deleteOrder(orderId) {
+    let orders = this.getOrders();
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    if (orderIndex === -1) return false;
+    const deletedOrder = orders[orderIndex];
+    orders.splice(orderIndex, 1);
+    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+    window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: { action: 'deleted', id: orderId, deletedOrder } }));
+    return true;
+  }
+
+  clearAllOrders() {
+    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify([]));
+    window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: { action: 'cleared' } }));
+    return true;
   }
 
   // --- Work Days, Months, & Calendar Engine ---

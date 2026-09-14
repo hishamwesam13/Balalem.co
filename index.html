@@ -637,9 +637,14 @@
               <h3 class="admin-card-title">طلبات الزبائن الواردة لمتابعة القص والتسليم</h3>
               <span class="badge badge-category">قم بتغيير حالة الطلب أو يوم الجدولة لمزامنتها مباشرة</span>
             </div>
-            <button type="button" class="btn btn-primary btn-sm" onclick="window.openWalkinOrderModal(event)">
-              <span>➕ تسجيل طلبية جديدة من المعرض</span>
-            </button>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="window.naseejAdmin.confirmClearAllOrders()" title="تصفير الجدول والبدء من جديد" style="color: #64748b; border-color: #cbd5e1;">
+                <span>🧹 تصفير كافة الطلبيات</span>
+              </button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="window.openWalkinOrderModal(event)">
+                <span>➕ تسجيل طلبية جديدة من المعرض</span>
+              </button>
+            </div>
           </div>
           <div class="admin-table-responsive">
             <table class="admin-table">
@@ -679,7 +684,10 @@
                 <span id="badge-installations-count" class="badge badge-gold" style="font-size: 11px; padding: 2px 7px; margin-right: 6px;">0</span>
               </button>
             </div>
-            <div class="schedule-quick-add-btn">
+            <div class="schedule-quick-add-btn" style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-sm btn-outline" onclick="window.naseejAdmin.confirmClearAllOrders()" title="تصفير جدول العمل">
+                <span>🧹 تصفير الجدول</span>
+              </button>
               <button type="button" class="btn btn-sm btn-primary" onclick="window.openWalkinOrderModal(event)" title="إضافة طلبية زبون حضر للمعرض">
                 <span>➕ طلبية زبون من المعرض</span>
               </button>
