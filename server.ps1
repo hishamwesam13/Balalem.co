@@ -50,6 +50,7 @@ while ($listener.IsListening) {
             $ext = [System.IO.Path]::GetExtension($filePath).ToLower()
             $mime = if ($mimeMap.ContainsKey($ext)) { $mimeMap[$ext] } else { "application/octet-stream" }
             $response.ContentType = $mime
+            $response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate")
 
             $bytes = [System.IO.File]::ReadAllBytes($filePath)
             $response.ContentLength64 = $bytes.Length
