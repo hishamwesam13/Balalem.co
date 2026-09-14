@@ -1132,8 +1132,32 @@ class NaseejCustomer {
         o => (o.customer && (o.customer.phone === user.phone || o.customer.email === user.email))
       );
 
+      const userPoints = user.points || 0;
+      const pointsHeaderHtml = `
+        <div class="my-orders-points-banner" style="background: linear-gradient(135deg, #0b1120 0%, #1e293b 100%); border: 1.5px solid rgba(212, 175, 55, 0.4); border-radius: 12px; padding: 14px; margin-bottom: 14px; color: #ffffff; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 24px;">🎁</span>
+              <div>
+                <div style="font-size: 11px; color: #d4af37; font-weight: 700;">رصيد نقاط الولاء المعتمد</div>
+                <div style="font-size: 18px; font-weight: 800; color: #fef08a;">${userPoints.toLocaleString()} <span style="font-size: 12.5px; font-weight: 600; color: #cbd5e1;">نقطة</span></div>
+              </div>
+            </div>
+            <div>
+              <span class="badge" style="background: ${userPoints >= 250 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)'}; color: ${userPoints >= 250 ? '#34d399' : '#fbbf24'}; border: 1px solid ${userPoints >= 250 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)'}; font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: 700;">
+                ${userPoints >= 250 ? '✓ مؤهل للخصم' : `يلزمك ${250 - userPoints} نقطة`}
+              </span>
+            </div>
+          </div>
+          <div style="font-size: 11.5px; color: #94a3b8; line-height: 1.5; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 8px;">
+            💡 <strong style="color: #e2e8f0;">طريقة الاستبدال:</strong> كل 100 نقطة = 5 ₪ خصم مباشر عند الدفع (يبدأ الاستبدال من 250 نقطة). تكسب 50 نقطة لكل 100 ₪ مشتريات.
+          </div>
+        </div>
+      `;
+
       if (userOrders.length === 0) {
         listContainer.innerHTML = `
+          ${pointsHeaderHtml}
           <div class="empty-orders-box">
             <div class="empty-icon">📦</div>
             <h4>لا توجد طلبات سابقة مسجلة برقم (${user.phone})</h4>
@@ -1141,7 +1165,7 @@ class NaseejCustomer {
           </div>
         `;
       } else {
-        listContainer.innerHTML = userOrders.map(order => {
+        listContainer.innerHTML = pointsHeaderHtml + userOrders.map(order => {
           const statusClasses = {
             pending: 'badge-status-pending',
             in_tailoring: 'badge-status-process',
