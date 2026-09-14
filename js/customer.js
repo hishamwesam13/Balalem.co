@@ -856,7 +856,7 @@ class NaseejCustomer {
       </div>
       <div class="checkout-summary-row" style="color: #3730a3; font-weight: 700; background: #e0e7ff; padding: 7px 10px; border-radius: 6px; margin: 4px 0;">
         <span>🔧 أجور خدمة التركيب في الموقع:</span>
-        <span style="font-size: 12.5px;">تُضاف حسب عدد الشبابيك والمقاسات (متراوحة وتدفع عند التركيب)</span>
+        <span style="font-size: 12.5px;">تُضاف حسب عدد الشبابيك فقط (تُحدد وتُدفع عند التركيب)</span>
       </div>
       ` : `
       <div class="checkout-summary-row" style="color: ${fulfillment.fee === 0 ? '#15803d' : '#0f172a'}; font-weight: 600;">
