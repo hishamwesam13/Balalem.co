@@ -21,6 +21,7 @@ class NaseejCustomer {
       selectedColor: null,
       hangingStyle: 'تفصيل وخياطة جاهزة للتركيب'
     };
+    this.applyLoyaltyDiscount = false;
 
     // Auto update storefront category bubbles when admin updates categories
     window.addEventListener('naseej:categories_updated', () => {
@@ -730,6 +731,11 @@ class NaseejCustomer {
     }
   }
 
+  toggleLoyaltyDiscount(checked) {
+    this.applyLoyaltyDiscount = Boolean(checked);
+    this.updateCheckoutSummary();
+  }
+
   updateCheckoutSummary() {
     const fulfillment = this.getCheckoutFulfillment();
     const installCheckbox = document.getElementById('checkout-install-toggle');
@@ -738,7 +744,88 @@ class NaseejCustomer {
     // Delivery is free when installation is requested (technician brings curtains directly)
     const effectiveShippingFee = requiresInstallation ? 0 : fulfillment.fee;
     const subtotal = Math.round(this.cart.reduce((sum, item) => sum + item.total, 0));
-    const grandTotal = subtotal + effectiveShippingFee;
+
+    // Loyalty Points Logic: threshold 250 pts (500 ₪ spend), 100 pts = 5 ₪, max 15% discount
+    const user = auth.getCurrentUser();
+    const isCustomer = user && user.role === 'customer';
+    const userPoints = isCustomer ? (user.points || 0) : 0;
+
+    const MIN_REDEEM_POINTS = 250;
+    const MAX_DISCOUNT_PERCENT = 0.15;
+
+    let actualDiscount = 0;
+    let actualPointsUsed = 0;
+
+    if (isCustomer && userPoints >= MIN_REDEEM_POINTS) {
+      const rawDiscount = Math.floor((userPoints / 100) * 5 * 10) / 10;
+      const maxCapDiscount = Math.floor(subtotal * MAX_DISCOUNT_PERCENT * 10) / 10;
+      const eligibleDiscount = Math.min(rawDiscount, maxCapDiscount);
+      const pointsToUse = Math.round((eligibleDiscount / 5) * 100);
+
+      if (this.applyLoyaltyDiscount) {
+        actualDiscount = eligibleDiscount;
+        actualPointsUsed = pointsToUse;
+      }
+
+      // Update banner to show redemption toggle
+      const loyaltyContainer = document.getElementById('checkout-loyalty-container');
+      if (loyaltyContainer) {
+        loyaltyContainer.className = 'loyalty-notice-banner unlocked';
+        loyaltyContainer.style.background = 'linear-gradient(135deg, rgba(22, 163, 74, 0.12), rgba(22, 163, 74, 0.04))';
+        loyaltyContainer.style.borderColor = '#16a34a';
+        loyaltyContainer.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 24px;">🎉</span>
+              <div>
+                <strong style="color: #166534;">رصيدك مؤهل للخصم! (متوفر لديك ${userPoints} نقطة ولاء)</strong>
+                <div style="font-size: 12px; color: #15803d; margin-top: 2px;">
+                  يمكنك استبدال ${pointsToUse} نقطة والحصول على خصم <strong>${eligibleDiscount} شيكل</strong> (كل 100 نقطة = 5 ₪، بحد أقصى 15%)
+                </div>
+              </div>
+            </div>
+            <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; background: #ffffff; padding: 7px 14px; border-radius: 20px; border: 1.5px solid #16a34a; box-shadow: 0 2px 8px rgba(22, 163, 74, 0.15);">
+              <input type="checkbox" id="loyalty-discount-toggle" ${this.applyLoyaltyDiscount ? 'checked' : ''} onchange="window.naseejCustomer.toggleLoyaltyDiscount(this.checked)" style="width: 17px; height: 17px; accent-color: #16a34a; cursor: pointer;">
+              <span style="font-weight: 700; color: #166534; font-size: 13px;">تطبيق الخصم الآن</span>
+            </label>
+          </div>
+        `;
+      }
+    } else {
+      this.applyLoyaltyDiscount = false;
+      const loyaltyContainer = document.getElementById('checkout-loyalty-container');
+      if (loyaltyContainer) {
+        if (isCustomer) {
+          const needed = MIN_REDEEM_POINTS - userPoints;
+          const willEarn = Math.floor((subtotal / 100) * 50);
+          loyaltyContainer.style.background = 'linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05))';
+          loyaltyContainer.style.borderColor = '#d4af37';
+          loyaltyContainer.innerHTML = `
+            <span style="font-size: 22px;">🎁</span>
+            <div>
+              <div style="font-weight: 700; color: #856404;">رصيد نقاط الولاء الحالي: <strong>${userPoints} نقطة</strong></div>
+              <div style="font-size: 12px; color: #785800; margin-top: 2px;">
+                تحتاج إلى <strong>${needed} نقطة إضافية</strong> لتفعيل الخصم (حد التفعيل: 250 نقطة تعادل مشتريات 500 ₪). طلبيتك الحالية ستمنحك <strong>+${willEarn} نقطة</strong>!
+              </div>
+            </div>
+          `;
+        } else {
+          loyaltyContainer.style.background = 'linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05))';
+          loyaltyContainer.style.borderColor = '#d4af37';
+          loyaltyContainer.innerHTML = `
+            <span style="font-size: 22px;">🎁</span>
+            <div>
+              <div style="font-weight: 700; color: #856404;">برنامج الولاء لزبائن شركة الولاء: اكسب 50 نقطة لكل 100 ₪!</div>
+              <div style="font-size: 12px; color: #785800; margin-top: 2px;">
+                يتفعّل رصيد الخصومات عند جمع 250 نقطة (مشتريات 500 ₪ فأكثر) بقيمة 5 ₪ لكل 100 نقطة، وحد أقصى للخصم 15% من الفاتورة.
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+
+    const grandTotal = Math.max(0, subtotal - actualDiscount + effectiveShippingFee);
 
     const summaryContainer = document.getElementById('checkout-items-summary');
     if (!summaryContainer) return;
@@ -757,6 +844,12 @@ class NaseejCustomer {
         <span>المجموع الفرعي (سعر الأقمشة والتفصيل):</span>
         <span>${subtotal.toLocaleString()} شيكل</span>
       </div>
+      ${actualDiscount > 0 ? `
+      <div class="checkout-summary-row" style="color: #166534; font-weight: 700; background: #ecfdf5; padding: 7px 10px; border-radius: 6px; margin: 4px 0;">
+        <span>🎁 خصم رصيد نقاط الولاء (استبدال ${actualPointsUsed} نقطة):</span>
+        <span>-${actualDiscount.toLocaleString()} شيكل</span>
+      </div>
+      ` : ''}
       ${requiresInstallation ? `
       <div class="checkout-summary-row" style="color: #15803d; font-weight: 700; background: #ecfdf5; padding: 7px 10px; border-radius: 6px; margin: 4px 0;">
         <span>🚚 أجور التوصيل (مع خدمة التركيب):</span>
@@ -891,27 +984,35 @@ class NaseejCustomer {
 
     const subtotal = Math.round(this.cart.reduce((sum, item) => sum + item.total, 0));
     const totalMeters = Math.round(this.cart.reduce((sum, item) => sum + item.meters, 0) * 10) / 10;
-    const grandTotal = subtotal + shippingFee;
 
-    // Loyalty Points: 50 points per 100 ₪
-    const pointsEarned = Math.floor((grandTotal / 100) * 50);
-
-    // If customer is logged in, credit points to account
+    // Loyalty Points Deduction & Earn Logic (250 pts min, 100 pts = 5 NIS, max 15% cap)
     let user = auth.getCurrentUser();
-    if (user && user.role === 'customer') {
-      try {
-        const users = auth.getRegisteredUsers();
-        const found = users.find(u => u.id === user.userId || u.phone === user.phone);
-        if (found) {
-          found.points = (found.points || 0) + pointsEarned;
-          auth.saveRegisteredUsers(users);
-          user.points = found.points;
-          auth.saveSession(user);
-          this.updateUserUI();
-        }
-      } catch (err) {
-        console.warn('Could not update loyalty points:', err);
-      }
+    const isCustomer = user && user.role === 'customer';
+    const userPoints = isCustomer ? (user.points || 0) : 0;
+
+    let actualDiscount = 0;
+    let actualPointsUsed = 0;
+
+    if (isCustomer && userPoints >= 250 && this.applyLoyaltyDiscount) {
+      const rawDiscount = Math.floor((userPoints / 100) * 5 * 10) / 10;
+      const maxCap = Math.floor(subtotal * 0.15 * 10) / 10;
+      actualDiscount = Math.min(rawDiscount, maxCap);
+      actualPointsUsed = Math.round((actualDiscount / 5) * 100);
+
+      // Deduct redeemed points
+      auth.updateUserPoints(user.userId || user.phone, -actualPointsUsed);
+    }
+
+    const paidSubtotal = Math.max(0, subtotal - actualDiscount);
+    const grandTotal = paidSubtotal + shippingFee;
+
+    // Loyalty Points: 50 points per 100 ₪ on net paid amount
+    const pointsEarned = Math.floor((paidSubtotal / 100) * 50);
+
+    // Credit newly earned points
+    if (isCustomer) {
+      auth.updateUserPoints(user.userId || user.phone, pointsEarned);
+      this.updateUserUI();
     }
 
     const orderData = {
@@ -929,6 +1030,8 @@ class NaseejCustomer {
       requiresInstallation: requiresInstallation,
       installationFee: installationFee,
       source: 'online',
+      discount: actualDiscount,
+      pointsUsed: actualPointsUsed,
       loyaltyPoints: pointsEarned,
       items: this.cart.map(item => ({
         productId: item.productId,
@@ -946,13 +1049,13 @@ class NaseejCustomer {
       totalMeters: totalMeters,
       subtotal: subtotal,
       shippingFee: shippingFee,
-      discount: 0,
       grandTotal: grandTotal,
       paymentMethod: paymentMethod
     };
 
     const newOrder = store.createOrder(orderData);
     this.clearCart();
+    this.applyLoyaltyDiscount = false;
     this.closeCheckoutModal();
 
     // Show Order Success Modal
@@ -984,7 +1087,11 @@ class NaseejCustomer {
 
     const pointsEl = document.getElementById('success-loyalty-points');
     if (pointsEl) {
-      pointsEl.textContent = `+${order.loyaltyPoints || 0} نقطة ولاء`;
+      if (order.pointsUsed && order.pointsUsed > 0) {
+        pointsEl.innerHTML = `<span>وفرت <strong>${order.discount} ₪</strong> (استبدال ${order.pointsUsed} نقطة) + كسبت <strong>+${order.loyaltyPoints} نقطة جديدة</strong>!</span>`;
+      } else {
+        pointsEl.textContent = `+${order.loyaltyPoints || 0} نقطة ولاء للطلب`;
+      }
     }
 
     modal.classList.add('active');

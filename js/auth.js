@@ -61,6 +61,7 @@ class BalalemAuth {
             email: 'ahmad@example.com',
             password: 'User@1234',
             city: 'نابلس',
+            points: 350,
             role: 'customer',
             createdAt: new Date().toISOString()
           }
@@ -83,6 +84,38 @@ class BalalemAuth {
 
   saveRegisteredUsers(users) {
     localStorage.setItem(CUSTOMERS_DB_KEY, JSON.stringify(users));
+  }
+
+  getUserPoints(identifier) {
+    if (!identifier) return 0;
+    const users = this.getRegisteredUsers();
+    const cleanId = identifier.toString().replace(/[^0-9]/g, '');
+    const user = users.find(u => 
+      u.id === identifier || 
+      (u.phone && u.phone.replace(/[^0-9]/g, '') === cleanId) ||
+      (u.email && u.email.toLowerCase() === identifier.toLowerCase())
+    );
+    return user ? (user.points || 0) : 0;
+  }
+
+  updateUserPoints(identifier, deltaPoints) {
+    if (!identifier) return 0;
+    const users = this.getRegisteredUsers();
+    const cleanId = identifier.toString().replace(/[^0-9]/g, '');
+    const user = users.find(u => 
+      u.id === identifier || 
+      (u.phone && u.phone.replace(/[^0-9]/g, '') === cleanId) ||
+      (u.email && u.email.toLowerCase() === identifier.toLowerCase())
+    );
+    if (!user) return 0;
+    user.points = Math.max(0, (user.points || 0) + deltaPoints);
+    this.saveRegisteredUsers(users);
+
+    if (this.session && (this.session.userId === user.id || this.session.phone === user.phone)) {
+      this.session.points = user.points;
+      this.saveSession(this.session);
+    }
+    return user.points;
   }
 
   /**
@@ -139,6 +172,7 @@ class BalalemAuth {
         email: customer.email,
         phone: customer.phone,
         city: customer.city || 'نابلس',
+        points: customer.points || 0,
         role: 'customer',
         token: 'cust_sec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
         loginTime: new Date().toISOString()
@@ -207,6 +241,7 @@ class BalalemAuth {
       email: cleanEmail,
       password: cleanPass,
       city: cleanCity,
+      points: 0,
       role: 'customer',
       createdAt: new Date().toISOString()
     };
@@ -221,6 +256,7 @@ class BalalemAuth {
       email: newUser.email,
       phone: newUser.phone,
       city: newUser.city,
+      points: 0,
       role: 'customer',
       token: 'cust_sec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
       loginTime: new Date().toISOString()
