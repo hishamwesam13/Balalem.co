@@ -284,7 +284,7 @@ const INITIAL_ORDERS = [
     deliveryType: 'delivery',
     deliveryRegion: 'الضفة الغربية',
     pickupBranch: '',
-    shippingFee: 0,
+    shippingFee: 20,
     requiresInstallation: true,
     installationFee: 100,
     installationDay: 'الأحد',
@@ -316,7 +316,7 @@ const INITIAL_ORDERS = [
     totalMeters: 28,
     subtotal: 1582,
     discount: 0,
-    grandTotal: 1682,
+    grandTotal: 1702,
     paymentMethod: 'الدفع عند الاستلام',
     paymentStatus: 'عند الاستلام',
     orderStatus: 'in_tailoring', // pending, in_tailoring, ready, shipped, delivered
@@ -417,7 +417,7 @@ const INITIAL_ORDERS = [
     deliveryType: 'delivery',
     deliveryRegion: 'القدس',
     pickupBranch: '',
-    shippingFee: 35,
+    shippingFee: 45,
     items: [
       {
         productId: 'fab-6',
@@ -432,7 +432,7 @@ const INITIAL_ORDERS = [
     totalMeters: 16,
     subtotal: 1200,
     discount: 0,
-    grandTotal: 1235,
+    grandTotal: 1245,
     paymentMethod: 'الدفع عند الاستلام',
     paymentStatus: 'عند الاستلام',
     orderStatus: 'in_tailoring',
@@ -453,7 +453,7 @@ const INITIAL_ORDERS = [
     deliveryType: 'delivery',
     deliveryRegion: 'الضفة الغربية',
     pickupBranch: '',
-    shippingFee: 0,
+    shippingFee: 20,
     requiresInstallation: true,
     installationFee: 90,
     installationDay: 'الإثنين',
@@ -476,7 +476,7 @@ const INITIAL_ORDERS = [
     totalMeters: 20,
     subtotal: 1300,
     discount: 0,
-    grandTotal: 1390,
+    grandTotal: 1410,
     paymentMethod: 'الدفع عند الاستلام',
     paymentStatus: 'عند الاستلام',
     orderStatus: 'pending',
@@ -667,9 +667,40 @@ class NaseejStore {
     } catch (e) {
       localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(INITIAL_PRODUCTS));
     }
-    // Update existing orders to Palestinian cities if first initialized or missing scheduledDate
-    const existingOrders = localStorage.getItem(STORAGE_KEYS.ORDERS);
-    if (!existingOrders || existingOrders.includes('الرياض') || !existingOrders.includes('ORD-100') || !existingOrders.includes('tech3') || existingOrders.includes('"shippingFee":20,"requiresInstallation":true') || !existingOrders.includes('scheduledDate')) {
+    // Update existing orders to ensure accurate Palestinian shipping fees (West Bank 20, Jerusalem 45, Interior 80, Pickup 0)
+    try {
+      const existingOrdersRaw = localStorage.getItem(STORAGE_KEYS.ORDERS);
+      if (!existingOrdersRaw || existingOrdersRaw.includes('الرياض') || !existingOrdersRaw.includes('ORD-100') || !existingOrdersRaw.includes('tech3') || !existingOrdersRaw.includes('scheduledDate')) {
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(INITIAL_ORDERS));
+      } else {
+        const orders = JSON.parse(existingOrdersRaw);
+        let orderChanged = false;
+        orders.forEach(o => {
+          if (o.deliveryType === 'delivery') {
+            let correctFee = 20;
+            if (o.deliveryRegion && o.deliveryRegion.includes('القدس')) correctFee = 45;
+            else if (o.deliveryRegion && (o.deliveryRegion.includes('الداخل') || o.deliveryRegion.includes('48'))) correctFee = 80;
+
+            if (o.shippingFee !== correctFee) {
+              const oldFee = Number(o.shippingFee) || 0;
+              o.shippingFee = correctFee;
+              o.grandTotal = Math.max(0, (Number(o.grandTotal) || 0) - oldFee + correctFee);
+              orderChanged = true;
+            }
+          } else if (o.deliveryType === 'pickup') {
+            if (o.shippingFee !== 0) {
+              const oldFee = Number(o.shippingFee) || 0;
+              o.shippingFee = 0;
+              o.grandTotal = Math.max(0, (Number(o.grandTotal) || 0) - oldFee);
+              orderChanged = true;
+            }
+          }
+        });
+        if (orderChanged) {
+          localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+        }
+      }
+    } catch (e) {
       localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(INITIAL_ORDERS));
     }
     if (!localStorage.getItem(STORAGE_KEYS.CUSTOMERS) || localStorage.getItem(STORAGE_KEYS.CUSTOMERS).includes('الرياض')) {
@@ -785,8 +816,10 @@ class NaseejStore {
     }
 
     const requiresInstallation = Boolean(orderData.requiresInstallation);
-    // When installation is requested, delivery fee is 0 (free delivery because technician transports curtains)
-    const shippingFee = requiresInstallation ? 0 : (Number(orderData.shippingFee) || 0);
+    // Shipping fee applies based on fulfillment delivery region (20 WB, 45 Jerusalem, 80 Interior) or pickup (0)
+    const shippingFee = Number(orderData.shippingFee) !== undefined && !isNaN(Number(orderData.shippingFee))
+      ? Number(orderData.shippingFee)
+      : (orderData.deliveryType === 'delivery' ? 20 : 0);
     const installationFee = requiresInstallation ? (Number(orderData.installationFee) || 0) : 0;
     const installationDate = orderData.installationDate || (requiresInstallation ? scheduledDate : '');
     const installationDay = orderData.installationDay || (requiresInstallation ? scheduledDay : '');

@@ -718,8 +718,8 @@ class NaseejCustomer {
       const regionSelect = document.getElementById('checkout-delivery-region');
       const region = regionSelect ? regionSelect.value : 'الضفة الغربية';
       let fee = 20;
-      if (region.includes('القدس')) fee = 35;
-      else if (region.includes('الداخل')) fee = 80;
+      if (region.includes('القدس')) fee = 45;
+      else if (region.includes('الداخل') || region.includes('48')) fee = 80;
 
       return {
         type: 'delivery',
@@ -741,8 +741,8 @@ class NaseejCustomer {
     const installCheckbox = document.getElementById('checkout-install-toggle');
     const requiresInstallation = installCheckbox ? installCheckbox.checked : false;
 
-    // Delivery is free when installation is requested (technician brings curtains directly)
-    const effectiveShippingFee = requiresInstallation ? 0 : fulfillment.fee;
+    // Delivery fee is determined by fulfillment selection (West Bank 20, Jerusalem 45, Interior 80, Pickup 0)
+    const effectiveShippingFee = fulfillment.fee;
     const subtotal = Math.round(this.cart.reduce((sum, item) => sum + item.total, 0));
 
     // Loyalty Points Logic: threshold 250 pts (500 ₪ spend), 100 pts = 5 ₪, max 15% discount
@@ -849,21 +849,16 @@ class NaseejCustomer {
         <span>-${actualDiscount.toLocaleString()} شيكل</span>
       </div>
       ` : ''}
-      ${requiresInstallation ? `
-      <div class="checkout-summary-row" style="color: #15803d; font-weight: 700; background: #ecfdf5; padding: 7px 10px; border-radius: 6px; margin: 4px 0;">
-        <span>🚚 أجور التوصيل (مع خدمة التركيب):</span>
-        <span>مجاناً (0 شيكل - الفني يحضر الستائر معه)</span>
-      </div>
-      <div class="checkout-summary-row" style="color: #3730a3; font-weight: 700; background: #e0e7ff; padding: 7px 10px; border-radius: 6px; margin: 4px 0;">
-        <span>🔧 أجور خدمة التركيب في الموقع:</span>
-        <span style="font-size: 12.5px;">متراوحة حسب عدد الشبابيك (تحدد وتدفع عند التركيب)</span>
-      </div>
-      ` : `
       <div class="checkout-summary-row" style="color: ${fulfillment.fee === 0 ? '#15803d' : '#0f172a'}; font-weight: 600;">
         <span>${fulfillment.summaryLabel}:</span>
         <span>${fulfillment.fee === 0 ? 'مجاناً (0 شيكل)' : `+${fulfillment.fee} شيكل`}</span>
       </div>
-      `}
+      ${requiresInstallation ? `
+      <div class="checkout-summary-row" style="color: #3730a3; font-weight: 700; background: #e0e7ff; padding: 7px 10px; border-radius: 6px; margin: 4px 0;">
+        <span>🔧 أجور خدمة التركيب في الموقع:</span>
+        <span style="font-size: 12.5px;">متراوحة حسب عدد الشبابيك (تحدد وتدفع عند التركيب)</span>
+      </div>
+      ` : ''}
       <div class="checkout-summary-row total-row">
         <span>المجموع الإجمالي (الدفع عند الاستلام):</span>
         <span class="gold-text">${grandTotal.toLocaleString()} شيكل</span>
@@ -977,8 +972,8 @@ class NaseejCustomer {
     const installCheckbox = document.getElementById('checkout-install-toggle');
     const requiresInstallation = installCheckbox ? installCheckbox.checked : false;
 
-    // Delivery is free when installation is selected because technician brings curtains from showroom:
-    const shippingFee = requiresInstallation ? 0 : fulfillment.fee;
+    // Shipping fee applies based on delivery region or showroom pickup
+    const shippingFee = fulfillment.fee;
     const installationFee = 0; // variable / agreed based on windows
 
     const subtotal = Math.round(this.cart.reduce((sum, item) => sum + item.total, 0));

@@ -1391,13 +1391,11 @@ class NaseejAdmin {
     const deliveryType = document.getElementById('walkin-delivery-type')?.value || 'pickup_babsaha';
     const installToggle = document.getElementById('walkin-install-toggle')?.checked || false;
 
-    // Delivery is free (0 ₪) when installation is chosen because technician transports the curtains
+    // Delivery fee is determined by selected delivery type (West Bank 20, Jerusalem 45, Interior 80, Pickup 0)
     let deliveryFee = 0;
-    if (!installToggle) {
-      if (deliveryType === 'delivery_wb') deliveryFee = 20;
-      else if (deliveryType === 'delivery_jer') deliveryFee = 35;
-      else if (deliveryType === 'delivery_48') deliveryFee = 80;
-    }
+    if (deliveryType === 'delivery_wb') deliveryFee = 20;
+    else if (deliveryType === 'delivery_jer') deliveryFee = 45;
+    else if (deliveryType === 'delivery_48') deliveryFee = 80;
 
     const installFeeInput = document.getElementById('walkin-install-fee');
     const installFee = installToggle ? (parseFloat(installFeeInput?.value) || 0) : 0;
@@ -1414,14 +1412,14 @@ class NaseejAdmin {
         `إجمالي الأمتار: <strong>${totalMeters} متر</strong>`,
         `مجموع الأقمشة: <strong>${fabricsSubtotal.toLocaleString()} ₪</strong>`
       ];
-      if (installToggle) {
-        parts.push(`التوصيل: مجاني (0 ₪ مع الفني)`);
-        if (installFee > 0) parts.push(`أجور التركيب: +${installFee} ₪`);
-        else parts.push(`أجور التركيب: متراوحة`);
-      } else if (deliveryFee > 0) {
-        parts.push(`توصيل: +${deliveryFee} ₪`);
+      if (deliveryFee > 0) {
+        parts.push(`أجور التوصيل: +${deliveryFee} ₪`);
       } else {
         parts.push(`استلام من الفرع: مجاني (0 ₪)`);
+      }
+      if (installToggle) {
+        if (installFee > 0) parts.push(`أجور التركيب: +${installFee} ₪`);
+        else parts.push(`أجور التركيب: متراوحة`);
       }
       breakdownEl.innerHTML = parts.join(' | ');
     }
@@ -1484,15 +1482,15 @@ class NaseejAdmin {
     } else if (deliveryVal === 'delivery_jer') {
       deliveryType = 'delivery';
       deliveryRegion = 'القدس';
-      baseShippingFee = 35;
+      baseShippingFee = 45;
     } else if (deliveryVal === 'delivery_48') {
       deliveryType = 'delivery';
       deliveryRegion = 'الداخل الفلسطيني (مناطق 48)';
       baseShippingFee = 80;
     }
 
-    // Delivery is free (0 ₪) when installation is chosen
-    const shippingFee = installToggle ? 0 : baseShippingFee;
+    // Shipping fee applies based on delivery region or branch pickup
+    const shippingFee = baseShippingFee;
     const installFeeInput = document.getElementById('walkin-install-fee');
     const installFee = installToggle ? (parseFloat(installFeeInput?.value) || 0) : 0;
 

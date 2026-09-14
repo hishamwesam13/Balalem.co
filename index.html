@@ -1220,7 +1220,7 @@
                   <label class="form-label">اختر منطقة التوصيل: *</label>
                   <select id="checkout-delivery-region" class="form-control" onchange="window.naseejCustomer.updateCheckoutSummary()">
                     <option value="الضفة الغربية" data-fee="20" selected>🏙️ مدن وقرى الضفة الغربية (أجور التوصيل: 20 شيكل)</option>
-                    <option value="القدس" data-fee="35">🕌 القدس الشريف وضواحيها (أجور التوصيل: 35 شيكل)</option>
+                    <option value="القدس" data-fee="45">🕌 القدس الشريف وضواحيها (أجور التوصيل: 45 شيكل)</option>
                     <option value="الداخل الفلسطيني (مناطق 48)" data-fee="80">📍 الداخل الفلسطيني / مناطق 48 (أجور التوصيل: 80 شيكل)</option>
                   </select>
                 </div>
@@ -1237,23 +1237,20 @@
                 </div>
               </div>
 
-              <!-- Installation Service Option (Free Delivery with Installation & Variable Fee) -->
+              <!-- Installation Service Option (Variable Fee based on windows) -->
               <div class="form-group" style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: var(--radius-md); padding: 14px; margin-top: 14px; margin-bottom: 14px;">
                 <label style="display: flex; align-items: flex-start; justify-content: space-between; cursor: pointer; margin-bottom: 0; gap: 12px;">
                   <div style="display: flex; align-items: flex-start; gap: 10px;">
                     <input type="checkbox" id="checkout-install-toggle" onchange="window.naseejCustomer.updateCheckoutSummary()" style="width: 20px; height: 20px; accent-color: var(--gold-primary); cursor: pointer; margin-top: 3px;">
                     <div>
                       <strong style="color: var(--primary); font-size: 14px;">🔧 هل ترغب بخدمة تركيب الستائر في الموقع؟ (داخل مدن وقرى الضفة)</strong>
-                      <div style="font-size: 12.5px; color: #15803d; margin-top: 3px; font-weight: 700;">
-                        🚚 أجور التوصيل مجانية (0 شيكل): الفني يأخذ الستائر مباشرة من المعرض لتركيبها بموقعك!
-                      </div>
-                      <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
-                        سعر أجور التركيب متراوح حسب عدد الشبابيك والمقاسات (يحدد ويتفق عليه بالتواصل معكم عند التجهيز).
+                      <div style="font-size: 12px; color: #64748b; margin-top: 3px;">
+                        أجور خدمة التركيب متراوحة حسب عدد الشبابيك والمقاسات (يتم الاتفاق عليها وتأكيدها هاتفياً عند التجهيز).
                       </div>
                     </div>
                   </div>
-                  <span class="fee-badge" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-weight: 800; padding: 5px 12px; border-radius: 6px; white-space: nowrap;">
-                    توصيل مجاني ✓ (أجور التركيب متراوحة)
+                  <span class="fee-badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 700; padding: 5px 12px; border-radius: 6px; white-space: nowrap;">
+                    أجور التركيب متراوحة
                   </span>
                 </label>
               </div>
@@ -1719,7 +1716,7 @@
                 <option value="pickup_babsaha">🏪 استلام من الفرع: نابلس - باب الساحة (مجاني 0 ₪)</option>
                 <option value="pickup_beitwazan">🏪 استلام من الفرع: نابلس - بيت وزن طلعة برافو (مجاني 0 ₪)</option>
                 <option value="delivery_wb">🚚 توصيل للضفة الغربية (+20 ₪)</option>
-                <option value="delivery_jer">🚚 توصيل للقدس الشريف (+35 ₪)</option>
+                <option value="delivery_jer">🚚 توصيل للقدس الشريف (+45 ₪)</option>
                 <option value="delivery_48">🚚 توصيل للداخل الفلسطيني 48 (+80 ₪)</option>
               </select>
             </div>
@@ -1739,12 +1736,12 @@
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                 <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer; margin-bottom: 0;">
                   <input type="checkbox" id="walkin-install-toggle" onchange="window.naseejAdmin.handleWalkinInstallToggle()" style="width: 18px; height: 18px; accent-color: var(--gold-primary);">
-                  <span>🔧 إضافة خدمة تركيب الستائر في الموقع (التوصيل مجاني 0 ₪ مع الفني)</span>
+                  <span>🔧 إضافة خدمة تركيب الستائر في الموقع</span>
                 </label>
-                <span class="fee-badge" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-weight: 700; padding: 4px 8px; border-radius: 6px;">توصيل مجاني مع التركيب ✓</span>
+                <span class="fee-badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 700; padding: 4px 8px; border-radius: 6px;">خدمة التركيب</span>
               </div>
               <div style="font-size: 12px; color: #64748b; margin-bottom: 6px;">
-                💡 عند طلب التركيب، يأخذ الفني الستائر من المعرض مباشرة ويركبها لدى الزبون، وبالتالي لا تُحسب أجور توصيل.
+                💡 يتم تحديد أجور التركيب وتعيين الفني المسؤول وموعد التركيب حسب عدد الشبابيك.
               </div>
               
               <div id="walkin-install-fields" style="display: none; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 12px;">
