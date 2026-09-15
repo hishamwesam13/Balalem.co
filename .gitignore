@@ -12,3 +12,12 @@ desktop.ini
 
 # Logs & Temp
 *.log
+
+# Environment & Database Secrets
+.env
+.env.*
+!.env.example
+
+# Node dependencies
+node_modules/
+npm-debug.log*

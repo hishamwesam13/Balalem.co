@@ -1,0 +1,15 @@
+{
+  "name": "balalem-co-curtains",
+  "version": "2.0.0",
+  "type": "module",
+  "description": "شركة الولاء لستائر Balalem co - متجر أقمشة الستائر الفاخرة وإدارة الورشة مع Neon PostgreSQL",
+  "main": "index.html",
+  "scripts": {
+    "start": "powershell -ExecutionPolicy Bypass -File .\\server.ps1 -Port 5500"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "pg": "^8.13.1",
+    "dotenv": "^16.4.7"
+  }
+}

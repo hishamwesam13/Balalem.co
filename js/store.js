@@ -274,6 +274,42 @@ class NaseejStore {
     if (!localStorage.getItem(STORAGE_KEYS.CUSTOMERS) || localStorage.getItem(STORAGE_KEYS.CUSTOMERS).includes('الرياض') || localStorage.getItem(STORAGE_KEYS.CUSTOMERS).includes('طارق الزغير')) {
       localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify([]));
     }
+
+    // Trigger asynchronous Neon Cloud synchronization
+    this.syncCloud();
+  }
+
+  async syncCloud() {
+    try {
+      const prodRes = await fetch('/api/products');
+      if (prodRes.ok) {
+        const prodData = await prodRes.json();
+        if (prodData.success && Array.isArray(prodData.products) && prodData.products.length > 0) {
+          localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(prodData.products));
+          if (Array.isArray(prodData.categories) && prodData.categories.length > 0) {
+            localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(prodData.categories));
+          }
+          window.dispatchEvent(new CustomEvent('naseej:products_updated'));
+        } else if (prodData.success && prodData.products && prodData.products.length === 0) {
+          // Initialize DB if empty
+          fetch('/api/init').then(r => r.json()).then(initData => {
+            if (initData.success) this.syncCloud();
+          }).catch(console.warn);
+        }
+      }
+
+      const ordRes = await fetch('/api/orders');
+      if (ordRes.ok) {
+        const ordData = await ordRes.json();
+        if (ordData.success && Array.isArray(ordData.orders)) {
+          localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(ordData.orders));
+          window.dispatchEvent(new CustomEvent('naseej:orders_updated'));
+        }
+      }
+    } catch (err) {
+      // Graceful offline fallback
+      console.log('[Store Cloud Sync] Using local storage mode:', err.message);
+    }
   }
 
   // --- Products Management ---
@@ -320,6 +356,14 @@ class NaseejStore {
     products.unshift(newProduct);
     localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
     window.dispatchEvent(new CustomEvent('naseej:products_updated', { detail: newProduct }));
+
+    // Async sync to Neon DB
+    fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newProduct)
+    }).catch(e => console.warn('[Cloud Sync] addProduct:', e.message));
+
     return newProduct;
   }
 
@@ -338,6 +382,14 @@ class NaseejStore {
 
     localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
     window.dispatchEvent(new CustomEvent('naseej:products_updated', { detail: products[index] }));
+
+    // Async sync to Neon DB
+    fetch('/api/products', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...updatedFields })
+    }).catch(e => console.warn('[Cloud Sync] updateProduct:', e.message));
+
     return products[index];
   }
 
@@ -346,6 +398,11 @@ class NaseejStore {
     const filtered = products.filter(p => p.id !== id);
     localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(filtered));
     window.dispatchEvent(new CustomEvent('naseej:products_updated'));
+
+    // Async sync to Neon DB
+    fetch('/api/products?id=' + encodeURIComponent(id), { method: 'DELETE' })
+      .catch(e => console.warn('[Cloud Sync] deleteProduct:', e.message));
+
     return true;
   }
 
@@ -447,6 +504,35 @@ class NaseejStore {
     }
 
     window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: newOrder }));
+
+    // Async sync to Neon DB
+    fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: newOrder.id,
+        customerName: newOrder.customer?.name || '',
+        customerPhone: newOrder.customer?.phone || '',
+        city: newOrder.customer?.city || newOrder.deliveryRegion || 'نابلس',
+        address: newOrder.customer?.address || '',
+        items: newOrder.items,
+        totalPrice: newOrder.grandTotal,
+        fabricTotal: newOrder.subtotal,
+        tailoringTotal: 0,
+        deliveryFee: newOrder.shippingFee,
+        installationFee: newOrder.installationFee,
+        discount: newOrder.discount,
+        orderStatus: newOrder.orderStatus,
+        tailoringStatus: 'pending',
+        installationStatus: newOrder.installationStatus,
+        scheduledDate: newOrder.scheduledDate,
+        scheduledSlot: newOrder.scheduledDay,
+        requiresInstallation: newOrder.requiresInstallation,
+        installerId: newOrder.installerId,
+        notes: newOrder.customer?.notes || ''
+      })
+    }).catch(e => console.warn('[Cloud Sync] createOrder:', e.message));
+
     return newOrder;
   }
 
@@ -470,6 +556,14 @@ class NaseejStore {
 
     localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
     window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: order }));
+
+    // Async sync to Neon DB
+    fetch('/api/orders', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: orderId, orderStatus: newStatus })
+    }).catch(e => console.warn('[Cloud Sync] updateOrderStatus:', e.message));
+
     return order;
   }
 
@@ -481,6 +575,11 @@ class NaseejStore {
     orders.splice(orderIndex, 1);
     localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
     window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: { action: 'deleted', id: orderId, deletedOrder } }));
+
+    // Async sync to Neon DB
+    fetch('/api/orders?id=' + encodeURIComponent(orderId), { method: 'DELETE' })
+      .catch(e => console.warn('[Cloud Sync] deleteOrder:', e.message));
+
     return true;
   }
 
