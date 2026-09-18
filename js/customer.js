@@ -1639,16 +1639,12 @@ class NaseejCustomer {
         mouseX += (targetX - mouseX) * 0.08;
         mouseY += (targetY - mouseY) * 0.08;
 
-        if (!isCurtainOpen) {
-          const rotY = (mouseX * 16).toFixed(2);
-          const rotX = (-mouseY * 8).toFixed(2);
-          const transX = (mouseX * 35).toFixed(1);
-          const transY = (mouseY * 15).toFixed(1);
+        const rotY = (mouseX * 14).toFixed(2);
+        const rotX = (-mouseY * 7).toFixed(2);
+        const transX = (mouseX * 28).toFixed(1);
+        const transY = (mouseY * 12).toFixed(1);
 
-          curtainLayer.style.transform = `perspective(1000px) rotateY(${rotY}deg) rotateX(${rotX}deg) translate3d(${transX}px, ${transY}px, 0)`;
-        } else {
-          curtainLayer.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg) translate3d(0, 0, 0)`;
-        }
+        curtainLayer.style.transform = `perspective(1000px) rotateY(${rotY}deg) rotateX(${rotX}deg) translate3d(${transX}px, ${transY}px, 0)`;
 
         requestAnimationFrame(updateMotion);
       };
