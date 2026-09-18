@@ -2,29 +2,126 @@
  * NASEEJ LUXURY CURTAIN FABRICS - CUSTOMER STOREFRONT STYLES
  */
 
-/* Hero Banner */
+/* Hero Banner & 3D Interactive Curtain Stage */
 .customer-hero {
   position: relative;
-  background: url('../assets/images/hero_wavy_linen_curtain.jpg') center center / cover no-repeat;
+  background: #0b1120;
   color: #0f172a;
-  padding: 85px 0 75px;
+  padding: 70px 0 65px;
   overflow: hidden;
   border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+  perspective: 1200px;
 }
 
-.customer-hero::before {
-  content: '';
+/* Hidden window view revealed when curtains are drawn */
+.curtain-behind-window {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to left,
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(253, 250, 243, 0.85) 45%,
-    rgba(247, 240, 227, 0.55) 75%,
-    rgba(242, 233, 216, 0.3) 100%
-  );
+  background: linear-gradient(180deg, #93c5fd 0%, #dbeafe 35%, #fef3c7 70%, #fde68a 100%);
+  z-index: 0;
+  overflow: hidden;
+}
+
+.window-sunbeam {
+  position: absolute;
+  top: -100px;
+  left: 25%;
+  width: 700px;
+  height: 140%;
+  background: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.7) 0%, rgba(254, 243, 199, 0.35) 45%, transparent 75%);
   pointer-events: none;
+  animation: sunbeamPulse 7s ease-in-out infinite alternate;
+}
+
+@keyframes sunbeamPulse {
+  0% { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 0.95; transform: scale(1.05); }
+}
+
+.window-frame-overlay {
+  position: absolute;
+  inset: 0;
+  border-top: 14px solid #0f172a;
+  box-shadow: inset 0 20px 50px rgba(15, 23, 42, 0.35);
+  pointer-events: none;
+}
+
+/* 3D Interactive Curtain Scene */
+.curtain-parallax-scene {
+  position: absolute;
+  inset: -20px;
   z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.curtain-bg-layer {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.12s ease-out;
+}
+
+.curtain-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background-image: url('../assets/images/hero_wavy_linen_curtain.jpg');
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  transition: transform 1.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.8s ease, box-shadow 0.8s ease;
+  will-change: transform;
+}
+
+.curtain-panel-left {
+  left: 0;
+  background-position: left center;
+  transform-origin: left center;
+  box-shadow: 10px 0 35px rgba(0, 0, 0, 0.45);
+  animation: curtainBreezeLeft 8s ease-in-out infinite;
+}
+
+.curtain-panel-right {
+  right: 0;
+  background-position: right center;
+  transform-origin: right center;
+  box-shadow: -10px 0 35px rgba(0, 0, 0, 0.45);
+  animation: curtainBreezeRight 8s ease-in-out infinite 0.6s;
+}
+
+/* Interactive Open / Close States */
+.customer-hero.curtains-open .curtain-panel-left {
+  transform: translateX(-78%) scaleX(0.42) !important;
+  filter: brightness(0.92) contrast(1.05);
+  animation: none !important;
+  box-shadow: 15px 0 45px rgba(0, 0, 0, 0.6);
+}
+
+.customer-hero.curtains-open .curtain-panel-right {
+  transform: translateX(78%) scaleX(0.42) !important;
+  filter: brightness(0.92) contrast(1.05);
+  animation: none !important;
+  box-shadow: -15px 0 45px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes curtainBreezeLeft {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(14px, -3px, 0) scale(1.018);
+  }
+}
+
+@keyframes curtainBreezeRight {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-14px, -3px, 0) scale(1.018);
+  }
 }
 
 .hero-glow {
@@ -33,22 +130,86 @@
   left: 30%;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0) 70%);
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.18) 0%, rgba(212, 175, 55, 0) 70%);
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
 
-.hero-content {
+/* Hero Content & Frosted Luxury Glass Card */
+.hero-content-wrapper {
   position: relative;
-  z-index: 2;
-  max-width: 800px;
+  z-index: 5;
+}
+
+.curtain-action-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-curtain-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(11, 17, 32, 0.92);
+  color: #fceea7;
+  border: 1.5px solid rgba(212, 175, 55, 0.65);
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-curtain-toggle:hover {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: var(--gold-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+}
+
+.btn-curtain-toggle.active {
+  background: var(--gold-gradient);
+  color: #0b1120;
+  border-color: #b89028;
+}
+
+.curtain-interactive-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8c6808;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.hero-glass-card {
+  max-width: 840px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(212, 175, 55, 0.45);
+  border-radius: 24px;
+  padding: 38px 42px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14), 0 4px 16px rgba(212, 175, 55, 0.12);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .hero-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.94);
   border: 1.5px solid rgba(212, 175, 55, 0.6);
   color: #8c6808;
   padding: 6px 18px;
@@ -57,7 +218,6 @@
   font-weight: 700;
   margin-bottom: 20px;
   box-shadow: 0 4px 14px rgba(212, 175, 55, 0.15);
-  backdrop-filter: blur(8px);
 }
 
 .hero-title {
@@ -1712,7 +1872,17 @@
 
   /* Hero Banner on Mobile */
   .customer-hero {
-    padding: 30px 0 25px;
+    padding: 24px 0 20px;
+  }
+
+  .hero-glass-card {
+    padding: 20px 15px;
+    border-radius: 16px;
+  }
+
+  .curtain-action-toolbar {
+    justify-content: center;
+    margin-bottom: 14px;
   }
 
   .hero-badge {

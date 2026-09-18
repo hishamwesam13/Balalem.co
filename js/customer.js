@@ -27,6 +27,9 @@ class NaseejCustomer {
     window.addEventListener('naseej:categories_updated', () => {
       this.renderCategoryTabs();
     });
+
+    // Initialize 3D dynamic interactive curtain
+    this.initCurtainInteractive();
   }
 
   loadCart() {
@@ -1571,9 +1574,98 @@ class NaseejCustomer {
     this.renderCategoryTabs();
     this.renderCatalog();
   }
+
+  // =========================================================================
+  // DYNAMIC 3D & 360° INTERACTIVE CURTAIN SYSTEM
+  // =========================================================================
+  initCurtainInteractive() {
+    const runInit = () => {
+      const stage = document.getElementById('customer-hero-stage');
+      const curtainLayer = document.getElementById('curtain-bg-layer');
+      const toggleBtn = document.getElementById('btn-toggle-curtain');
+      const toggleText = document.getElementById('curtain-toggle-text');
+
+      if (!stage || !curtainLayer) return;
+
+      let isCurtainOpen = false;
+      let mouseX = 0, mouseY = 0;
+      let targetX = 0, targetY = 0;
+
+      // Toggle Open / Close
+      this.toggleCurtainAction = () => {
+        isCurtainOpen = !isCurtainOpen;
+        stage.classList.toggle('curtains-open', isCurtainOpen);
+        if (toggleText) {
+          toggleText.textContent = isCurtainOpen ? 'إغلاق الستارة (Wave Fold)' : 'محاكاة فتح وإغلاق الستارة';
+        }
+        if (toggleBtn) {
+          toggleBtn.classList.toggle('active', isCurtainOpen);
+        }
+      };
+
+      // 360 / 3D Parallax on mouse move
+      const handleMouseMove = (e) => {
+        const rect = stage.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5; // -0.5 to 0.5
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        targetX = Math.max(-0.5, Math.min(0.5, x));
+        targetY = Math.max(-0.5, Math.min(0.5, y));
+      };
+
+      const handleMouseLeave = () => {
+        targetX = 0;
+        targetY = 0;
+      };
+
+      // Touch support for mobile devices
+      const handleTouchMove = (e) => {
+        if (e.touches && e.touches[0]) {
+          const touch = e.touches[0];
+          const rect = stage.getBoundingClientRect();
+          const x = (touch.clientX - rect.left) / rect.width - 0.5;
+          const y = (touch.clientY - rect.top) / rect.height - 0.5;
+          targetX = Math.max(-0.5, Math.min(0.5, x));
+          targetY = Math.max(-0.5, Math.min(0.5, y));
+        }
+      };
+
+      stage.addEventListener('mousemove', handleMouseMove, { passive: true });
+      stage.addEventListener('mouseleave', handleMouseLeave);
+      stage.addEventListener('touchmove', handleTouchMove, { passive: true });
+      stage.addEventListener('touchend', handleMouseLeave);
+
+      // Smooth physics loop for organic motion and 3D parallax
+      const updateMotion = () => {
+        mouseX += (targetX - mouseX) * 0.08;
+        mouseY += (targetY - mouseY) * 0.08;
+
+        if (!isCurtainOpen) {
+          const rotY = (mouseX * 16).toFixed(2);
+          const rotX = (-mouseY * 8).toFixed(2);
+          const transX = (mouseX * 35).toFixed(1);
+          const transY = (mouseY * 15).toFixed(1);
+
+          curtainLayer.style.transform = `perspective(1000px) rotateY(${rotY}deg) rotateX(${rotX}deg) translate3d(${transX}px, ${transY}px, 0)`;
+        } else {
+          curtainLayer.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg) translate3d(0, 0, 0)`;
+        }
+
+        requestAnimationFrame(updateMotion);
+      };
+
+      requestAnimationFrame(updateMotion);
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', runInit);
+    } else {
+      runInit();
+    }
+  }
 }
 
 export const customer = new NaseejCustomer();
 window.naseejCustomer = customer;
 window.scrollToSection = (id, ev) => customer.scrollToSection(id, ev);
 window.openSmartCalculator = (type, ev) => customer.openCalculatorFromNav(ev, type);
+window.toggleCurtainAction = () => customer.toggleCurtainAction();

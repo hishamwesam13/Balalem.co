@@ -298,58 +298,86 @@
   <!-- 1. CUSTOMER STOREFRONT VIEW                -->
   <!-- ========================================== -->
   <main id="storefront-view">
-    <!-- Hero Banner -->
-    <section class="customer-hero">
-      <div class="hero-glow"></div>
-      <div class="container hero-content">
-        <div class="hero-badge">
-          <span>متجر أقمشة الستائر المعتمد • تواصل وطلب مباشر: 0599842231</span>
+    <!-- Hero Banner with Dynamic 3D Interactive Curtain & Wave Controls -->
+    <section class="customer-hero" id="customer-hero-stage">
+      <!-- Background Window View revealed when curtains open -->
+      <div class="curtain-behind-window">
+        <div class="window-sunbeam"></div>
+        <div class="window-frame-overlay"></div>
+      </div>
+
+      <!-- 3D Interactive Curtain Scene Layer -->
+      <div class="curtain-parallax-scene" id="curtain-scene">
+        <div class="curtain-bg-layer" id="curtain-bg-layer">
+          <div class="curtain-panel curtain-panel-left" id="curtain-left"></div>
+          <div class="curtain-panel curtain-panel-right" id="curtain-right"></div>
         </div>
-        <h1 class="hero-title">
-          أناقة منسدلة تُعيد تعريف مساحتك بلمسة <span class="gold-text">مَلَكِيَّة</span>
-        </h1>
-        <p class="hero-desc">
-          تصميم وتفصيل أرقى ستائر وبرادي المنازل والفلل العصرية بأجود خامات الأقمشة العالمية، مع حاسبة مقاسات ذكية وتوصيل مباشر لكافة مدن فلسطين.
-        </p>
-        <div class="hero-features-row">
-          <div class="hero-feature-item" style="cursor: pointer;" onclick="window.openSmartCalculator(null, event)" title="اضغط لفتح حاسبة تفصيل الستائر">
-            <span class="feature-svg-wrap">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.3 15.3l-6.6-6.6a2 2 0 0 0-2.8 0L2.7 17.9a2 2 0 0 0 0 2.8l.6.6a2 2 0 0 0 2.8 0l9.2-9.2"/>
-                <path d="m14.5 12.5 2-2"/><path d="m11.5 15.5 2-2"/><path d="m8.5 18.5 2-2"/><path d="m17.5 9.5 2-2"/>
-              </svg>
-            </span>
-            <span>حاسبة أمتار النوافذ والكسرات الذكية</span>
+      </div>
+
+      <!-- Ambient Lighting Glow -->
+      <div class="hero-glow"></div>
+
+      <!-- Hero Content in a Frosted Luxury Glass Card -->
+      <div class="container hero-content-wrapper">
+        <!-- Interactive Curtain Controls Toolbar -->
+        <div class="curtain-action-toolbar">
+          <button type="button" class="btn-curtain-toggle" id="btn-toggle-curtain" onclick="window.naseejCustomer?.toggleCurtainAction?.()" title="اضغط لمحاكاة فتح وسحب الستارة">
+            <span class="curtain-toggle-icon">🪟</span>
+            <span id="curtain-toggle-text">محاكاة فتح وإغلاق الستارة</span>
+          </button>
+          <span class="curtain-interactive-badge">✨ حرّك الماوس للتفاعل 360°</span>
+        </div>
+
+        <div class="hero-glass-card">
+          <div class="hero-badge">
+            <span>متجر أقمشة الستائر المعتمد • تواصل وطلب مباشر: 0599842231</span>
           </div>
-          <div class="hero-feature-item" style="cursor: pointer;" onclick="window.scrollToSection('tailoring-services-section', event)" title="اضغط للانتقال لخدمات التفصيل">
-            <span class="feature-svg-wrap">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
-                <line x1="20" y1="4" x2="8.12" y2="15.88"/>
-                <line x1="14.47" y1="14.48" x2="20" y2="20"/>
-                <line x1="8.12" y1="8.12" x2="12" y2="12"/>
-              </svg>
-            </span>
-            <span>تفصيل وتصميم حسب المقاس بأعلى جودة</span>
-          </div>
-          <div class="hero-feature-item" style="cursor: pointer;" onclick="window.scrollToSection('fabrics-catalog-section', event)" title="اضغط لعرض كافة الأقمشة">
-            <span class="feature-svg-wrap">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="1" y="3" width="15" height="13"/>
-                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
-                <circle cx="5.5" cy="18.5" r="2.5"/>
-                <circle cx="18.5" cy="18.5" r="2.5"/>
-              </svg>
-            </span>
-            <span>توصيل لكافة المدن (القدس، الضفة، والداخل)</span>
-          </div>
-          <div class="hero-feature-item" style="cursor: pointer;" onclick="window.scrollToSection('contacts-section', event)" title="اضغط للانتقال لجدول أرقام التواصل">
-            <span class="feature-svg-wrap">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-              </svg>
-            </span>
-            <span>أرقام الإدارة والمبيعات المباشرة</span>
+          <h1 class="hero-title">
+            أناقة منسدلة تُعيد تعريف مساحتك بلمسة <span class="gold-text">مَلَكِيَّة</span>
+          </h1>
+          <p class="hero-desc">
+            تصميم وتفصيل أرقى ستائر وبرادي المنازل والفلل العصرية بأجود خامات الأقمشة العالمية، مع حاسبة مقاسات ذكية وتوصيل مباشر لكافة مدن فلسطين.
+          </p>
+          <div class="hero-features-row">
+            <div class="hero-feature-item" style="cursor: pointer;" onclick="window.openSmartCalculator(null, event)" title="اضغط لفتح حاسبة تفصيل الستائر">
+              <span class="feature-svg-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.3 15.3l-6.6-6.6a2 2 0 0 0-2.8 0L2.7 17.9a2 2 0 0 0 0 2.8l.6.6a2 2 0 0 0 2.8 0l9.2-9.2"/>
+                  <path d="m14.5 12.5 2-2"/><path d="m11.5 15.5 2-2"/><path d="m8.5 18.5 2-2"/><path d="m17.5 9.5 2-2"/>
+                </svg>
+              </span>
+              <span>حاسبة أمتار النوافذ والكسرات الذكية</span>
+            </div>
+            <div class="hero-feature-item" style="cursor: pointer;" onclick="window.scrollToSection('tailoring-services-section', event)" title="اضغط للانتقال لخدمات التفصيل">
+              <span class="feature-svg-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+                  <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                  <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                  <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                </svg>
+              </span>
+              <span>تفصيل وتصميم حسب المقاس بأعلى جودة</span>
+            </div>
+            <div class="hero-feature-item" style="cursor: pointer;" onclick="window.scrollToSection('fabrics-catalog-section', event)" title="اضغط لعرض كافة الأقمشة">
+              <span class="feature-svg-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1" y="3" width="15" height="13"/>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                  <circle cx="5.5" cy="18.5" r="2.5"/>
+                  <circle cx="18.5" cy="18.5" r="2.5"/>
+                </svg>
+              </span>
+              <span>توصيل لكافة المدن (القدس، الضفة، والداخل)</span>
+            </div>
+            <div class="hero-feature-item" style="cursor: pointer;" onclick="window.scrollToSection('contacts-section', event)" title="اضغط للانتقال لجدول أرقام التواصل">
+              <span class="feature-svg-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                </svg>
+              </span>
+              <span>أرقام الإدارة والمبيعات المباشرة</span>
+            </div>
           </div>
         </div>
       </div>
