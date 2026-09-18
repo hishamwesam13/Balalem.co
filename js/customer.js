@@ -1457,8 +1457,8 @@ class NaseejCustomer {
             <button class="btn btn-gold w-100" onclick="window.naseejCustomer.closeAccountDropdown(); window.naseejCustomer.openAuthModal('login');">
               🔑 تسجيل الدخول
             </button>
-            <button class="btn btn-outline w-100" style="margin-top: 8px;" onclick="window.naseejCustomer.closeAccountDropdown(); window.naseejCustomer.openAuthModal('register');">
-              ✨ إنشاء حساب عميل جديد
+            <button class="btn btn-outline w-100" onclick="window.naseejCustomer.closeAccountDropdown(); window.naseejCustomer.openAuthModal('register');">
+              ✨ إنشاء حساب جديد
             </button>
           </div>
         `;
