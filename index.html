@@ -1556,16 +1556,50 @@
               <input type="text" id="prod-name" class="form-control" placeholder="مثال: كريب ستائر إسطنبولي فاخر" required oninput="window.naseejAdmin.updateProductLivePreview()">
             </div>
 
-            <div class="form-group">
-              <label class="form-label">التصنيف والنوع *</label>
-              <select id="prod-category" class="form-control" onchange="window.naseejAdmin.updateProductLivePreview()">
-                <option value="crepe">كريب ستائر (Crepe)</option>
-                <option value="linen">كتان ستائر طبيعي (Linen)</option>
-                <option value="tulle">تول وفوال وشيفون (Tulle & Sheer)</option>
-                <option value="velvet">مخمل وبلاك آوت (Velvet & Blackout)</option>
-                <option value="brocade">بروكار وجاكار مطرز (Brocade & Jacquard)</option>
-                <option value="tarsoon">ستائر الترسون بالمتر المربع (Tarsoon Blinds)</option>
-              </select>
+            <div class="form-group" style="position: relative;">
+              <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>التصنيف والنوع *</span>
+                <span style="font-size: 10px; color: #94a3b8; font-weight: normal;">(كتابة أو سكرول أو إضافة جديد)</span>
+              </label>
+              <div class="prod-category-combobox-wrapper" id="prod-category-combobox">
+                <input type="hidden" id="prod-category" value="crepe">
+                <input type="hidden" id="prod-category-name" value="أقمشة كريب ستائر">
+                <div class="prod-category-input-group">
+                  <span class="prod-category-input-icon" id="prod-category-icon-badge">🏷️</span>
+                  <input 
+                    type="text" 
+                    id="prod-category-search" 
+                    class="form-control prod-category-input" 
+                    placeholder="ابحث بالتصنيف أو اختر بالسكرول أو اكتب جديداً..." 
+                    value="كريب ستائر (Crepe)"
+                    autocomplete="off"
+                    onfocus="window.naseejAdmin.openCategoryDropdown()"
+                    onclick="window.naseejAdmin.openCategoryDropdown()"
+                    oninput="window.naseejAdmin.filterCategoryDropdown(this.value)"
+                    onkeydown="window.naseejAdmin.handleCategoryKeydown(event)"
+                  >
+                  <button 
+                    type="button" 
+                    class="prod-category-toggle" 
+                    id="prod-category-toggle" 
+                    tabindex="-1"
+                    title="عرض قائمة التصنيفات الكاملة للاختيار بالسكرول" 
+                    onclick="window.naseejAdmin.toggleCategoryDropdown(event)"
+                  >
+                    <span class="combobox-arrow">▼</span>
+                  </button>
+                </div>
+
+                <div class="prod-category-dropdown" id="prod-category-dropdown" style="display: none;">
+                  <div class="prod-category-dropdown-header">
+                    <span id="prod-category-dropdown-count">التصنيفات المتاحة</span>
+                    <span style="font-size: 10px; color: #94a3b8;">اختر بالسكرول أو اكتب لإضافة تصنيف</span>
+                  </div>
+                  <div class="prod-category-list-scroll" id="prod-category-list">
+                    <!-- Populated dynamically by window.naseejAdmin.populateCategorySelect() -->
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="form-group">

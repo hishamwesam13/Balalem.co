@@ -45,10 +45,13 @@ class NaseejAdmin {
       this.renderKPIs();
     });
 
-    // Close walkin fabric combobox dropdowns when clicking outside
+    // Close walkin fabric & product category combobox dropdowns when clicking outside
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.walkin-fabric-combobox-wrapper')) {
         this.closeAllFabricDropdowns();
+      }
+      if (!e.target.closest('.prod-category-combobox-wrapper')) {
+        this.closeCategoryDropdown();
       }
     });
   }
@@ -2176,7 +2179,9 @@ class NaseejAdmin {
 
     const el = (id) => document.getElementById(id);
     if (el('prod-name')) el('prod-name').value = preset.name;
-    if (el('prod-category')) el('prod-category').value = preset.category;
+    if (preset.category) {
+      this.selectProductCategory(preset.category);
+    }
     if (el('prod-price')) el('prod-price').value = preset.price;
     if (el('prod-width')) el('prod-width').value = preset.width;
     if (el('prod-stock')) el('prod-stock').value = preset.stock;
@@ -2246,6 +2251,7 @@ class NaseejAdmin {
   openAddProductModal() {
     this.editingProductId = null;
     this.populateCategorySelect();
+    this.selectProductCategory('crepe');
     const titleEl = document.getElementById('admin-product-modal-title');
     if (titleEl) titleEl.textContent = 'تزويد قماش ستائر جديد للمتجر';
     const formEl = document.getElementById('admin-product-form');
@@ -2279,7 +2285,7 @@ class NaseejAdmin {
     document.getElementById('admin-product-modal-title').textContent = `تعديل قماش (${product.name})`;
     document.getElementById('prod-form-id').value = product.id;
     document.getElementById('prod-name').value = product.name;
-    document.getElementById('prod-category').value = product.category;
+    this.selectProductCategory(product.category);
     document.getElementById('prod-price').value = product.pricePerMeter;
     document.getElementById('prod-width').value = product.rollWidth;
     document.getElementById('prod-stock').value = product.stockMeters;
@@ -2306,6 +2312,7 @@ class NaseejAdmin {
   }
 
   closeProductModal() {
+    this.closeCategoryDropdown();
     const modal = document.getElementById('admin-product-modal');
     if (modal) {
       modal.classList.remove('active');
@@ -2325,7 +2332,27 @@ class NaseejAdmin {
     const id = document.getElementById('prod-form-id').value;
     const nameInput = document.getElementById('prod-name');
     const name = nameInput ? nameInput.value.trim() : '';
-    const category = document.getElementById('prod-category').value;
+
+    const searchInput = document.getElementById('prod-category-search');
+    const typedCategoryName = searchInput ? searchInput.value.trim() : '';
+    let category = document.getElementById('prod-category')?.value || 'crepe';
+
+    // If user typed a custom category name that doesn't exist yet, automatically add it to the store
+    if (typedCategoryName) {
+      const allCats = store.getCategories();
+      const match = allCats.find(c => c.name.toLowerCase() === typedCategoryName.toLowerCase() || c.id === category);
+      if (!match) {
+        const added = store.addCategory({ name: typedCategoryName, icon: '✨' });
+        if (added) {
+          category = added.id;
+          if (document.getElementById('prod-category')) document.getElementById('prod-category').value = added.id;
+          this.renderCategoriesTable();
+        }
+      } else {
+        category = match.id;
+      }
+    }
+
     const pricePerMeter = Math.max(1, Number(document.getElementById('prod-price').value) || 60);
     const rollWidth = Math.max(50, Number(document.getElementById('prod-width').value) || 280);
     const stockMeters = Math.max(0, Number(document.getElementById('prod-stock').value) || 200);
@@ -2357,7 +2384,7 @@ class NaseejAdmin {
 
     const allCats = store.getCategories();
     const foundCat = allCats.find(c => c.id === category);
-    const categoryName = foundCat ? foundCat.name : (categoryNames[category] || 'أقمشة ستائر ومفروشات');
+    const categoryName = foundCat ? foundCat.name : (typedCategoryName || categoryNames[category] || 'أقمشة ستائر ومفروشات');
 
     // Parse colors string e.g. "بيج:#d2b48c, أبيض:#ffffff"
     let parsedColors = [];
@@ -2501,19 +2528,242 @@ class NaseejAdmin {
     }
   }
 
-  populateCategorySelect() {
-    const select = document.getElementById('prod-category');
-    if (!select) return;
+  // ==========================================
+  // PRODUCT CATEGORY SEARCHABLE COMBOBOX (كتابة + سكرول + إضافة جديد)
+  // ==========================================
 
-    const currentVal = select.value;
+  generateCategoryOptionsHtml(query = '') {
     const categories = store.getCategories().filter(c => c.id !== 'all');
+    const selectedCatId = document.getElementById('prod-category')?.value || 'crepe';
 
-    select.innerHTML = categories.map(c => `
-      <option value="${c.id}">${c.icon ? c.icon + ' ' : ''}${c.name}</option>
-    `).join('');
+    const normalizeArabic = (s) => (s || '').toLowerCase()
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .replace(/[\u064B-\u065F]/g, '')
+      .trim();
 
-    if (currentVal && categories.some(c => c.id === currentVal)) {
-      select.value = currentVal;
+    const q = normalizeArabic(query);
+    const filtered = categories.filter(c => {
+      if (!q) return true;
+      const name = normalizeArabic(c.name);
+      const id = normalizeArabic(c.id);
+      return name.includes(q) || id.includes(q);
+    });
+
+    let html = '';
+
+    if (filtered.length > 0) {
+      html += filtered.map(c => {
+        const isSelected = c.id === selectedCatId;
+        const icon = c.icon || '🏷️';
+        const typeBadge = c.isCustom ? '✨ مخصص' : 'أساسي';
+        const safeName = (c.name || '').replace(/"/g, '&quot;');
+        return `
+          <div class="prod-category-option ${isSelected ? 'selected' : ''}" 
+               data-id="${c.id}" 
+               data-name="${safeName}"
+               data-icon="${icon}"
+               tabindex="0"
+               onmousedown="event.preventDefault(); window.naseejAdmin.selectProductCategory('${c.id}')">
+            <div class="prod-category-opt-main">
+              <span style="font-size: 16px;">${icon}</span>
+              <span class="prod-category-opt-name">${c.name}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="prod-category-opt-badge">${typeBadge}</span>
+              ${isSelected ? '<span style="color: #16a34a; font-weight: 900; font-size: 13px;">✓</span>' : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      html += `
+        <div style="padding: 14px 10px; text-align: center; color: #64748b; font-size: 12px;">
+          <span>لا يوجد تصنيف مطابق لـ "${query}"</span>
+        </div>
+      `;
+    }
+
+    // Offer to create a new category if query doesn't match an existing one
+    const cleanQ = (query || '').trim();
+    if (cleanQ && !categories.some(c => normalizeArabic(c.name) === q)) {
+      const safeQuery = cleanQ.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      html += `
+        <div class="prod-category-custom-add-btn" 
+             onmousedown="event.preventDefault(); window.naseejAdmin.addAndSelectCustomCategory('${safeQuery}')">
+          <span>✨ إضافة كـ تصنيف ونوع جديد للمتجر: <strong>"${safeQuery}"</strong></span>
+          <span style="font-size: 10.5px; color: #b45309;">(انقر هنا لإنشاء التصنيف واعتماده فوراً للمنتج)</span>
+        </div>
+      `;
+    }
+
+    return html;
+  }
+
+  openCategoryDropdown() {
+    this.closeAllFabricDropdowns();
+    const dropdown = document.getElementById('prod-category-dropdown');
+    const wrapper = document.getElementById('prod-category-combobox');
+    if (!dropdown || !wrapper) return;
+
+    const listEl = document.getElementById('prod-category-list');
+    const input = document.getElementById('prod-category-search');
+    if (listEl) {
+      listEl.innerHTML = this.generateCategoryOptionsHtml(input ? input.value : '');
+    }
+
+    dropdown.style.display = 'block';
+    wrapper.classList.add('is-open');
+
+    setTimeout(() => {
+      const selected = listEl?.querySelector('.prod-category-option.selected');
+      if (selected) selected.scrollIntoView({ block: 'nearest' });
+    }, 20);
+  }
+
+  closeCategoryDropdown() {
+    const dropdown = document.getElementById('prod-category-dropdown');
+    const wrapper = document.getElementById('prod-category-combobox');
+    if (dropdown) dropdown.style.display = 'none';
+    if (wrapper) wrapper.classList.remove('is-open');
+  }
+
+  toggleCategoryDropdown(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const dropdown = document.getElementById('prod-category-dropdown');
+    const isOpen = dropdown && dropdown.style.display === 'block';
+    if (isOpen) {
+      this.closeCategoryDropdown();
+    } else {
+      const listEl = document.getElementById('prod-category-list');
+      if (listEl) {
+        listEl.innerHTML = this.generateCategoryOptionsHtml('');
+      }
+      this.openCategoryDropdown();
+      const input = document.getElementById('prod-category-search');
+      if (input) input.focus();
+    }
+  }
+
+  filterCategoryDropdown(query) {
+    const listEl = document.getElementById('prod-category-list');
+    if (listEl) {
+      listEl.innerHTML = this.generateCategoryOptionsHtml(query);
+    }
+    this.openCategoryDropdown();
+
+    const categories = store.getCategories().filter(c => c.id !== 'all');
+    const cleanQ = (query || '').trim().toLowerCase();
+    const match = categories.find(c => c.name.trim().toLowerCase() === cleanQ || c.id.toLowerCase() === cleanQ);
+    if (match) {
+      this.selectProductCategory(match.id, false);
+    } else {
+      const nameHidden = document.getElementById('prod-category-name');
+      if (nameHidden) nameHidden.value = query;
+    }
+  }
+
+  selectProductCategory(categoryId, updateInput = true) {
+    const categories = store.getCategories();
+    const cat = categories.find(c => c.id === categoryId);
+    const hiddenId = document.getElementById('prod-category');
+    const hiddenName = document.getElementById('prod-category-name');
+    const searchInput = document.getElementById('prod-category-search');
+    const iconBadge = document.getElementById('prod-category-icon-badge');
+
+    if (cat) {
+      if (hiddenId) hiddenId.value = cat.id;
+      if (hiddenName) hiddenName.value = cat.name;
+      if (updateInput && searchInput) searchInput.value = cat.name;
+      if (iconBadge) iconBadge.textContent = cat.icon || '🏷️';
+    } else if (categoryId) {
+      if (hiddenId) hiddenId.value = categoryId;
+      if (hiddenName) hiddenName.value = categoryId;
+      if (updateInput && searchInput) searchInput.value = categoryId;
+    }
+
+    this.closeCategoryDropdown();
+    this.updateProductLivePreview();
+  }
+
+  addAndSelectCustomCategory(categoryName) {
+    if (!categoryName || !categoryName.trim()) return;
+    const cleanName = categoryName.trim();
+
+    const existing = store.getCategories().find(c => c.name.toLowerCase() === cleanName.toLowerCase());
+    if (existing) {
+      this.selectProductCategory(existing.id);
+      return;
+    }
+
+    const newCat = store.addCategory({ name: cleanName, icon: '✨' });
+    if (newCat) {
+      this.selectProductCategory(newCat.id);
+      if (window.naseejCustomer) {
+        window.naseejCustomer.showToast(`✨ تم إنشاء تصنيف (${cleanName}) وإضافته للمتجر بنجاح!`, 'success');
+      }
+      this.renderCategoriesTable();
+    }
+  }
+
+  handleCategoryKeydown(event) {
+    const listEl = document.getElementById('prod-category-list');
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const input = document.getElementById('prod-category-search');
+      const val = input ? input.value.trim() : '';
+      if (!listEl) return;
+
+      const highlighted = listEl.querySelector('.prod-category-option.highlighted') || listEl.querySelector('.prod-category-option');
+      if (highlighted && highlighted.dataset.id) {
+        this.selectProductCategory(highlighted.dataset.id);
+      } else if (val) {
+        this.addAndSelectCustomCategory(val);
+      }
+      this.closeCategoryDropdown();
+    } else if (event.key === 'Escape' || event.key === 'Tab') {
+      this.closeCategoryDropdown();
+    } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.openCategoryDropdown();
+      if (!listEl) return;
+      const options = Array.from(listEl.querySelectorAll('.prod-category-option'));
+      if (options.length === 0) return;
+      const curIndex = options.findIndex(opt => opt.classList.contains('highlighted'));
+      let nextIndex = 0;
+      if (event.key === 'ArrowDown') {
+        nextIndex = curIndex < options.length - 1 ? curIndex + 1 : 0;
+      } else {
+        nextIndex = curIndex > 0 ? curIndex - 1 : options.length - 1;
+      }
+      options.forEach(opt => opt.classList.remove('highlighted'));
+      options[nextIndex].classList.add('highlighted');
+      options[nextIndex].scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  populateCategorySelect() {
+    const listEl = document.getElementById('prod-category-list');
+    const hiddenId = document.getElementById('prod-category');
+    const currentVal = hiddenId ? hiddenId.value : 'crepe';
+
+    if (listEl) {
+      listEl.innerHTML = this.generateCategoryOptionsHtml('');
+    }
+
+    const countBadge = document.getElementById('prod-category-dropdown-count');
+    const categories = store.getCategories().filter(c => c.id !== 'all');
+    if (countBadge) {
+      countBadge.textContent = `التصنيفات المتاحة (${categories.length})`;
+    }
+
+    const cat = categories.find(c => c.id === currentVal) || categories[0];
+    if (cat) {
+      this.selectProductCategory(cat.id, true);
     }
   }
 }
