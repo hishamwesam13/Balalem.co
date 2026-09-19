@@ -22,6 +22,9 @@ class NaseejAdmin {
     // Showroom Walk-in Multi-Window Items State
     this.walkinItems = [];
 
+    // Active product colors state for product modal
+    this.activeProductColors = [];
+
     window.naseejAdmin = this;
   }
 
@@ -2188,7 +2191,9 @@ class NaseejAdmin {
     if (el('prod-origin')) el('prod-origin').value = preset.origin;
     if (el('prod-composition')) el('prod-composition').value = preset.composition;
     if (el('prod-light')) el('prod-light').value = preset.light;
-    if (el('prod-colors')) el('prod-colors').value = preset.colors;
+    if (preset.colors) {
+      this.setProductColorsFromString(preset.colors);
+    }
     if (el('prod-image-url')) el('prod-image-url').value = preset.image;
     if (el('prod-image-preview')) el('prod-image-preview').src = preset.image;
     if (el('prod-desc')) el('prod-desc').value = preset.desc;
@@ -2222,11 +2227,17 @@ class NaseejAdmin {
     if (previewOrigin) previewOrigin.textContent = origin;
     if (previewUnit) previewUnit.textContent = category === 'tarsoon' ? 'لكل م²' : 'لكل متر طولي';
 
-    if (previewColors && colors) {
-      const parts = colors.split(',').slice(0, 4);
-      previewColors.innerHTML = parts.map(p => {
-        const [cName, cHex] = p.split(':').map(s => s ? s.trim() : '');
-        return `<span class="preview-color-dot" style="background-color: ${cHex && cHex.startsWith('#') ? cHex : '#d4af37'};" title="${cName || ''}"></span>`;
+    if (previewColors) {
+      const activeList = Array.isArray(this.activeProductColors) && this.activeProductColors.length > 0
+        ? this.activeProductColors
+        : (colors ? colors.split(',').map(p => {
+            const [cName, cHex] = p.split(':').map(s => s ? s.trim() : '');
+            return { name: cName, hex: cHex };
+          }) : []);
+      const parts = activeList.slice(0, 5);
+      previewColors.innerHTML = parts.map(c => {
+        const hex = c.hex && c.hex.startsWith('#') ? c.hex : '#d4af37';
+        return `<span class="preview-color-dot" style="background-color: ${hex};" title="${c.name || ''}"></span>`;
       }).join('');
     }
   }
@@ -2252,6 +2263,16 @@ class NaseejAdmin {
     this.editingProductId = null;
     this.populateCategorySelect();
     this.selectProductCategory('crepe');
+
+    // Default 4 main popular colors pre-selected as requested by store owner
+    this.activeProductColors = [
+      { name: 'سكني', hex: '#808488' },
+      { name: 'بيج', hex: '#d2b48c' },
+      { name: 'سكري (أوف وايت)', hex: '#fdfbf7' },
+      { name: 'ذهبي', hex: '#d4af37' }
+    ];
+    this.syncProductColors();
+
     const titleEl = document.getElementById('admin-product-modal-title');
     if (titleEl) titleEl.textContent = 'تزويد قماش ستائر جديد للمتجر';
     const formEl = document.getElementById('admin-product-form');
@@ -2296,8 +2317,12 @@ class NaseejAdmin {
     document.getElementById('prod-image-url').value = product.image;
     document.getElementById('prod-image-preview').src = product.image;
 
-    const colorsStr = (product.colors || []).map(c => `${c.name}:${c.hex}`).join(', ');
-    document.getElementById('prod-colors').value = colorsStr;
+    if (Array.isArray(product.colors) && product.colors.length > 0) {
+      this.activeProductColors = product.colors.map(c => ({ name: c.name, hex: c.hex || '#808488' }));
+    } else {
+      this.setProductColorsFromString(product.colorsStr || '');
+    }
+    this.syncProductColors();
 
     const modal = document.getElementById('admin-product-modal');
     if (modal) {
@@ -2386,19 +2411,27 @@ class NaseejAdmin {
     const foundCat = allCats.find(c => c.id === category);
     const categoryName = foundCat ? foundCat.name : (typedCategoryName || categoryNames[category] || 'أقمشة ستائر ومفروشات');
 
-    // Parse colors string e.g. "بيج:#d2b48c, أبيض:#ffffff"
-    let parsedColors = [];
-    if (colorsInput) {
+    // Parse colors from activeProductColors or input
+    let parsedColors = Array.isArray(this.activeProductColors) && this.activeProductColors.length > 0
+      ? [...this.activeProductColors]
+      : [];
+
+    if (parsedColors.length === 0 && colorsInput) {
       parsedColors = colorsInput.split(',').map(part => {
         const [cName, cHex] = part.split(':').map(s => s ? s.trim() : '');
         return {
           name: cName || 'لون مخصص',
-          hex: cHex && cHex.startsWith('#') ? cHex : '#b58b4c'
+          hex: cHex && cHex.startsWith('#') ? cHex : '#808488'
         };
       });
     }
     if (parsedColors.length === 0) {
-      parsedColors = [{ name: 'بيج رملي', hex: '#d2b48c' }, { name: 'أوف وايت', hex: '#fdfbf7' }];
+      parsedColors = [
+        { name: 'سكني', hex: '#808488' },
+        { name: 'بيج', hex: '#d2b48c' },
+        { name: 'سكري (أوف وايت)', hex: '#fdfbf7' },
+        { name: 'ذهبي', hex: '#d4af37' }
+      ];
     }
 
     const productPayload = {
@@ -2764,6 +2797,206 @@ class NaseejAdmin {
     const cat = categories.find(c => c.id === currentVal) || categories[0];
     if (cat) {
       this.selectProductCategory(cat.id, true);
+    }
+  }
+
+  // ==========================================
+  // PRODUCT COLORS VISUAL MANAGEMENT (الألوان الأساسية والمخصصة)
+  // ==========================================
+
+  handleCustomColorNameInput(name) {
+    if (!name) return;
+    const clean = name.trim();
+    const COLOR_NAME_MAP = {
+      'سكني': '#808488',
+      'رمادي': '#808488',
+      'رصاصي': '#6b7280',
+      'بيج': '#d2b48c',
+      'بيج رملي': '#d2b48c',
+      'سكري': '#fdfbf7',
+      'أوف وايت': '#fdfbf7',
+      'اوف وايت': '#fdfbf7',
+      'ابيض': '#ffffff',
+      'أبيض': '#ffffff',
+      'ذهبي': '#d4af37',
+      'ذهبي ملكي': '#d4af37',
+      'كحلي': '#1e3a8a',
+      'ازرق': '#2563eb',
+      'أزرق': '#2563eb',
+      'زيتي': '#4d6050',
+      'اخضر': '#16a34a',
+      'أخضر': '#16a34a',
+      'خمري': '#721c24',
+      'نبيذي': '#721c24',
+      'احمر': '#dc2626',
+      'أحمر': '#dc2626',
+      'بني': '#78350f',
+      'عسلي': '#9a602f',
+      'موف': '#7c3aed',
+      'ليلكي': '#a855f7',
+      'وردي': '#ec4899',
+      'زهري': '#f472b6',
+      'تركواز': '#06b6d4',
+      'بترولي': '#0e7490',
+      'اسود': '#1e293b',
+      'أسود': '#1e293b',
+      'فضي': '#cbd5e1',
+      'برتقالي': '#ea580c',
+      'خردلي': '#ca8a04'
+    };
+
+    const picker = document.getElementById('prod-new-color-picker');
+    if (picker && COLOR_NAME_MAP[clean]) {
+      picker.value = COLOR_NAME_MAP[clean];
+    }
+  }
+
+  addCustomColorFromInput() {
+    const input = document.getElementById('prod-new-color-name');
+    const picker = document.getElementById('prod-new-color-picker');
+    if (!input) return;
+
+    const name = input.value.trim();
+    if (!name) {
+      if (window.naseejCustomer) {
+        window.naseejCustomer.showToast('يرجى كتابة اسم اللون أولاً (مثال: كحلي، زيتي...)', 'error');
+      }
+      input.focus();
+      return;
+    }
+
+    const hex = picker ? picker.value : '#808488';
+
+    if (!Array.isArray(this.activeProductColors)) {
+      this.activeProductColors = [];
+    }
+
+    // Check if color name already exists
+    const exists = this.activeProductColors.some(c => c.name.toLowerCase() === name.toLowerCase());
+    if (exists) {
+      if (window.naseejCustomer) {
+        window.naseejCustomer.showToast(`لون (${name}) مضاف مسبقاً لهذا القماش`, 'info');
+      }
+    } else {
+      this.activeProductColors.push({ name, hex });
+      if (window.naseejCustomer) {
+        window.naseejCustomer.showToast(`✓ تمت إضافة لون (${name})`, 'success');
+      }
+    }
+
+    input.value = '';
+    this.syncProductColors();
+    input.focus();
+  }
+
+  togglePresetColor(name, hex) {
+    if (!Array.isArray(this.activeProductColors)) {
+      this.activeProductColors = [];
+    }
+
+    const existingIdx = this.activeProductColors.findIndex(c => 
+      c.name.toLowerCase() === name.toLowerCase() || c.hex.toLowerCase() === hex.toLowerCase()
+    );
+
+    if (existingIdx >= 0) {
+      this.activeProductColors.splice(existingIdx, 1);
+    } else {
+      this.activeProductColors.push({ name, hex });
+    }
+
+    this.syncProductColors();
+  }
+
+  removeActiveColor(index) {
+    if (!Array.isArray(this.activeProductColors)) return;
+    this.activeProductColors.splice(index, 1);
+    this.syncProductColors();
+  }
+
+  setProductColorsFromString(str) {
+    if (!str) {
+      this.activeProductColors = [];
+      this.syncProductColors();
+      return;
+    }
+
+    this.activeProductColors = str.split(',').map(part => {
+      const [cName, cHex] = part.split(':').map(s => s ? s.trim() : '');
+      return {
+        name: cName || 'لون مخصص',
+        hex: cHex && cHex.startsWith('#') ? cHex : '#808488'
+      };
+    }).filter(c => c.name);
+
+    this.syncProductColors();
+  }
+
+  syncProductColors() {
+    const rawStr = (this.activeProductColors || []).map(c => `${c.name}:${c.hex}`).join(', ');
+    const hidden = document.getElementById('prod-colors');
+    if (hidden) hidden.value = rawStr;
+
+    this.renderProductColorsUI();
+    this.updateProductLivePreview();
+  }
+
+  renderProductColorsUI() {
+    const quickContainer = document.getElementById('prod-quick-colors-row');
+    const selectedContainer = document.getElementById('prod-selected-colors-list');
+    const countBadge = document.getElementById('prod-selected-colors-count');
+
+    const activeList = this.activeProductColors || [];
+
+    if (countBadge) {
+      countBadge.textContent = activeList.length;
+    }
+
+    // 1. Render quick buttons: The 4 main store colors first, then 4 frequent curtain colors
+    if (quickContainer) {
+      const PRESETS = [
+        { name: 'سكني', hex: '#808488', isMain: true },
+        { name: 'بيج', hex: '#d2b48c', isMain: true },
+        { name: 'سكري (أوف وايت)', hex: '#fdfbf7', isMain: true },
+        { name: 'ذهبي', hex: '#d4af37', isMain: true },
+        { name: 'أبيض ناصع', hex: '#ffffff', isMain: false },
+        { name: 'كحلي ملوكي', hex: '#1e3a8a', isMain: false },
+        { name: 'زيتي طبيعي', hex: '#4d6050', isMain: false },
+        { name: 'عسلي دافئ', hex: '#9a602f', isMain: false }
+      ];
+
+      quickContainer.innerHTML = PRESETS.map(p => {
+        const isActive = activeList.some(c => 
+          c.name.toLowerCase() === p.name.toLowerCase() || c.hex.toLowerCase() === p.hex.toLowerCase()
+        );
+        const safeName = p.name.replace(/'/g, "\\'");
+        return `
+          <button type="button" 
+                  class="prod-quick-color-btn ${isActive ? 'is-active' : ''} ${p.isMain ? 'is-main' : ''}" 
+                  onclick="window.naseejAdmin.togglePresetColor('${safeName}', '${p.hex}')" 
+                  title="${isActive ? 'انقر لإلغاء التفعيل' : 'انقر للتفعيل السريع'}">
+            <span class="prod-color-swatch-circle" style="background-color: ${p.hex};"></span>
+            <span>${p.name}</span>
+            ${isActive ? '<span style="font-size: 11px; font-weight: 900; color: #16a34a;">✓</span>' : ''}
+          </button>
+        `;
+      }).join('');
+    }
+
+    // 2. Render active selected colors list with remove badges
+    if (selectedContainer) {
+      if (activeList.length === 0) {
+        selectedContainer.innerHTML = `
+          <span class="prod-no-colors-hint">⚠️ لم يتم تفعيل أي لون بعد - انقر على الألوان السريعة أعلاه أو أضف لوناً جديداً</span>
+        `;
+      } else {
+        selectedContainer.innerHTML = activeList.map((c, idx) => `
+          <div class="prod-color-tag">
+            <span class="prod-color-tag-dot" style="background-color: ${c.hex};"></span>
+            <span class="prod-color-tag-name">${c.name}</span>
+            <button type="button" class="prod-color-tag-remove" onclick="window.naseejAdmin.removeActiveColor(${idx})" title="حذف لون ${c.name}">✕</button>
+          </div>
+        `).join('');
+      }
     }
   }
 }
