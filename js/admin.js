@@ -44,6 +44,13 @@ class NaseejAdmin {
       if (this.calendarViewMode === 'monthly') this.renderMonthlyCalendar();
       this.renderKPIs();
     });
+
+    // Close walkin fabric combobox dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.walkin-fabric-combobox-wrapper')) {
+        this.closeAllFabricDropdowns();
+      }
+    });
   }
 
   renderAll() {
@@ -1306,13 +1313,17 @@ class NaseejAdmin {
           item.color = product.colors[0].name;
         }
         // Update DOM inputs directly without losing focus
+        const searchInput = document.getElementById(`walkin-fabric-search-${index}`);
         const priceInput = document.getElementById(`walkin-item-price-${index}`);
         const colorInput = document.getElementById(`walkin-item-color-${index}`);
         const unitBadge = document.getElementById(`walkin-item-unit-${index}`);
+        if (searchInput) searchInput.value = item.productName;
         if (priceInput) priceInput.value = item.unitPrice;
         if (colorInput) colorInput.value = item.color;
         if (unitBadge) unitBadge.textContent = item.unitLabel;
       }
+    } else if (field === 'productName') {
+      item.productName = value;
     } else if (field === 'meters') {
       item.meters = parseFloat(value) || 0;
     } else if (field === 'unitPrice') {
@@ -1333,6 +1344,262 @@ class NaseejAdmin {
     }
 
     this.recalcWalkinTotal();
+  }
+
+  // ==========================================
+  // SEARCHABLE FABRIC COMBOBOX METHODS (كتابة + سكرول)
+  // ==========================================
+
+  generateFabricOptionsHtml(index, selectedProductId, query = '') {
+    const products = store.getProducts();
+    const normalizeArabic = (s) => (s || '').toLowerCase()
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .replace(/[\u064B-\u065F]/g, '')
+      .trim();
+
+    const q = normalizeArabic(query);
+    const filtered = products.filter(p => {
+      if (!q) return true;
+      const name = normalizeArabic(p.name);
+      const cat = normalizeArabic(p.categoryName || p.category || '');
+      const id = normalizeArabic(p.id);
+      return name.includes(q) || cat.includes(q) || id.includes(q);
+    });
+
+    if (filtered.length === 0) {
+      let noResHtml = `
+        <div class="walkin-fabric-no-results">
+          <span>لا يوجد قماش مطابق لـ "${query}"</span>
+        </div>
+      `;
+      if (query && query.trim()) {
+        const safeQuery = query.trim().replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        noResHtml += `
+          <div class="walkin-fabric-custom-option" 
+               onmousedown="event.preventDefault(); window.naseejAdmin.applyCustomFabric(${index}, '${safeQuery}')">
+            <span>✨ اعتماد كقماش مخصص: <strong>"${safeQuery}"</strong></span>
+            <span style="font-size: 11px; color: #b45309;">(اضغط للاختيار وتعديل السعر)</span>
+          </div>
+        `;
+      }
+      return noResHtml;
+    }
+
+    let html = filtered.map(p => {
+      const isSelected = p.id === selectedProductId;
+      const unitLabel = p.category === 'tarsoon' ? 'م²' : 'متر';
+      const safeId = (p.id || '').replace(/'/g, "\\'");
+      const safeName = (p.name || '').replace(/"/g, '&quot;');
+      return `
+        <div class="walkin-fabric-option ${isSelected ? 'selected' : ''}" 
+             data-id="${safeId}" 
+             data-name="${safeName}"
+             tabindex="0"
+             onmousedown="event.preventDefault(); window.naseejAdmin.selectWalkinFabric(${index}, '${safeId}')">
+          <div class="walkin-fabric-opt-main">
+            <span class="walkin-fabric-opt-name">${p.name}</span>
+            ${p.categoryName ? `<span class="walkin-fabric-opt-cat">${p.categoryName}</span>` : ''}
+          </div>
+          <div class="walkin-fabric-opt-meta">
+            <span class="walkin-fabric-opt-price">${p.pricePerMeter} ₪ / ${unitLabel}</span>
+            ${isSelected ? '<span class="walkin-fabric-check">✓</span>' : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (query && query.trim() && !products.some(p => normalizeArabic(p.name) === q)) {
+      const safeQuery = query.trim().replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      html += `
+        <div class="walkin-fabric-custom-option" 
+             onmousedown="event.preventDefault(); window.naseejAdmin.applyCustomFabric(${index}, '${safeQuery}')">
+          <span>✨ اعتماد كقماش مخصص: <strong>"${safeQuery}"</strong></span>
+          <span style="font-size: 11px; color: #b45309;">(اضغط للاختيار وتعديل السعر)</span>
+        </div>
+      `;
+    }
+
+    return html;
+  }
+
+  openFabricDropdown(index) {
+    this.closeAllFabricDropdowns(index);
+    const dropdown = document.getElementById(`walkin-fabric-dropdown-${index}`);
+    const wrapper = document.getElementById(`walkin-combobox-${index}`);
+    const card = document.getElementById(`walkin-item-card-${index}`);
+    if (!dropdown || !wrapper) return;
+
+    dropdown.style.display = 'block';
+    wrapper.classList.add('is-open');
+    if (card) card.classList.add('has-open-combobox');
+
+    // Auto-scroll to selected option if present
+    setTimeout(() => {
+      const list = document.getElementById(`walkin-fabric-list-${index}`);
+      if (list) {
+        const selected = list.querySelector('.walkin-fabric-option.selected');
+        if (selected) {
+          selected.scrollIntoView({ block: 'nearest' });
+        }
+      }
+    }, 20);
+  }
+
+  closeFabricDropdown(index) {
+    const dropdown = document.getElementById(`walkin-fabric-dropdown-${index}`);
+    const wrapper = document.getElementById(`walkin-combobox-${index}`);
+    const card = document.getElementById(`walkin-item-card-${index}`);
+    if (dropdown) dropdown.style.display = 'none';
+    if (wrapper) wrapper.classList.remove('is-open');
+    if (card) card.classList.remove('has-open-combobox');
+  }
+
+  closeAllFabricDropdowns(exceptIndex = null) {
+    const dropdowns = document.querySelectorAll('.walkin-fabric-dropdown');
+    dropdowns.forEach(dd => {
+      const idx = dd.id.replace('walkin-fabric-dropdown-', '');
+      if (exceptIndex !== null && parseInt(idx, 10) === exceptIndex) return;
+      dd.style.display = 'none';
+      const wrapper = document.getElementById(`walkin-combobox-${idx}`);
+      if (wrapper) wrapper.classList.remove('is-open');
+      const card = document.getElementById(`walkin-item-card-${idx}`);
+      if (card) card.classList.remove('has-open-combobox');
+    });
+  }
+
+  toggleFabricDropdown(index, event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const dropdown = document.getElementById(`walkin-fabric-dropdown-${index}`);
+    const isOpen = dropdown && dropdown.style.display === 'block';
+    if (isOpen) {
+      this.closeFabricDropdown(index);
+    } else {
+      const input = document.getElementById(`walkin-fabric-search-${index}`);
+      const listEl = document.getElementById(`walkin-fabric-list-${index}`);
+      const item = this.walkinItems[index];
+      if (listEl && item) {
+        listEl.innerHTML = this.generateFabricOptionsHtml(index, item.productId, '');
+      }
+      this.openFabricDropdown(index);
+      if (input) input.focus();
+    }
+  }
+
+  filterFabricDropdown(index, query) {
+    const item = this.walkinItems[index];
+    if (!item) return;
+
+    item.productName = query;
+
+    const listEl = document.getElementById(`walkin-fabric-list-${index}`);
+    if (listEl) {
+      listEl.innerHTML = this.generateFabricOptionsHtml(index, item.productId, query);
+    }
+    this.openFabricDropdown(index);
+
+    const products = store.getProducts();
+    const cleanQ = (query || '').trim().toLowerCase();
+    const exact = products.find(p => p.name.trim().toLowerCase() === cleanQ || p.id.toLowerCase() === cleanQ);
+    if (exact) {
+      this.selectWalkinFabric(index, exact.id, false);
+    }
+  }
+
+  selectWalkinFabric(index, productId, updateInputValue = true) {
+    const product = store.getProductById(productId);
+    if (!product || !this.walkinItems[index]) return;
+
+    const item = this.walkinItems[index];
+    item.productId = product.id;
+    item.productName = product.name;
+    item.unitPrice = product.pricePerMeter || 65;
+    item.unitLabel = product.category === 'tarsoon' ? 'م²' : 'متر';
+    if (product.colors && product.colors[0]) {
+      item.color = product.colors[0].name;
+    }
+
+    if (updateInputValue) {
+      const searchInput = document.getElementById(`walkin-fabric-search-${index}`);
+      if (searchInput) searchInput.value = product.name;
+    }
+
+    const priceInput = document.getElementById(`walkin-item-price-${index}`);
+    const colorInput = document.getElementById(`walkin-item-color-${index}`);
+    const unitBadge = document.getElementById(`walkin-item-unit-${index}`);
+    if (priceInput) priceInput.value = item.unitPrice;
+    if (colorInput) colorInput.value = item.color;
+    if (unitBadge) unitBadge.textContent = item.unitLabel;
+
+    // Update subtotal badge
+    const itemSubtotal = Math.round((item.meters || 0) * (item.unitPrice || 0));
+    const subtotalEl = document.getElementById(`walkin-item-subtotal-${index}`);
+    if (subtotalEl) {
+      subtotalEl.innerHTML = `المجموع: <strong>${itemSubtotal.toLocaleString()} ₪</strong> (${item.meters} ${item.unitLabel} × ${item.unitPrice} ₪)`;
+    }
+
+    this.closeFabricDropdown(index);
+    this.recalcWalkinTotal();
+  }
+
+  applyCustomFabric(index, customName) {
+    const item = this.walkinItems[index];
+    if (!item) return;
+
+    item.productId = 'custom_' + Date.now();
+    item.productName = customName;
+
+    const searchInput = document.getElementById(`walkin-fabric-search-${index}`);
+    if (searchInput) searchInput.value = customName;
+
+    this.closeFabricDropdown(index);
+    this.recalcWalkinTotal();
+
+    const priceInput = document.getElementById(`walkin-item-price-${index}`);
+    if (priceInput) {
+      priceInput.focus();
+      priceInput.select();
+    }
+  }
+
+  handleFabricKeydown(index, event) {
+    const listEl = document.getElementById(`walkin-fabric-list-${index}`);
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (!listEl) return;
+      const highlighted = listEl.querySelector('.walkin-fabric-option.highlighted') || listEl.querySelector('.walkin-fabric-option');
+      if (highlighted && highlighted.dataset.id) {
+        this.selectWalkinFabric(index, highlighted.dataset.id);
+      } else {
+        const input = document.getElementById(`walkin-fabric-search-${index}`);
+        if (input && input.value.trim()) {
+          this.applyCustomFabric(index, input.value.trim());
+        }
+      }
+      this.closeFabricDropdown(index);
+    } else if (event.key === 'Escape' || event.key === 'Tab') {
+      this.closeFabricDropdown(index);
+    } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.openFabricDropdown(index);
+      if (!listEl) return;
+      const options = Array.from(listEl.querySelectorAll('.walkin-fabric-option'));
+      if (options.length === 0) return;
+      const curIndex = options.findIndex(opt => opt.classList.contains('highlighted'));
+      let nextIndex = 0;
+      if (event.key === 'ArrowDown') {
+        nextIndex = curIndex < options.length - 1 ? curIndex + 1 : 0;
+      } else {
+        nextIndex = curIndex > 0 ? curIndex - 1 : options.length - 1;
+      }
+      options.forEach(opt => opt.classList.remove('highlighted'));
+      options[nextIndex].classList.add('highlighted');
+      options[nextIndex].scrollIntoView({ block: 'nearest' });
+    }
   }
 
   renderWalkinItems() {
@@ -1358,12 +1625,6 @@ class NaseejAdmin {
 
     container.innerHTML = this.walkinItems.map((item, idx) => {
       const itemSubtotal = Math.round((item.meters || 0) * (item.unitPrice || 0));
-
-      const fabricOptions = products.map(p => `
-        <option value="${p.id}" ${p.id === item.productId ? 'selected' : ''}>
-          ${p.name} (${p.pricePerMeter} ₪ / ${p.category === 'tarsoon' ? 'م²' : 'متر'})
-        </option>
-      `).join('');
 
       const roomChipsHtml = commonRooms.map(r => `
         <button type="button" class="room-chip-btn ${item.roomName === r ? 'active' : ''}" data-room="${r}" onclick="window.naseejAdmin.setWalkinItemRoom(${idx}, '${r}')">
@@ -1399,10 +1660,47 @@ class NaseejAdmin {
 
           <div class="walkin-item-fields-grid">
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px;">نوع قماش الشباك *</label>
-              <select class="form-control" style="font-size: 12.5px; height: 36px; padding: 4px 8px;" onchange="window.naseejAdmin.updateWalkinItem(${idx}, 'productId', this.value)">
-                ${fabricOptions}
-              </select>
+              <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+                <span>نوع قماش الشباك *</span>
+                <span style="font-size: 10px; color: #94a3b8; font-weight: normal;">(كتابة أو سكرول)</span>
+              </label>
+              <div class="walkin-fabric-combobox-wrapper" id="walkin-combobox-${idx}">
+                <div class="walkin-fabric-input-group">
+                  <span class="walkin-fabric-input-icon">🧵</span>
+                  <input 
+                    type="text" 
+                    id="walkin-fabric-search-${idx}" 
+                    class="form-control walkin-fabric-input" 
+                    placeholder="ابحث بالاسم/الرقم أو اختر بالسكرول..." 
+                    value="${(item.productName || '').replace(/"/g, '&quot;')}"
+                    autocomplete="off"
+                    onfocus="window.naseejAdmin.openFabricDropdown(${idx})"
+                    onclick="window.naseejAdmin.openFabricDropdown(${idx})"
+                    oninput="window.naseejAdmin.filterFabricDropdown(${idx}, this.value)"
+                    onkeydown="window.naseejAdmin.handleFabricKeydown(${idx}, event)"
+                  >
+                  <button 
+                    type="button" 
+                    class="walkin-combobox-toggle" 
+                    id="walkin-combobox-toggle-${idx}" 
+                    tabindex="-1"
+                    title="عرض قائمة الأقمشة الكاملة للاختيار بالسكرول" 
+                    onclick="window.naseejAdmin.toggleFabricDropdown(${idx}, event)"
+                  >
+                    <span class="combobox-arrow">▼</span>
+                  </button>
+                </div>
+                
+                <div class="walkin-fabric-dropdown" id="walkin-fabric-dropdown-${idx}" style="display: none;">
+                  <div class="walkin-fabric-dropdown-header">
+                    <span>قائمة الأقمشة المتاحة (${products.length})</span>
+                    <span style="font-size: 10px; color: #94a3b8;">اختر بالسكرول أو اكتب</span>
+                  </div>
+                  <div class="walkin-fabric-list-scroll" id="walkin-fabric-list-${idx}">
+                    ${this.generateFabricOptionsHtml(idx, item.productId, '')}
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
@@ -1469,6 +1767,7 @@ class NaseejAdmin {
   }
 
   closeWalkinOrderModal() {
+    this.closeAllFabricDropdowns();
     const modal = document.getElementById('admin-walkin-order-modal');
     if (modal) {
       modal.classList.remove('active');
