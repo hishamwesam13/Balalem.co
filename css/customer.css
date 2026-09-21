@@ -1520,118 +1520,289 @@
 }
 
 /* ==========================================================================
-   FLOATING SOCIAL DOCK
+   FLOATING SOCIAL BUBBLE (فقاعة صفحاتنا العائمة)
    ========================================================================== */
-.floating-social-dock {
+.floating-social-bubble-wrap {
   position: fixed;
-  bottom: 85px;
-  left: 20px;
+  bottom: 26px;
+  left: 24px;
   z-index: 998;
+  direction: rtl;
+  font-family: inherit;
+}
+
+/* Trigger Button */
+.floating-social-bubble-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.94));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38), 0 0 16px rgba(212, 175, 55, 0.18);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  position: relative;
+  user-select: none;
+  outline: none;
+}
+
+.floating-social-bubble-btn:hover {
+  transform: translateY(-3px) scale(1.03);
+  border-color: rgba(212, 175, 55, 0.85);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 22px rgba(212, 175, 55, 0.32);
+}
+
+.floating-social-bubble-wrap.is-open .floating-social-bubble-btn {
+  border-color: var(--gold-primary);
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+}
+
+.bubble-pulse-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(212, 175, 55, 0.55);
+  animation: bubblePulse 2.8s infinite ease-out;
+  pointer-events: none;
+}
+
+@keyframes bubblePulse {
+  0% { transform: scale(0.96); opacity: 0.8; }
+  50% { transform: scale(1.12); opacity: 0; }
+  100% { transform: scale(1.12); opacity: 0; }
+}
+
+.bubble-icon-badge {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.bubble-label {
+  letter-spacing: 0.3px;
+  color: #f8fafc;
+}
+
+.bubble-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 2px;
+}
+
+.bdot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.bdot-fb {
+  background: #1877f2;
+}
+
+.bdot-tiktok {
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 4px #fe2c55;
+}
+
+.bdot-insta {
+  background: linear-gradient(45deg, #f09433, #dc2743, #bc1888);
+}
+
+/* Popover Card */
+.social-bubble-card {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 0;
+  width: 310px;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55), 0 0 28px rgba(212, 175, 55, 0.15);
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 10px;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 10px 8px;
-  border-radius: 28px;
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0;
+  transform: translateY(14px) scale(0.95);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.floating-social-dock:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
-  border-color: rgba(212, 175, 55, 0.6);
+.floating-social-bubble-wrap.is-open .social-bubble-card,
+.floating-social-bubble-wrap:hover .social-bubble-card {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
 }
 
-.dock-badge-title {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  font-size: 10px;
+.social-bubble-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.social-bubble-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.social-bubble-sparkle {
+  font-size: 16px;
+}
+
+.social-bubble-title {
+  font-size: 13.5px;
   font-weight: 800;
-  color: var(--gold-light);
-  letter-spacing: 0.5px;
-  padding: 4px 2px;
-  user-select: none;
+  color: #ffffff;
+  line-height: 1.2;
 }
 
-.dock-btn {
-  position: relative;
-  width: 40px;
-  height: 40px;
+.social-bubble-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold-light);
+  margin-top: 1px;
+}
+
+.social-bubble-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: #94a3b8;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
-  text-decoration: none;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-}
-
-.dock-btn.dock-fb {
-  background: #1877f2;
-}
-
-.dock-btn.dock-fb:hover {
-  transform: scale(1.15);
-  background: #0d65d9;
-}
-
-.dock-btn.dock-tiktok {
-  background: #010101;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.dock-btn.dock-tiktok:hover {
-  transform: scale(1.15);
-  background: #000000;
-  box-shadow: 0 4px 14px rgba(254, 44, 85, 0.55), -2px -2px 10px rgba(37, 244, 238, 0.45);
-}
-
-.dock-btn.dock-insta {
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-}
-
-.dock-btn.dock-insta:hover {
-  transform: scale(1.15);
-  box-shadow: 0 4px 14px rgba(220, 39, 67, 0.45);
-}
-
-.dock-btn.dock-wa {
-  background: #10b981;
-}
-
-.dock-btn.dock-wa:hover {
-  transform: scale(1.15);
-  background: #059669;
-}
-
-.dock-tooltip {
-  position: absolute;
-  left: 52px;
-  top: 50%;
-  transform: translateY(-50%) translateX(-8px);
-  background: #0f172a;
-  color: #ffffff;
-  padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 11.5px;
-  font-weight: 700;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
+  font-size: 12px;
+  cursor: pointer;
   transition: all 0.2s ease;
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
 }
 
-.dock-btn:hover .dock-tooltip {
-  opacity: 1;
-  transform: translateY(-50%) translateX(0);
+.social-bubble-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  transform: rotate(90deg);
+}
+
+.social-bubble-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.social-bubble-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  text-decoration: none;
+  color: #ffffff;
+  transition: all 0.22s ease;
+}
+
+.social-bubble-item:hover {
+  background: rgba(255, 255, 255, 0.09);
+  transform: translateX(-3px);
+}
+
+.social-bubble-item.fb-item:hover {
+  border-color: rgba(24, 119, 242, 0.5);
+  box-shadow: 0 4px 14px rgba(24, 119, 242, 0.25);
+}
+
+.social-bubble-item.tiktok-item:hover {
+  border-color: rgba(254, 44, 85, 0.5);
+  box-shadow: 0 4px 14px rgba(254, 44, 85, 0.25), 0 0 8px rgba(37, 244, 238, 0.2);
+}
+
+.social-bubble-item.insta-item:hover {
+  border-color: rgba(220, 39, 67, 0.5);
+  box-shadow: 0 4px 14px rgba(220, 39, 67, 0.25);
+}
+
+.social-bubble-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.social-bubble-icon.fb-icon {
+  background: #1877f2;
+  color: #ffffff;
+}
+
+.social-bubble-icon.tiktok-icon {
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.social-bubble-icon.insta-icon {
+  background: linear-gradient(45deg, #f09433, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888);
+  color: #ffffff;
+}
+
+.social-bubble-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.social-bubble-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.social-bubble-handle {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.social-bubble-action {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold-light);
+  background: rgba(212, 175, 55, 0.12);
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  margin-right: auto;
+  transition: all 0.2s ease;
+}
+
+.social-bubble-item:hover .social-bubble-action {
+  background: var(--gold-primary);
+  color: #0f172a;
 }
 
 /* ==========================================================================
@@ -2168,26 +2339,28 @@
     font-size: 28px;
   }
 
-  /* Floating Social Dock */
-  .floating-social-dock {
-    bottom: 70px;
-    left: 8px;
-    padding: 5px 6px;
+  /* Floating Social Bubble Responsive */
+  .floating-social-bubble-wrap {
+    bottom: 72px;
+    left: 10px;
+  }
+
+  .floating-social-bubble-btn {
+    padding: 7px 13px;
+    font-size: 12px;
     gap: 6px;
   }
 
-  .dock-btn {
-    width: 32px;
-    height: 32px;
+  .bubble-pulse-ring {
+    inset: -3px;
   }
 
-  .dock-btn svg {
-    width: 15px;
-    height: 15px;
-  }
-
-  .dock-badge-title, .dock-tooltip {
-    display: none;
+  .social-bubble-card {
+    width: calc(100vw - 24px);
+    max-width: 310px;
+    left: 0;
+    bottom: calc(100% + 10px);
+    padding: 12px;
   }
 
   /* Cart Drawer Side Drawer on Mobile (طرف الشاشة) */
