@@ -2075,13 +2075,96 @@ class NaseejAdmin {
     }
 
     // Update subtotal badge for this card
+    this.updateWalkinCardSubtotal(index);
+    this.recalcWalkinTotal();
+  }
+
+  updateWalkinCardSubtotal(index) {
+    if (!this.walkinItems || !this.walkinItems[index]) return;
+    const item = this.walkinItems[index];
     const itemSubtotal = Math.round((item.meters || 0) * (item.unitPrice || 0));
     const subtotalEl = document.getElementById(`walkin-item-subtotal-${index}`);
     if (subtotalEl) {
       const dimInfo = (item.width && item.height) ? `مقاس [${item.width}م عرض × ${item.height}م ارتفاع] • ` : '';
-      subtotalEl.innerHTML = `${dimInfo}المجموع: <strong>${itemSubtotal.toLocaleString()} ₪</strong> (${item.meters} ${item.unitLabel} × ${item.unitPrice} ₪)`;
+      const sewInfo = item.sewingType ? `${item.sewingType} • ` : '';
+      subtotalEl.innerHTML = `${dimInfo}${sewInfo}المجموع: <strong>${itemSubtotal.toLocaleString()} ₪</strong> (${item.meters} ${item.unitLabel} × ${item.unitPrice} ₪)`;
+    }
+  }
+
+  setWalkinPleat(index, ratio, title, btnEl) {
+    if (!this.walkinItems || !this.walkinItems[index]) return;
+    const item = this.walkinItems[index];
+    item.fullnessRatio = parseFloat(ratio) || 2.8;
+    item.sewingType = title;
+
+    // Recalculate meters = width * ratio
+    const width = parseFloat(item.width) || 3.0;
+    item.meters = Math.round(width * item.fullnessRatio * 10) / 10;
+
+    // Update active button state within card
+    const card = document.getElementById(`walkin-item-card-${index}`);
+    if (card) {
+      card.querySelectorAll('.fullness-btn').forEach(btn => btn.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
     }
 
+    // Update custom ratio input in card
+    const ratioInput = document.getElementById(`walkin-item-ratio-${index}`);
+    if (ratioInput) ratioInput.value = item.fullnessRatio;
+
+    // Update hidden meters input
+    const metersInput = document.getElementById(`walkin-item-meters-${index}`);
+    if (metersInput) metersInput.value = item.meters;
+
+    // Update subtotal badge
+    this.updateWalkinCardSubtotal(index);
+    this.recalcWalkinTotal();
+  }
+
+  updateWalkinCustomRatio(index, ratioVal) {
+    if (!this.walkinItems || !this.walkinItems[index]) return;
+    const item = this.walkinItems[index];
+    const ratio = parseFloat(ratioVal);
+    if (!ratio || ratio <= 0) return;
+
+    item.fullnessRatio = Math.round(ratio * 100) / 100;
+
+    // Determine sewing type name
+    if (Math.abs(ratio - 1.5) < 0.05) {
+      item.sewingType = 'رنج فرد (1.5x)';
+    } else if (Math.abs(ratio - 2.5) < 0.05) {
+      item.sewingType = 'رنج مزموم (2.5x)';
+    } else if (Math.abs(ratio - 2.8) < 0.05) {
+      item.sewingType = 'كسرات أمريكي / شتوح (2.8x)';
+    } else if (Math.abs(ratio - 3.0) < 0.05) {
+      item.sewingType = 'ويفي Wave (3.0x)';
+    } else {
+      item.sewingType = `كسرات معدّلة (${ratio}x)`;
+    }
+
+    // Recalculate meters
+    const width = parseFloat(item.width) || 3.0;
+    item.meters = Math.round(width * ratio * 10) / 10;
+
+    // Update preset buttons active state
+    const card = document.getElementById(`walkin-item-card-${index}`);
+    if (card) {
+      card.querySelectorAll('.fullness-btn').forEach(btn => {
+        const btnText = btn.textContent || '';
+        const isPresetMatch = (Math.abs(ratio - 1.5) < 0.05 && btnText.includes('1.5')) ||
+                              (Math.abs(ratio - 2.5) < 0.05 && btnText.includes('2.5')) ||
+                              (Math.abs(ratio - 2.8) < 0.05 && btnText.includes('2.8')) ||
+                              (Math.abs(ratio - 3.0) < 0.05 && btnText.includes('3.0'));
+        btn.classList.toggle('active', isPresetMatch);
+      });
+    }
+
+    // Update hidden meters input
+    const metersInput = document.getElementById(`walkin-item-meters-${index}`);
+    if (metersInput) metersInput.value = item.meters;
+
+    // Update subtotal badge
+    this.updateWalkinCardSubtotal(index);
     this.recalcWalkinTotal();
   }
 
@@ -2463,32 +2546,77 @@ class NaseejAdmin {
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px; display: flex; justify-content: space-between;">
-                <span>القياس بالعرض *</span>
-                <span style="color: #64748b; font-weight: normal;">متر</span>
-              </label>
+              <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px; font-weight: 700; color: #334155;">القياس بالعرض (متر) *</label>
               <div class="walkin-dim-input-wrap">
-                <input type="number" id="walkin-item-width-${idx}" class="form-control" style="font-size: 13px; height: 36px; padding: 4px 8px; font-weight: 700;" value="${item.width || 3.0}" step="0.1" min="0.1" max="30" placeholder="مثال: 3.0" required oninput="window.naseejAdmin.updateWalkinItem(${idx}, 'width', this.value)">
+                <input type="number" id="walkin-item-width-${idx}" class="form-control" style="font-size: 13px; height: 36px; padding: 4px 8px 4px 34px; font-weight: 700;" value="${item.width || 3.0}" step="0.1" min="0.1" max="30" placeholder="مثال: 3.0" required oninput="window.naseejAdmin.updateWalkinItem(${idx}, 'width', this.value)">
                 <span class="walkin-dim-suffix">متر</span>
               </div>
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px; display: flex; justify-content: space-between;">
-                <span>القياس بالارتفاع *</span>
-                <span style="color: #64748b; font-weight: normal;">متر</span>
-              </label>
+              <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px; font-weight: 700; color: #334155;">القياس بالارتفاع (متر) *</label>
               <div class="walkin-dim-input-wrap">
-                <input type="number" id="walkin-item-height-${idx}" class="form-control" style="font-size: 13px; height: 36px; padding: 4px 8px; font-weight: 700;" value="${item.height || 2.8}" step="0.1" min="0.1" max="15" placeholder="مثال: 2.8" required oninput="window.naseejAdmin.updateWalkinItem(${idx}, 'height', this.value)">
+                <input type="number" id="walkin-item-height-${idx}" class="form-control" style="font-size: 13px; height: 36px; padding: 4px 8px 4px 34px; font-weight: 700;" value="${item.height || 2.8}" step="0.1" min="0.1" max="15" placeholder="مثال: 2.8" required oninput="window.naseejAdmin.updateWalkinItem(${idx}, 'height', this.value)">
                 <span class="walkin-dim-suffix">متر</span>
               </div>
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px;">سعر المتر / م² (₪) *</label>
+              <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px; font-weight: 700; color: #334155;">سعر المتر / م² (₪) *</label>
               <input type="number" id="walkin-item-price-${idx}" class="form-control" style="font-size: 13px; height: 36px; padding: 4px 8px; font-weight: 700;" value="${item.unitPrice}" min="1" required oninput="window.naseejAdmin.updateWalkinItem(${idx}, 'unitPrice', this.value)">
             </div>
           </div>
+
+          <!-- Pleats and Sewing Density Options (كثافة ونوع الكسرات) -->
+          ${item.unitLabel !== 'م²' ? `
+            <div class="walkin-pleat-section">
+              <div class="walkin-pleat-header">
+                <span class="walkin-pleat-title">كثافة الكسرات ونوع الخياطة (لكل متر حائط):</span>
+                <div class="walkin-custom-ratio-box">
+                  <span class="walkin-custom-ratio-label">✏️ تعديل الكسرات:</span>
+                  <div class="walkin-custom-ratio-input-wrap">
+                    <input type="number" 
+                           id="walkin-item-ratio-${idx}" 
+                           class="walkin-custom-ratio-input" 
+                           value="${item.fullnessRatio || 2.8}" 
+                           step="0.1" 
+                           min="1.0" 
+                           max="6.0" 
+                           title="معامل مضاعفة أمتار القماش لكل متر حائط"
+                           oninput="window.naseejAdmin.updateWalkinCustomRatio(${idx}, this.value)">
+                    <span class="walkin-custom-ratio-unit">م قماش/م حيط</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="fullness-options-row">
+                <div class="fullness-btn ${Number(item.fullnessRatio) === 1.5 ? 'active' : ''}" 
+                     onclick="window.naseejAdmin.setWalkinPleat(${idx}, 1.5, 'رنج فرد (1.5x)', this)">
+                  <span class="fullness-title">رنج فرد</span>
+                  <span class="fullness-ratio">1.5 م قماش / م حيط</span>
+                </div>
+                <div class="fullness-btn ${Number(item.fullnessRatio) === 2.5 ? 'active' : ''}" 
+                     onclick="window.naseejAdmin.setWalkinPleat(${idx}, 2.5, 'رنج مزموم (2.5x)', this)">
+                  <span class="fullness-title">رنج مزموم</span>
+                  <span class="fullness-ratio">2.5 م قماش / م حيط</span>
+                </div>
+                <div class="fullness-btn ${(Number(item.fullnessRatio) === 2.8 || !item.fullnessRatio) ? 'active' : ''}" 
+                     onclick="window.naseejAdmin.setWalkinPleat(${idx}, 2.8, 'كسرات أمريكي / شتوح (2.8x)', this)">
+                  <span class="fullness-title">كسرات أمريكي / شتوح</span>
+                  <span class="fullness-ratio">2.8 م قماش / م حيط</span>
+                </div>
+                <div class="fullness-btn ${Number(item.fullnessRatio) === 3.0 ? 'active' : ''}" 
+                     onclick="window.naseejAdmin.setWalkinPleat(${idx}, 3.0, 'ويفي Wave (3.0x)', this)">
+                  <span class="fullness-title">ويفي (Wave)</span>
+                  <span class="fullness-ratio">3.0 م قماش / م حيط</span>
+                </div>
+              </div>
+            </div>
+          ` : `
+            <div class="walkin-pleat-section walkin-tarsoon-notice">
+              <span>🪟 <strong>ستائر ترسون:</strong> تُحسب بالمتر المربع مسطحة (العرض ${item.width || 3}م × الارتفاع ${item.height || 2.8}م = ${item.meters} م²) دون مضاعفة كسرات.</span>
+            </div>
+          `}
 
           <!-- Hidden helper inputs to keep references alive -->
           <input type="hidden" id="walkin-item-meters-${idx}" value="${item.meters}">
@@ -2498,7 +2626,7 @@ class NaseejAdmin {
             <input type="text" class="form-control walkin-item-notes-input" value="${item.notes}" placeholder="ملاحظة خاصة بهذا الشباك (تفصيل كسرات، إضافات، ملاحظات فنية...)" oninput="window.naseejAdmin.updateWalkinItem(${idx}, 'notes', this.value)">
             
             <div class="walkin-item-total-badge" id="walkin-item-subtotal-${idx}">
-              ${(item.width && item.height) ? `مقاس [${item.width}م عرض × ${item.height}م ارتفاع] • ` : ''}المجموع: <strong>${itemSubtotal.toLocaleString()} ₪</strong> (${item.meters} ${item.unitLabel} × ${item.unitPrice} ₪)
+              ${(item.width && item.height) ? `مقاس [${item.width}م عرض × ${item.height}م ارتفاع] • ` : ''}${item.sewingType ? `${item.sewingType} • ` : ''}المجموع: <strong>${itemSubtotal.toLocaleString()} ₪</strong> (${item.meters} ${item.unitLabel} × ${item.unitPrice} ₪)
             </div>
           </div>
         </div>
