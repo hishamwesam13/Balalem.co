@@ -1137,12 +1137,17 @@ class NaseejAdmin {
                   ${d.isToday ? '<span class="badge badge-gold" style="font-size: 10px; padding: 1px 6px;">اليوم</span>' : ''}
                 </div>
 
-                <!-- Daily Workload Capacity Meter -->
-                <div style="margin-top: 8px; font-size: 11px; display: flex; flex-direction: column; gap: 3px; background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <!-- Daily Workload Capacity Meter (حد التركيب 3 إلى 4 ورش يومياً) -->
+                <div style="margin-top: 8px; font-size: 11px; display: flex; flex-direction: column; gap: 4px; background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
                   <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="color: ${dayInstallCount > 2 ? '#b91c1c' : '#2563eb'}; font-weight: 800;">
-                      🔧 تركيب: <strong>${dayInstallCount}</strong> ${dayInstallCount > 2 ? '⚠️ (ضغط عمل)' : (dayInstallCount > 0 ? '/ 2 متاح' : '')}
+                    <span style="color: ${dayInstallCount > 4 ? '#b91c1c' : (dayInstallCount >= 3 ? '#b45309' : '#2563eb')}; font-weight: 800;">
+                      🔧 تركيب: <strong>${dayInstallCount}</strong> / 4 ورش
                     </span>
+                    ${dayInstallCount > 4 
+                      ? '<span style="font-size: 9.5px; font-weight: 800; background: #fee2e2; color: #b91c1c; padding: 1px 5px; border-radius: 4px;">⚠️ ضغط وتجاوز الحد!</span>' 
+                      : (dayInstallCount >= 3 
+                          ? '<span style="font-size: 9.5px; font-weight: 800; background: #fef3c7; color: #92400e; padding: 1px 5px; border-radius: 4px;">مكتمل (3-4)</span>' 
+                          : '<span style="font-size: 9.5px; font-weight: 700; background: #dcfce7; color: #166534; padding: 1px 5px; border-radius: 4px;">متاح</span>')}
                   </div>
                   <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="color: #059669; font-weight: 800;">
