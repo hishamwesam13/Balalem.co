@@ -18,6 +18,8 @@ class NaseejAdmin {
     this.currentScheduleMonth = today.getMonth() + 1; // 1-12
     this.currentSaturdayDate = store.getSaturdayOfWeek(today);
     this.calendarViewMode = 'weekly'; // 'weekly' or 'monthly'
+    this.monthlyFilterOnlyScheduled = false;
+    this.monthlyTypeFilter = 'all'; // 'all', 'install', 'pickup'
 
     // Showroom Walk-in Multi-Window Items State
     this.walkinItems = [];
@@ -1061,19 +1063,41 @@ class NaseejAdmin {
       `;
     }
 
+    // Filter orders by appointment type (all, install, pickup)
+    const filteredOrdersMap = {};
+    data.days.forEach(d => {
+      const allOrders = ordersMapByDate[d.dateStr] || [];
+      if (this.monthlyTypeFilter === 'install') {
+        filteredOrdersMap[d.dateStr] = allOrders.filter(o => o.requiresInstallation);
+      } else if (this.monthlyTypeFilter === 'pickup') {
+        filteredOrdersMap[d.dateStr] = allOrders.filter(o => !o.requiresInstallation);
+      } else {
+        filteredOrdersMap[d.dateStr] = allOrders;
+      }
+    });
+
     // Build Table Rows for all days or scheduled days only
     let rowsHtml = '';
     const filteredDays = this.monthlyFilterOnlyScheduled 
-      ? data.days.filter(d => (ordersMapByDate[d.dateStr] || []).length > 0)
+      ? data.days.filter(d => (filteredOrdersMap[d.dateStr] || []).length > 0)
       : data.days;
 
     if (filteredDays.length === 0) {
-      rowsHtml = `<tr><td colspan="5" style="text-align: center; padding: 30px; color: #64748b; font-size: 13px;">لا توجد طلبيات مجدولة في هذا الشهر حتى الآن. استخدم زر "إضافة طلبية زبون من المعرض" أو قم بإرفاق صورة الجدول الورقي لتفريغها.</td></tr>`;
+      const emptyMsg = this.monthlyTypeFilter === 'install' 
+        ? 'لا توجد مواعيد تركيب منزلي في هذا الشهر.' 
+        : (this.monthlyTypeFilter === 'pickup' 
+            ? 'لا توجد طلبيات تسليم بالمعرض في هذا الشهر.' 
+            : 'لا توجد طلبيات مجدولة في هذا الشهر حتى الآن.');
+      rowsHtml = `<tr><td colspan="5" style="text-align: center; padding: 35px; color: #64748b; font-size: 13px;">${emptyMsg}</td></tr>`;
     } else {
       filteredDays.forEach(d => {
-        const orders = ordersMapByDate[d.dateStr] || [];
+        const orders = filteredOrdersMap[d.dateStr] || [];
+        const allDayOrders = ordersMapByDate[d.dateStr] || [];
         const isFriday = d.isFriday;
         const rowClass = `${d.isToday ? 'row-today' : ''} ${isFriday ? 'row-friday' : ''}`;
+
+        const dayInstallCount = allDayOrders.filter(o => o.requiresInstallation).length;
+        const dayPickupCount = allDayOrders.filter(o => !o.requiresInstallation).length;
 
         if (orders.length === 0) {
           rowsHtml += `
@@ -1103,15 +1127,30 @@ class NaseejAdmin {
         } else {
           rowsHtml += `
             <tr class="${rowClass}">
-              <td style="vertical-align: top; width: 175px; background: ${d.isToday ? '#fefce8' : '#ffffff'}; border-left: 1.5px solid #e2e8f0;">
+              <td style="vertical-align: top; width: 195px; background: ${d.isToday ? '#fefce8' : '#ffffff'}; border-left: 1.5px solid #e2e8f0; padding: 10px 12px;">
                 <div class="day-date-cell ${d.isToday ? 'today' : ''}">
                   <span class="day-badge-num">${d.dayNum}</span>
                   <div>
-                    <div style="font-weight: 800; color: #0f172a; font-size: 13px;">${d.dayName}</div>
+                    <div style="font-weight: 800; color: #0f172a; font-size: 13.5px;">${d.dayName}</div>
                     <div style="font-size: 11px; color: #64748b;">${d.dateStr}</div>
                   </div>
                   ${d.isToday ? '<span class="badge badge-gold" style="font-size: 10px; padding: 1px 6px;">اليوم</span>' : ''}
                 </div>
+
+                <!-- Daily Workload Capacity Meter -->
+                <div style="margin-top: 8px; font-size: 11px; display: flex; flex-direction: column; gap: 3px; background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: ${dayInstallCount > 2 ? '#b91c1c' : '#2563eb'}; font-weight: 800;">
+                      🔧 تركيب: <strong>${dayInstallCount}</strong> ${dayInstallCount > 2 ? '⚠️ (ضغط عمل)' : (dayInstallCount > 0 ? '/ 2 متاح' : '')}
+                    </span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #059669; font-weight: 800;">
+                      🏪 تسليم بالمعرض: <strong>${dayPickupCount}</strong>
+                    </span>
+                  </div>
+                </div>
+
                 <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between;">
                   <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 11px; font-weight: 800;">${orders.length} ${orders.length === 1 ? 'طلبية' : 'طلبيات'}</span>
                   <button type="button" class="btn btn-sm btn-outline" style="font-size: 10.5px; padding: 2px 7px;" onclick="window.naseejAdmin.quickAddOrderForDate('${d.dateStr}')" title="إضافة موعد آخر لهذا اليوم">
@@ -1124,33 +1163,49 @@ class NaseejAdmin {
                   ${orders.map(o => {
                     const custName = (o.customer && o.customer.name) || o.customerName || 'زبون الورشة';
                     const custPhone = (o.customer && o.customer.phone) || o.customerPhone || '';
-                    const custCity = (o.customer && o.customer.city) || o.customerCity || o.deliveryRegion || 'نابلس';
-                    const isInstall = o.requiresInstallation;
-                    const isDelivery = o.deliveryType === 'delivery';
+                    const isInstall = Boolean(o.requiresInstallation);
                     const windowsCount = (o.items || []).length || 1;
                     const fabricsText = (o.items || []).map(it => it.productName || 'قماش').slice(0, 2).join(' + ') || `${o.totalMeters || 8}م قماش`;
                     const totalAmount = o.grandTotal || o.totalAmount || o.total || 0;
+                    
+                    const prepInfo = store.getWorkshopPrepDate(o.scheduledDate || o.installationDate);
+                    const prepDate = o.workshopPrepDate || prepInfo.dateStr;
+                    const prepDay = o.workshopPrepDay || prepInfo.dayName;
 
                     return `
                       <div class="day-order-chip">
                         <div class="day-order-chip-header">
-                          <span class="day-order-cust-name" onclick="window.naseejAdmin.printOrderWorkReceipt('${o.id}')" title="انقر لعرض وطباعة الفاتورة">
+                          <span class="day-order-cust-name" onclick="window.naseejAdmin.printOrderReceipt('${o.id}')" title="انقر لعرض وطباعة الفاتورة">
                             👤 <strong>${custName}</strong>
                           </span>
-                          <span class="order-type-badge ${isInstall ? 'install' : (isDelivery ? 'delivery' : 'pickup')}" style="font-size: 10px; padding: 2px 7px;">
-                            ${isInstall ? `🔧 تركيب (${o.installerName || 'فني'})` : (isDelivery ? `🚚 توصيل (${custCity})` : '🏪 استلام')}
-                          </span>
+                          ${isInstall ? `
+                            <span class="badge" style="font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd;">
+                              🔧 تركيب منزلي (${o.installerName || 'فني تركيب'})
+                            </span>
+                          ` : `
+                            <span class="badge" style="font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7;">
+                              🏪 تسليم داخل المعرض
+                            </span>
+                          `}
                         </div>
+
                         <div class="day-order-chip-body">
                           <span>🪟 ${windowsCount} ${windowsCount === 1 ? 'شباك' : 'شبابيك'} • ${fabricsText}</span>
                           <span style="font-weight: 800; color: #b45309;">${totalAmount.toLocaleString()} ₪</span>
                         </div>
-                        <div class="day-order-chip-actions">
+
+                        <!-- Workshop Prep Date (تنزل للورشة قبل بيومين) -->
+                        <div style="margin-top: 5px; font-size: 11px; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; padding: 3px 8px; border-radius: 5px; display: flex; align-items: center; justify-content: space-between;">
+                          <span>✂️ تنزيل وتجهيز الورشة: <strong>يوم ${prepDay} (${prepDate})</strong></span>
+                          <span style="font-size: 10px; font-weight: 800; color: #c2410c; background: #ffedd5; padding: 1px 6px; border-radius: 4px;">قبل بيومين</span>
+                        </div>
+
+                        <div class="day-order-chip-actions" style="margin-top: 6px;">
                           <span style="font-size: 10px; color: #94a3b8; font-family: monospace;">#${o.id}</span>
                           <div style="display: flex; gap: 4px;">
-                            <button type="button" class="btn btn-xs btn-outline" onclick="window.naseejAdmin.printOrderWorkReceipt('${o.id}')" title="طباعة أمر تفصيل">🖨️ طباعة</button>
+                            <button type="button" class="btn btn-xs btn-outline" onclick="window.naseejAdmin.printOrderReceipt('${o.id}')" title="طباعة أمر تفصيل الورشة">🖨️ أمر الورشة</button>
                             ${custPhone ? `
-                              <a href="https://wa.me/972${custPhone.replace(/\\D/g, '').replace(/^0+/, '')}?text=${encodeURIComponent(`السلام عليكم ${custName}، معك إدارة شركة الولاء للستائر Balalem co بخصوص موعد طلبيتكم`)}" target="_blank" rel="noopener noreferrer" class="btn btn-xs btn-outline" style="color: #10b981; border-color: #10b981;" title="واتساب">💬</a>
+                              <a href="https://wa.me/972${custPhone.replace(/\\D/g, '').replace(/^0+/, '')}?text=${encodeURIComponent(`السلام عليكم ${custName}، معك إدارة شركة الولاء للستائر Balalem co بخصوص موعد ${isInstall ? 'التركيب' : 'التسليم بالمعرض'} لطلبيتكم رقم ${o.id}`)}" target="_blank" rel="noopener noreferrer" class="btn btn-xs btn-outline" style="color: #10b981; border-color: #10b981;" title="واتساب">💬</a>
                             ` : ''}
                             <button type="button" class="btn btn-xs btn-danger-soft" onclick="window.naseejAdmin.confirmDeleteOrder('${o.id}')" title="حذف الطلبية">🗑️</button>
                           </div>
@@ -1176,7 +1231,7 @@ class NaseejAdmin {
               <span class="badge badge-gold" style="font-size: 12px;">شهر كامل</span>
             </div>
             <p style="font-size: 12.5px; color: #64748b; margin: 4px 0 0 0;">
-              جدول شامل يوضح مواعيد كافة الزبائن باليوم والتاريخ ونوع الموعد (تسليم أو تركيب) مع إمكانية حفظ صورة الجدول الورقي.
+              جدول شامل يوضح مواعيد كافة الزبائن باليوم والتاريخ مع فرز صريح بين مواعيد التركيب المنزلي والتسليم داخل المعرض، وموعد تنزيل الشغل للورشة.
             </p>
           </div>
 
@@ -1199,23 +1254,37 @@ class NaseejAdmin {
         </div>
 
         <!-- Monthly Aggregate KPIs -->
-        <div class="monthly-stats-pills" style="margin-bottom: 14px;">
+        <div class="monthly-stats-pills" style="margin-bottom: 12px;">
           <div class="monthly-stat-pill active-gold">
             <span>📦 إجمالي طلبيات الشهر:</span>
             <strong>${totalScheduledOrders} طلبية</strong>
           </div>
-          <div class="monthly-stat-pill">
-            <span>🔧 مواعيد التركيب الميداني:</span>
+          <div class="monthly-stat-pill" style="border-right: 3px solid #2563eb;">
+            <span>🔧 مواعيد التركيب المنزلي:</span>
             <strong style="color: #2563eb;">${totalInstallOrders} موعد</strong>
           </div>
-          <div class="monthly-stat-pill">
-            <span>🚚🏪 مواعيد التسليم والاستلام:</span>
-            <strong style="color: #16a34a;">${totalDeliveryOrders + totalPickupOrders} موعد</strong>
+          <div class="monthly-stat-pill" style="border-right: 3px solid #059669;">
+            <span>🏪 تسليم داخل المعرض:</span>
+            <strong style="color: #059669;">${totalDeliveryOrders + totalPickupOrders} موعد</strong>
           </div>
           <div class="monthly-stat-pill">
             <span>📐 إجمالي أمتار القماش:</span>
             <strong>${totalMetersMonth} متر</strong>
           </div>
+        </div>
+
+        <!-- Interactive Appointment Type Filter Tabs Bar -->
+        <div class="monthly-type-filter-bar" style="display: flex; gap: 8px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; background: #ffffff; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+          <span style="font-size: 13px; font-weight: 800; color: #0f172a; margin-left: 6px;">🎯 فرز نوع الموعد في الجدول:</span>
+          <button type="button" class="btn btn-sm ${this.monthlyTypeFilter === 'all' ? 'btn-gold' : 'btn-outline'}" onclick="window.naseejAdmin.setMonthlyTypeFilter('all')" style="font-weight: 800;">
+            🔘 كافة المواعيد (${totalScheduledOrders})
+          </button>
+          <button type="button" class="btn btn-sm ${this.monthlyTypeFilter === 'install' ? 'btn-primary' : 'btn-outline'}" onclick="window.naseejAdmin.setMonthlyTypeFilter('install')" style="font-weight: 800; ${this.monthlyTypeFilter === 'install' ? 'background: #2563eb; color: #fff;' : 'color: #2563eb; border-color: #93c5fd;'}">
+            🔧 مواعيد التركيب المنزلي فقط (${totalInstallOrders})
+          </button>
+          <button type="button" class="btn btn-sm ${this.monthlyTypeFilter === 'pickup' ? 'btn-success' : 'btn-outline'}" onclick="window.naseejAdmin.setMonthlyTypeFilter('pickup')" style="font-weight: 800; ${this.monthlyTypeFilter === 'pickup' ? 'background: #059669; color: #fff;' : 'color: #059669; border-color: #6ee7b7;'}">
+            🏪 تسليم داخل المعرض فقط (${totalDeliveryOrders + totalPickupOrders})
+          </button>
         </div>
 
         <!-- Paper Schedule Image & Extractor Section -->
@@ -1226,11 +1295,8 @@ class NaseejAdmin {
           <table class="monthly-schedule-table">
             <thead>
               <tr>
-                <th style="width: 22%;">اليوم والتاريخ 📅</th>
-                <th style="width: 28%;">اسم الزبون والطلبية 👤</th>
-                <th style="width: 22%;">نوع الموعد (تسليم / تركيب) 🏷️</th>
-                <th style="width: 18%;">الشبابيك والأمتار 🪟</th>
-                <th style="width: 10%;">الإجراء ⚙️</th>
+                <th style="width: 24%;">اليوم والتاريخ 📅 وطاقة اليوم</th>
+                <th colspan="4">مواعيد الزبائن والطلبيات 👤 (مع موعد تنزيل الشغل للورشة قبل بيومين)</th>
               </tr>
             </thead>
             <tbody>
@@ -1240,6 +1306,15 @@ class NaseejAdmin {
         </div>
       </div>
     `;
+  }
+
+  setMonthlyTypeFilter(filterType) {
+    this.monthlyTypeFilter = filterType;
+    this.renderMonthlyScheduleView();
+  }
+
+  printOrderWorkReceipt(orderId) {
+    this.printOrderReceipt(orderId);
   }
 
   handlePaperScheduleUpload(input) {
@@ -1465,13 +1540,14 @@ class NaseejAdmin {
           const d = new Date(item.date);
           const dayName = store.getDayNameFromDate(d);
           const isInstall = item.type === 'install';
+          const prepInfo = store.getWorkshopPrepDate(item.date);
 
           store.createOrder({
             customer: {
               name: item.name,
               phone: '059' + Math.floor(1000000 + Math.random() * 8999999),
               city: 'نابلس',
-              address: item.desc
+              address: isInstall ? item.desc : 'استلام وتسليم داخل المعرض'
             },
             customerName: item.name,
             customerPhone: '059' + Math.floor(1000000 + Math.random() * 8999999),
@@ -1481,7 +1557,12 @@ class NaseejAdmin {
             requiresInstallation: isInstall,
             installationDate: isInstall ? item.date : null,
             installationDay: isInstall ? dayName : null,
-            deliveryType: isInstall ? 'delivery' : 'delivery',
+            installerName: isInstall ? (item.desc.includes('عز') ? 'عز' : 'أسامة') : null,
+            installerId: isInstall ? (item.desc.includes('عز') ? 'ezz' : 'osama') : null,
+            deliveryType: isInstall ? 'delivery' : 'pickup',
+            deliveryRegion: isInstall ? 'تركيب منزلي' : 'تسليم داخل المعرض',
+            workshopPrepDate: prepInfo.dateStr,
+            workshopPrepDay: prepInfo.dayName,
             totalMeters: 8,
             source: 'paper_schedule_ai',
             items: [{
@@ -3088,9 +3169,10 @@ class NaseejAdmin {
         </div>
         <div class="info-grid">
           <div>
-            <strong>رقم الطلب:</strong> ${order.id}<br>
-            <strong>تاريخ ويوم القص بالورشة:</strong> <span style="color:#b45309; font-weight:bold;">يوم ${order.scheduledDay || 'السبت'} ${order.scheduledDate ? `(${order.scheduledDate})` : ''}</span><br>
-            ${order.requiresInstallation ? `<strong>موعد وفني التركيب:</strong> <span style="color:#2563eb; font-weight:bold;">${order.installerName || 'فني معتمد'} - يوم ${order.installationDay || ''} ${order.installationDate ? `(${order.installationDate})` : ''}</span><br>` : ''}
+            <strong>رقم الطلب:</strong> #${order.id}<br>
+            <strong>✂️ موعد تجهيز وتفصيل الورشة:</strong> <span style="color:#b45309; font-weight:bold;">يوم ${order.workshopPrepDay || ''} (${order.workshopPrepDate || ''})</span> <small style="color:#b45309;">(قبل بيومين من التسليم)</small><br>
+            <strong>📅 موعد التسليم / التركيب للزبون:</strong> <span style="color:#0f172a; font-weight:bold;">يوم ${order.scheduledDay || 'السبت'} (${order.scheduledDate || ''})</span><br>
+            <strong>🏷️ نوع وتصنيف الموعد:</strong> <span style="font-weight:bold; color: ${order.requiresInstallation ? '#2563eb' : '#059669'};">${order.requiresInstallation ? `🔧 تركيب منزلي (${order.installerName || 'فني تركيب معتمد'})` : '🏪 تسليم واستلام داخل المعرض'}</span><br>
             <strong>طريقة الدفع:</strong> ${order.paymentMethod}
           </div>
           <div>

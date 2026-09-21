@@ -433,6 +433,20 @@ class NaseejStore {
         if (!o.customerCity) {
           o.customerCity = o.customer.city || 'نابلس';
         }
+
+        // Workshop Preparation Date (1-2 days before target delivery/install)
+        if (!o.workshopPrepDate && (o.scheduledDate || o.installationDate)) {
+          const prep = this.getWorkshopPrepDate(o.scheduledDate || o.installationDate);
+          o.workshopPrepDate = prep.dateStr;
+          o.workshopPrepDay = prep.dayName;
+        }
+
+        // Ensure non-install paper schedule orders are recognized as in-store pickup/delivery
+        if (!o.requiresInstallation && (!o.deliveryType || o.deliveryType === 'delivery') && o.source === 'paper_schedule_ai') {
+          o.deliveryType = 'pickup';
+          o.deliveryRegion = 'تسليم داخل المعرض';
+        }
+
         return o;
       });
     } catch (e) {
@@ -512,7 +526,9 @@ class NaseejStore {
       orderStatus: orderData.orderStatus || 'pending', // pending, in_tailoring, ready, shipped, delivered
       statusText: orderData.statusText || 'قيد المراجعة وتأكيد المقاسات',
       scheduledDay: scheduledDay,
-      scheduledDate: scheduledDate
+      scheduledDate: scheduledDate,
+      workshopPrepDate: orderData.workshopPrepDate || this.getWorkshopPrepDate(scheduledDate).dateStr,
+      workshopPrepDay: orderData.workshopPrepDay || this.getWorkshopPrepDate(scheduledDate).dayName
     };
 
     // Deduct stock meters for ordered items if product exists
@@ -659,6 +675,26 @@ class NaseejStore {
     const m = String(dateObj.getMonth() + 1).padStart(2, '0');
     const day = String(dateObj.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
+  }
+
+  // Calculate workshop preparation date (1-2 days before target delivery/install, skipping Friday)
+  getWorkshopPrepDate(targetDate) {
+    if (!targetDate) return { dateStr: '', dayName: '' };
+    const d = typeof targetDate === 'string' ? new Date(targetDate) : new Date(targetDate.getTime());
+    if (isNaN(d.getTime())) return { dateStr: targetDate, dayName: '' };
+
+    // Default: 2 days before
+    const prep = new Date(d);
+    prep.setDate(prep.getDate() - 2);
+
+    // If prep date lands on Friday (workshop holiday), move it back to Thursday (3 days before)
+    if (prep.getDay() === 5) {
+      prep.setDate(prep.getDate() - 1);
+    }
+
+    const iso = this.formatDateISO(prep);
+    const dayName = this.getDayNameFromDate(prep);
+    return { dateStr: iso, dayName: dayName };
   }
 
   // Find the starting Saturday for the workweek containing a date
