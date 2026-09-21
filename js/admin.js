@@ -1776,7 +1776,7 @@ class NaseejAdmin {
     const newStatus = order.installationStatus === 'completed' ? 'scheduled' : 'completed';
     const updated = store.assignOrderInstallation(orderId, { installationStatus: newStatus });
     if (updated) {
-      const statusLabel = newStatus === 'completed' ? 'تم التركيب بنجاح ✅' : 'مجدول ⏳';
+      const statusLabel = newStatus === 'completed' ? 'تم التركيب بنجاح ✅' : 'بانتظار التركيب ⏳';
       window.naseejCustomer.showToast(`تم تحديث حالة التركيب إلى "${statusLabel}" للطلبية ${orderId}`, 'success');
       this.renderInstallationSchedule();
       this.renderOrdersTable();
@@ -1919,8 +1919,8 @@ class NaseejAdmin {
                 <span class="schedule-order-num">${order.id}</span>
                 ${order.source === 'showroom' ? '<span class="badge badge-source badge-source-showroom">معرض</span>' : '<span class="badge badge-source badge-source-online">متجر</span>'}
               </div>
-              <span class="badge-install-status ${isCompleted ? 'completed' : 'scheduled'}">
-                ${isCompleted ? 'تم التركيب ✓' : 'مجدول ⏳'}
+              <span class="badge-install-status ${isCompleted ? 'completed' : 'scheduled'}" style="cursor: pointer;" onclick="window.naseejAdmin.toggleInstallationStatus('${order.id}')" title="انقر للتبديل بين: تم التركيب / بانتظار التركيب">
+                ${isCompleted ? 'تم التركيب ✓' : 'بانتظار التركيب ⏳'}
               </span>
             </div>
 
