@@ -1597,11 +1597,15 @@ class NaseejAdmin {
     const orders = store.getOrders();
 
     const matches = orders.filter(o => {
-      const name = normalizeArabic(o.customerName);
-      const phone = (o.customerPhone || '').replace(/\D/g, '');
-      const id = normalizeArabic(o.id);
-      const city = normalizeArabic(o.customerCity);
-      return name.includes(qNorm) || phone.includes(q.replace(/\D/g, '')) || id.includes(qNorm) || city.includes(qNorm);
+      const custName = (o.customer && o.customer.name) || o.customerName || '';
+      const custPhone = (o.customer && o.customer.phone) || o.customerPhone || '';
+      const custCity = (o.customer && o.customer.city) || o.customerCity || o.deliveryRegion || '';
+      const name = normalizeArabic(custName);
+      const phone = custPhone.replace(/\D/g, '');
+      const id = normalizeArabic(o.id || '');
+      const city = normalizeArabic(custCity);
+      const qDigits = q.replace(/\D/g, '');
+      return name.includes(qNorm) || (qDigits && phone.includes(qDigits)) || id.includes(qNorm) || city.includes(qNorm);
     });
 
     resultsPanel.style.display = 'block';
@@ -1621,6 +1625,11 @@ class NaseejAdmin {
     }
 
     const cardsHtml = matches.map(o => {
+      const custName = (o.customer && o.customer.name) || o.customerName || 'زبون الورشة';
+      const custPhone = (o.customer && o.customer.phone) || o.customerPhone || '';
+      const custCity = (o.customer && o.customer.city) || o.customerCity || o.deliveryRegion || 'نابلس';
+      const grandTotal = o.grandTotal || o.totalAmount || o.subtotal || o.total || 0;
+
       const windowsCount = (o.items || []).length || 1;
       const windowsCountLabel = windowsCount === 1 ? 'شباك واحد' : (windowsCount === 2 ? 'شباكان' : `${windowsCount} شبابيك`);
       
@@ -1653,13 +1662,13 @@ class NaseejAdmin {
         <div class="search-result-card">
           <div class="search-result-top">
             <div>
-              <div class="search-cust-name">👤 ${o.customerName || 'زبون'}</div>
-              <div class="search-cust-meta">
-                <span>📞 ${o.customerPhone || 'لا يوجد هاتف'}</span>
+              <div class="search-cust-name" style="font-size: 14.5px; font-weight: 800; color: #0f172a;">👤 ${custName}</div>
+              <div class="search-cust-meta" style="font-size: 12px; color: #64748b; margin-top: 3px;">
+                <span>📞 ${custPhone ? `<a href="tel:${custPhone}" style="color: #0284c7; font-weight: 700; text-decoration: none;">${custPhone}</a>` : '<span style="color: #94a3b8;">لا يوجد هاتف</span>'}</span>
                 <span>•</span>
-                <span>📍 ${o.customerCity || 'نابلس'}</span>
+                <span>📍 ${custCity}</span>
                 <span>•</span>
-                <span class="badge badge-gold" style="font-size: 10px;">${o.id}</span>
+                <span class="badge badge-gold" style="font-size: 10.5px; font-family: monospace;">#${o.id}</span>
               </div>
             </div>
             <div>
@@ -1676,19 +1685,19 @@ class NaseejAdmin {
           </div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-            <div style="font-size: 13.5px; font-weight: 800; color: #b45309;">
-              المجموع: ${(o.totalAmount || o.total || 0).toLocaleString()} ₪
+            <div style="font-size: 14px; font-weight: 800; color: #b45309;">
+              المجموع: <strong>${grandTotal.toLocaleString()} ₪</strong>
             </div>
             <div class="search-card-actions">
               <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 3px 8px;" onclick="window.naseejAdmin.printOrderWorkReceipt('${o.id}'); window.naseejAdmin.clearTopCustomerSearch();">
                 🖨️ أمر الورشة
               </button>
-              ${o.customerPhone ? `
-                <a href="https://wa.me/972${o.customerPhone.replace(/^0+/, '')}?text=${encodeURIComponent(`مرحباً ${o.customerName}، شركة الولاء للستائر BalalemCo بخصوص طلبية الستائر رقم ${o.id}`)}" target="_blank" class="btn btn-sm btn-outline" style="color: #10b981; border-color: #10b981; font-size: 11px; padding: 3px 8px;" title="مراسلة واتساب">
+              ${custPhone ? `
+                <a href="https://wa.me/972${custPhone.replace(/\\D/g, '').replace(/^0+/, '')}?text=${encodeURIComponent(`مرحباً ${custName}، شركة الولاء للستائر BalalemCo بخصوص طلبية الستائر رقم ${o.id}`)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline" style="color: #10b981; border-color: #10b981; font-size: 11px; padding: 3px 8px;" title="مراسلة واتساب">
                   💬 واتساب
                 </a>
               ` : ''}
-              <button type="button" class="btn btn-sm btn-gold" style="font-size: 11px; padding: 3px 8px;" onclick="window.naseejAdmin.jumpToDate('${o.scheduledDate || o.installationDate}'); window.naseejAdmin.clearTopCustomerSearch();">
+              <button type="button" class="btn btn-sm btn-gold" style="font-size: 11px; padding: 3px 8px;" onclick="window.naseejAdmin.jumpToDate('${o.scheduledDate || o.installationDate || ''}'); window.naseejAdmin.clearTopCustomerSearch();">
                 📅 عرض بالجدول
               </button>
             </div>
