@@ -1173,16 +1173,25 @@ class NaseejAdmin {
                     const fabricsText = (o.items || []).map(it => it.productName || 'قماش').slice(0, 2).join(' + ') || `${o.totalMeters || 8}م قماش`;
                     const totalAmount = o.grandTotal || o.totalAmount || o.total || 0;
                     
+                    const isPrepared = store.isOrderPrepared(o);
                     const prepInfo = store.getWorkshopPrepDate(o.scheduledDate || o.installationDate);
                     const prepDate = o.workshopPrepDate || prepInfo.dateStr;
                     const prepDay = o.workshopPrepDay || prepInfo.dayName;
 
                     return `
-                      <div class="day-order-chip">
+                      <div class="day-order-chip ${isPrepared ? 'chip-prepared' : 'chip-pending'}">
                         <div class="day-order-chip-header">
-                          <span class="day-order-cust-name" onclick="window.naseejAdmin.printOrderReceipt('${o.id}')" title="انقر لعرض وطباعة الفاتورة">
-                            👤 <strong>${custName}</strong>
-                          </span>
+                          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                            <span class="day-order-cust-name" onclick="window.naseejAdmin.printOrderReceipt('${o.id}')" title="انقر لعرض وطباعة الفاتورة">
+                              👤 <strong>${custName}</strong>
+                            </span>
+                            <span class="badge ${isPrepared ? 'badge-prepared' : 'badge-pending'}" 
+                                  onclick="window.naseejAdmin.toggleOrderPrepStatus('${o.id}', event)" 
+                                  title="انقر لتغيير حالة التجهيز يدوياً"
+                                  style="font-size: 10.5px; padding: 2px 7px; cursor: pointer; user-select: none; transition: transform 0.15s ease;">
+                              ${isPrepared ? '✅ تم التجهيز' : '⏳ قيد التجهيز'}
+                            </span>
+                          </div>
                           ${isInstall ? `
                             <span class="badge" style="font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd;">
                               🔧 تركيب منزلي (${o.installerName || 'فني تركيب'})
@@ -1196,7 +1205,10 @@ class NaseejAdmin {
 
                         <div class="day-order-chip-body">
                           <span>🪟 ${windowsCount} ${windowsCount === 1 ? 'شباك' : 'شبابيك'} • ${fabricsText}</span>
-                          <span style="font-weight: 800; color: #b45309;">${totalAmount.toLocaleString()} ₪</span>
+                          <div style="display: flex; gap: 8px; align-items: center;">
+                            ${isPrepared ? '<span style="color: #15803d; font-weight: 800; font-size: 11px;">✓ منجز</span>' : ''}
+                            <span style="font-weight: 800; color: #b45309;">${totalAmount.toLocaleString()} ₪</span>
+                          </div>
                         </div>
 
                         <!-- Workshop Prep Date (تنزل للورشة قبل بيومين) -->
@@ -1316,6 +1328,32 @@ class NaseejAdmin {
   setMonthlyTypeFilter(filterType) {
     this.monthlyTypeFilter = filterType;
     this.renderMonthlyScheduleView();
+  }
+
+  toggleOrderPrepStatus(orderId, event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const order = store.getOrderById(orderId);
+    if (!order) return;
+
+    const currentStatus = store.isOrderPrepared(order);
+    const newStatus = !currentStatus;
+
+    store.updateOrder(orderId, { isPrepared: newStatus });
+
+    const custName = (order.customer && order.customer.name) || order.customerName || 'الطلبية';
+    if (newStatus) {
+      if (window.naseejCustomer) window.naseejCustomer.showToast(`✅ تم تأكيد وتحديد طلبية (${custName}) كـ [تم التجهيز] بنجاح`, 'success');
+    } else {
+      if (window.naseejCustomer) window.naseejCustomer.showToast(`⏳ تم إعادة طلبية (${custName}) إلى [قيد التجهيز]`, 'info');
+    }
+
+    this.renderMonthlyScheduleView();
+    if (this.currentScheduleSubTab === 'installation') this.renderInstallationSchedule();
+    if (this.currentScheduleSubTab === 'tailoring') this.renderWeeklySchedule();
+    this.renderOrdersTable();
   }
 
   printOrderWorkReceipt(orderId) {
@@ -3178,6 +3216,7 @@ class NaseejAdmin {
             <strong>✂️ موعد تجهيز وتفصيل الورشة:</strong> <span style="color:#b45309; font-weight:bold;">يوم ${order.workshopPrepDay || ''} (${order.workshopPrepDate || ''})</span> <small style="color:#b45309;">(قبل بيومين من التسليم)</small><br>
             <strong>📅 موعد التسليم / التركيب للزبون:</strong> <span style="color:#0f172a; font-weight:bold;">يوم ${order.scheduledDay || 'السبت'} (${order.scheduledDate || ''})</span><br>
             <strong>🏷️ نوع وتصنيف الموعد:</strong> <span style="font-weight:bold; color: ${order.requiresInstallation ? '#2563eb' : '#059669'};">${order.requiresInstallation ? `🔧 تركيب منزلي (${order.installerName || 'فني تركيب معتمد'})` : '🏪 تسليم واستلام داخل المعرض'}</span><br>
+            <strong>حالة التجهيز بالورشة:</strong> <span style="font-weight:bold; color: ${store.isOrderPrepared(order) ? '#15803d' : '#d97706'};">${store.isOrderPrepared(order) ? '✅ تم التجهيز بالكامل' : '⏳ قيد التجهيز'}</span><br>
             <strong>طريقة الدفع:</strong> ${order.paymentMethod}
           </div>
           <div>

@@ -614,6 +614,41 @@ class NaseejStore {
     return order;
   }
 
+  getOrderById(orderId) {
+    const orders = this.getOrders();
+    return orders.find(o => o.id === orderId) || null;
+  }
+
+  updateOrder(orderId, patchData) {
+    const orders = this.getOrders();
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return null;
+
+    Object.assign(order, patchData);
+
+    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+    window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: order }));
+
+    // Async sync to Neon DB
+    fetch('/api/orders', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: orderId, ...patchData })
+    }).catch(e => console.warn('[Cloud Sync] updateOrder:', e.message));
+
+    return order;
+  }
+
+  // Determines if an order is prepared: either explicitly marked or date has arrived/passed (<= today)
+  isOrderPrepared(order) {
+    if (!order) return false;
+    if (order.isPrepared !== undefined) return Boolean(order.isPrepared);
+    const todayStr = this.formatDateISO(new Date());
+    const dateStr = order.scheduledDate || order.installationDate;
+    if (!dateStr) return false;
+    return dateStr <= todayStr;
+  }
+
   deleteOrder(orderId) {
     let orders = this.getOrders();
     const orderIndex = orders.findIndex(o => o.id === orderId);
