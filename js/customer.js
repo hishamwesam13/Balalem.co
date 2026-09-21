@@ -30,9 +30,6 @@ class NaseejCustomer {
 
     // Initialize 3D dynamic interactive curtain
     this.initCurtainInteractive();
-
-    // Initialize Floating Social Bubble widget
-    this.initFloatingSocialBubble();
   }
 
   loadCart() {
@@ -1661,56 +1658,6 @@ class NaseejCustomer {
       document.addEventListener('DOMContentLoaded', runInit);
     } else {
       runInit();
-    }
-  }
-
-  /**
-   * Floating Social Bubble (فقاعة صفحاتنا العائمة)
-   * Handles opening, closing, outside click, and keyboard interaction.
-   */
-  initFloatingSocialBubble() {
-    const run = () => {
-      const wrap = document.getElementById('floating-social-bubble-wrap');
-      const btn = document.getElementById('social-bubble-btn');
-      const closeBtn = document.getElementById('social-bubble-close');
-      if (!wrap || !btn) return;
-
-      const toggle = (force) => {
-        const isOpen = force !== undefined ? force : !wrap.classList.contains('is-open');
-        wrap.classList.toggle('is-open', isOpen);
-      };
-
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggle();
-      });
-
-      if (closeBtn) {
-        closeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          toggle(false);
-        });
-      }
-
-      // Close when clicking outside
-      document.addEventListener('click', (e) => {
-        if (!wrap.contains(e.target)) {
-          wrap.classList.remove('is-open');
-        }
-      });
-
-      // Close on Escape key
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          wrap.classList.remove('is-open');
-        }
-      });
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', run);
-    } else {
-      run();
     }
   }
 }
