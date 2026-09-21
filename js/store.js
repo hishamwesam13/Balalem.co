@@ -410,7 +410,31 @@ class NaseejStore {
   getOrders() {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.ORDERS);
-      return data ? JSON.parse(data) : [];
+      const orders = data ? JSON.parse(data) : [];
+      return orders.map(o => {
+        if (!o.customer) {
+          o.customer = {
+            name: o.customerName || 'زبون الورشة',
+            phone: o.customerPhone || '',
+            email: '',
+            city: o.customerCity || o.deliveryRegion || 'نابلس',
+            address: o.customerAddress || ''
+          };
+        }
+        if (!o.customer.name) {
+          o.customer.name = o.customerName || 'زبون الورشة';
+        }
+        if (!o.customerName) {
+          o.customerName = o.customer.name;
+        }
+        if (!o.customerPhone) {
+          o.customerPhone = o.customer.phone || '';
+        }
+        if (!o.customerCity) {
+          o.customerCity = o.customer.city || 'نابلس';
+        }
+        return o;
+      });
     } catch (e) {
       console.error('Error fetching orders:', e);
       return [];
@@ -423,10 +447,6 @@ class NaseejStore {
     
     let scheduledDate = orderData.scheduledDate;
     let scheduledDay = orderData.scheduledDay;
-    
-    // If date or day is not explicitly provided (e.g. online orders or unassigned walk-in),
-    // allocate to the next available production slot.
-    // If Week 1 is full, it immediately rolls over to Week 2!
     if (!scheduledDate || !scheduledDay) {
       const orderMeters = Number(orderData.totalMeters) || 0;
       const slot = this.getNextAvailableSlot(orderMeters);
@@ -435,7 +455,6 @@ class NaseejStore {
     }
 
     const requiresInstallation = Boolean(orderData.requiresInstallation);
-    // When installation is requested: road delivery fee is 0 (free with technician) while installation fee applies
     const shippingFee = requiresInstallation
       ? 0
       : (Number(orderData.shippingFee) !== undefined && !isNaN(Number(orderData.shippingFee))
@@ -448,14 +467,26 @@ class NaseejStore {
     const installerName = installerId ? this.getInstallerName(installerId) : '';
     const source = orderData.source || 'online';
 
-    const subtotal = Number(orderData.subtotal) || 0;
+    const subtotal = Number(orderData.subtotal) || Number(orderData.fabricTotal) || 0;
     const discount = Number(orderData.discount) || 0;
-    const grandTotal = Number(orderData.grandTotal) || (subtotal + shippingFee + installationFee - discount);
+    const grandTotal = Number(orderData.grandTotal) || Number(orderData.totalAmount) || (subtotal + shippingFee + installationFee - discount);
+
+    const custObj = orderData.customer || {
+      name: orderData.customerName || 'زبون الورشة',
+      phone: orderData.customerPhone || '',
+      email: orderData.customerEmail || '',
+      city: orderData.customerCity || orderData.city || 'نابلس',
+      address: orderData.customerAddress || orderData.address || ''
+    };
+    if (!custObj.name) custObj.name = orderData.customerName || 'زبون الورشة';
 
     const newOrder = {
       id: orderId,
       date: orderData.date || new Date().toISOString(),
-      customer: orderData.customer,
+      customer: custObj,
+      customerName: custObj.name,
+      customerPhone: custObj.phone || '',
+      customerCity: custObj.city || 'نابلس',
       deliveryType: orderData.deliveryType || 'delivery',
       deliveryRegion: orderData.deliveryRegion || '',
       pickupBranch: orderData.pickupBranch || '',
@@ -720,14 +751,12 @@ class NaseejStore {
 
       const tailoringOrders = orders.filter(o => 
         o.orderStatus !== 'cancelled' && 
-        o.orderStatus !== 'delivered' && 
         (o.scheduledDate === isoStr || (!o.scheduledDate && o.scheduledDay === dayName && d.getMonth() + 1 === monthNum))
       );
 
       const installOrders = orders.filter(o =>
         o.requiresInstallation &&
         o.orderStatus !== 'cancelled' &&
-        o.installationStatus !== 'completed' &&
         (o.installationDate === isoStr || (!o.installationDate && o.installationDay === dayName && d.getMonth() + 1 === monthNum))
       );
 

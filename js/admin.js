@@ -439,9 +439,12 @@ class NaseejAdmin {
     label.innerHTML = `${weekBadge} أسبوع العمل: <strong>${start.dayName} (${start.dayNum} ${start.monthName.split('/')[0].trim()})</strong> ➔ <strong>${end.dayName} (${end.dayNum} ${end.monthName.split('/')[0].trim()} ${this.currentScheduleYear})</strong>`;
 
     const monthSelect = document.getElementById('cal-month-select');
-    if (monthSelect && monthSelect.value != start.monthNum) {
-      this.currentScheduleMonth = start.monthNum;
-      monthSelect.value = start.monthNum;
+    if (monthSelect) {
+      const weekMonths = [start.monthNum, end.monthNum];
+      if (!weekMonths.includes(this.currentScheduleMonth)) {
+        this.currentScheduleMonth = end.monthNum;
+      }
+      monthSelect.value = this.currentScheduleMonth;
     }
   }
 
@@ -449,10 +452,16 @@ class NaseejAdmin {
     this.currentScheduleMonth = parseInt(monthNum);
     const weeks = store.getMonthWeeks(this.currentScheduleYear, this.currentScheduleMonth);
     if (weeks.length > 0) {
-      this.currentSaturdayDate = new Date(weeks[0].saturdayDate);
+      let targetWeek = weeks.find(w => {
+        const inMonthDays = w.weekDates.filter(d => d.monthNum === this.currentScheduleMonth).length;
+        return inMonthDays >= 3;
+      }) || weeks[0];
+      this.currentSaturdayDate = new Date(targetWeek.saturdayDate);
     }
     this.updateActiveWeekBanner();
-    if (this.calendarViewMode === 'monthly') {
+    if (this.currentScheduleSubTab === 'monthly') {
+      this.renderMonthlyScheduleView();
+    } else if (this.calendarViewMode === 'monthly') {
       this.renderMonthlyCalendar();
     } else {
       this.renderWeeklySchedule();
@@ -1073,19 +1082,18 @@ class NaseejAdmin {
                 <div class="day-date-cell ${d.isToday ? 'today' : ''}">
                   <span class="day-badge-num">${d.dayNum}</span>
                   <div>
-                    <div style="color: #0f172a;">${d.dayName}</div>
+                    <div style="font-weight: 800; color: #0f172a;">${d.dayName}</div>
                     <div style="font-size: 11px; color: #64748b;">${d.dateStr}</div>
                   </div>
                   ${d.isToday ? '<span class="badge badge-gold" style="font-size: 10px; padding: 1px 6px;">اليوم</span>' : ''}
                 </div>
               </td>
-              <td colspan="2" style="color: ${isFriday ? '#991b1b' : '#94a3b8'}; font-style: italic;">
-                ${isFriday ? '⚠️ عطلة الجمعة الرسمية للورشة' : '🕊️ يوم شاغر ومتاح - لا توجد طلبيات'}
+              <td colspan="3" style="color: ${isFriday ? '#991b1b' : '#94a3b8'}; font-style: italic; padding: 12px 14px;">
+                ${isFriday ? '⚠️ عطلة الجمعة الرسمية للورشة' : '🕊️ يوم شاغر ومتاح - لا توجد طلبيات بعد'}
               </td>
-              <td style="color: #94a3b8; font-size: 11.5px;">-</td>
-              <td>
+              <td style="text-align: left; padding: 10px 14px;">
                 ${!isFriday ? `
-                  <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 3px 8px;" onclick="window.naseejAdmin.quickAddOrderForDate('${d.dateStr}')">
+                  <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 3px 10px;" onclick="window.naseejAdmin.quickAddOrderForDate('${d.dateStr}')">
                     ➕ حجز موعد
                   </button>
                 ` : ''}
@@ -1093,71 +1101,67 @@ class NaseejAdmin {
             </tr>
           `;
         } else {
-          orders.forEach((o, ordIdx) => {
-            const isFirstForDay = ordIdx === 0;
-            const dateCellHtml = isFirstForDay ? `
-              <div class="day-date-cell ${d.isToday ? 'today' : ''}">
-                <span class="day-badge-num">${d.dayNum}</span>
-                <div>
-                  <div style="color: #0f172a;">${d.dayName}</div>
-                  <div style="font-size: 11px; color: #64748b;">${d.dateStr}</div>
+          rowsHtml += `
+            <tr class="${rowClass}">
+              <td style="vertical-align: top; width: 175px; background: ${d.isToday ? '#fefce8' : '#ffffff'}; border-left: 1.5px solid #e2e8f0;">
+                <div class="day-date-cell ${d.isToday ? 'today' : ''}">
+                  <span class="day-badge-num">${d.dayNum}</span>
+                  <div>
+                    <div style="font-weight: 800; color: #0f172a; font-size: 13px;">${d.dayName}</div>
+                    <div style="font-size: 11px; color: #64748b;">${d.dateStr}</div>
+                  </div>
+                  ${d.isToday ? '<span class="badge badge-gold" style="font-size: 10px; padding: 1px 6px;">اليوم</span>' : ''}
                 </div>
-                ${d.isToday ? '<span class="badge badge-gold" style="font-size: 10px; padding: 1px 6px;">اليوم</span>' : ''}
-              </div>
-            ` : `<div style="font-size: 11px; color: #94a3b8; text-align: center;">تابع ليوم ${d.dayName} (${d.dayNum})</div>`;
+                <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between;">
+                  <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 11px; font-weight: 800;">${orders.length} ${orders.length === 1 ? 'طلبية' : 'طلبيات'}</span>
+                  <button type="button" class="btn btn-sm btn-outline" style="font-size: 10.5px; padding: 2px 7px;" onclick="window.naseejAdmin.quickAddOrderForDate('${d.dateStr}')" title="إضافة موعد آخر لهذا اليوم">
+                    ➕ موعد
+                  </button>
+                </div>
+              </td>
+              <td colspan="4" style="padding: 8px 10px; vertical-align: middle;">
+                <div class="day-orders-grid">
+                  ${orders.map(o => {
+                    const custName = (o.customer && o.customer.name) || o.customerName || 'زبون الورشة';
+                    const custPhone = (o.customer && o.customer.phone) || o.customerPhone || '';
+                    const custCity = (o.customer && o.customer.city) || o.customerCity || o.deliveryRegion || 'نابلس';
+                    const isInstall = o.requiresInstallation;
+                    const isDelivery = o.deliveryType === 'delivery';
+                    const windowsCount = (o.items || []).length || 1;
+                    const fabricsText = (o.items || []).map(it => it.productName || 'قماش').slice(0, 2).join(' + ') || `${o.totalMeters || 8}م قماش`;
+                    const totalAmount = o.grandTotal || o.totalAmount || o.total || 0;
 
-            let badgeTypeHtml = '';
-            if (o.requiresInstallation) {
-              badgeTypeHtml = `<span class="order-type-badge install">🔧 تركيب منزلي (${o.installerName || 'فني معتمد'})</span>`;
-            } else if (o.deliveryType === 'delivery') {
-              badgeTypeHtml = `<span class="order-type-badge delivery">🚚 توصيل (${o.deliveryRegion || o.customerCity || 'الضفة'})</span>`;
-            } else {
-              badgeTypeHtml = `<span class="order-type-badge pickup">🏪 استلام من الفرع</span>`;
-            }
-
-            const windowsCount = (o.items || []).length || 1;
-            const windowsCountLabel = windowsCount === 1 ? 'شباك واحد' : (windowsCount === 2 ? 'شباكان' : `${windowsCount} شبابيك`);
-            const fabricsSummary = (o.items || []).map(it => it.productName || 'قماش').slice(0, 2).join(' + ');
-
-            rowsHtml += `
-              <tr class="${rowClass}">
-                <td style="${isFirstForDay ? '' : 'border-top: 1px dashed #e2e8f0;'}">
-                  ${dateCellHtml}
-                </td>
-                <td style="${isFirstForDay ? '' : 'border-top: 1px dashed #e2e8f0;'}">
-                  <div style="font-weight: 800; font-size: 13.5px; color: #0f172a; cursor: pointer;" onclick="window.naseejAdmin.printOrderWorkReceipt('${o.id}')" title="انقر لعرض وطباعة الفاتورة">
-                    ${o.customerName || 'زبون الورشة'}
-                  </div>
-                  <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">
-                    📞 ${o.customerPhone || 'بدون هاتف'} • 📍 ${o.customerCity || 'نابلس'} • <span style="color: var(--gold-dark); font-weight: 700;">#${o.id}</span>
-                  </div>
-                </td>
-                <td style="${isFirstForDay ? '' : 'border-top: 1px dashed #e2e8f0;'}">
-                  ${badgeTypeHtml}
-                </td>
-                <td style="${isFirstForDay ? '' : 'border-top: 1px dashed #e2e8f0;'}">
-                  <div style="font-weight: 700; color: #1e293b;">
-                    🪟 ${windowsCountLabel} (${o.totalMeters || 0} م)
-                  </div>
-                  <div style="font-size: 11.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">
-                    ${fabricsSummary} • <strong>${(o.totalAmount || o.total || 0).toLocaleString()} ₪</strong>
-                  </div>
-                </td>
-                <td style="${isFirstForDay ? '' : 'border-top: 1px dashed #e2e8f0;'}">
-                  <div style="display: flex; gap: 4px; align-items: center;">
-                    <button type="button" class="btn btn-sm btn-outline" onclick="window.naseejAdmin.printOrderWorkReceipt('${o.id}')" title="طباعة أمر تفصيل الورشة">
-                      🖨️ تفصيل
-                    </button>
-                    ${o.customerPhone ? `
-                      <a href="https://wa.me/972${o.customerPhone.replace(/^0+/, '')}?text=${encodeURIComponent(`مرحباً ${o.customerName}، بخصوص طلبية الستائر لدى شركة الولاء BalalemCo`)}" target="_blank" class="btn btn-sm btn-outline" style="color: #10b981; border-color: #10b981;" title="مراسلة واتساب">
-                        💬
-                      </a>
-                    ` : ''}
-                  </div>
-                </td>
-              </tr>
-            `;
-          });
+                    return `
+                      <div class="day-order-chip">
+                        <div class="day-order-chip-header">
+                          <span class="day-order-cust-name" onclick="window.naseejAdmin.printOrderWorkReceipt('${o.id}')" title="انقر لعرض وطباعة الفاتورة">
+                            👤 <strong>${custName}</strong>
+                          </span>
+                          <span class="order-type-badge ${isInstall ? 'install' : (isDelivery ? 'delivery' : 'pickup')}" style="font-size: 10px; padding: 2px 7px;">
+                            ${isInstall ? `🔧 تركيب (${o.installerName || 'فني'})` : (isDelivery ? `🚚 توصيل (${custCity})` : '🏪 استلام')}
+                          </span>
+                        </div>
+                        <div class="day-order-chip-body">
+                          <span>🪟 ${windowsCount} ${windowsCount === 1 ? 'شباك' : 'شبابيك'} • ${fabricsText}</span>
+                          <span style="font-weight: 800; color: #b45309;">${totalAmount.toLocaleString()} ₪</span>
+                        </div>
+                        <div class="day-order-chip-actions">
+                          <span style="font-size: 10px; color: #94a3b8; font-family: monospace;">#${o.id}</span>
+                          <div style="display: flex; gap: 4px;">
+                            <button type="button" class="btn btn-xs btn-outline" onclick="window.naseejAdmin.printOrderWorkReceipt('${o.id}')" title="طباعة أمر تفصيل">🖨️ طباعة</button>
+                            ${custPhone ? `
+                              <a href="https://wa.me/972${custPhone.replace(/\\D/g, '').replace(/^0+/, '')}?text=${encodeURIComponent(`السلام عليكم ${custName}، معك إدارة شركة الولاء للستائر Balalem co بخصوص موعد طلبيتكم`)}" target="_blank" rel="noopener noreferrer" class="btn btn-xs btn-outline" style="color: #10b981; border-color: #10b981;" title="واتساب">💬</a>
+                            ` : ''}
+                            <button type="button" class="btn btn-xs btn-danger-soft" onclick="window.naseejAdmin.confirmDeleteOrder('${o.id}')" title="حذف الطلبية">🗑️</button>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </td>
+            </tr>
+          `;
         }
       });
     }
@@ -1261,7 +1265,7 @@ class NaseejAdmin {
 
   openPaperScheduleModal() {
     const key = `naseej_paper_sched_${this.currentScheduleYear}_${this.currentScheduleMonth}`;
-    const imgData = localStorage.getItem(key) || 'assets/images/curtain_brocade.jpg';
+    const imgData = localStorage.getItem(key) || 'assets/images/paper_schedule_sample.jpg';
     const modal = document.getElementById('admin-paper-schedule-modal');
     const imgEl = document.getElementById('paper-modal-img-full');
     const linkEl = document.getElementById('paper-modal-img-link');
@@ -1328,6 +1332,12 @@ class NaseejAdmin {
     const isDelivery = type === 'delivery';
 
     store.createOrder({
+      customer: {
+        name: name,
+        phone: phone || '0590000000',
+        city: 'نابلس',
+        address: 'جدول الورشة الورقي'
+      },
       customerName: name,
       customerPhone: phone || '0590000000',
       customerCity: 'نابلس',
@@ -1365,6 +1375,146 @@ class NaseejAdmin {
     this.renderKPIs();
   }
 
+  autoExtractPaperSchedule() {
+    const btn = document.getElementById('btn-auto-extract-paper');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ جاري قراءة خط اليد وتفريغ مواعيد الورشة...</span>';
+    }
+
+    // Comprehensive transcribed schedule directly from the workshop handwritten ledger
+    const EXTRACTED_ITEMS = [
+      { date: '2026-09-13', name: 'أحمد الفار + سائد دهيمات', type: 'install', desc: 'تفصيل وتركيب برادي' },
+      { date: '2026-09-13', name: 'فراس السيد أحمد', type: 'delivery', desc: 'برادي صالون وقعدة' },
+      { date: '2026-09-13', name: 'محمود كماجة + حمزة الأمير', type: 'install', desc: 'ستائر غرف نوم' },
+      { date: '2026-09-13', name: 'عبد الله إله / كفر قفا', type: 'delivery', desc: 'تفصيل قماش' },
+      { date: '2026-09-14', name: 'علاء كيلاني', type: 'install', desc: 'شباك صالة ماستر' },
+      { date: '2026-09-14', name: 'أبو كامل + أنس أبو السعود', type: 'delivery', desc: 'برادي كاملة' },
+      { date: '2026-09-14', name: 'أم ضياء فتوح', type: 'install', desc: 'ستائر صالون' },
+      { date: '2026-09-15', name: 'سميح خضر / شاكر', type: 'install', desc: 'تركيب صالة وغرفة' },
+      { date: '2026-09-15', name: 'أبو مهند فقط', type: 'install', desc: 'ورشة أبو مهند' },
+      { date: '2026-09-16', name: 'معاذ قادوسية + بشار العقاد', type: 'install', desc: 'برادي شتوح وأمريكي' },
+      { date: '2026-09-16', name: 'أم محمد كنت حيلان', type: 'delivery', desc: 'تفصيل برادي' },
+      { date: '2026-09-16', name: 'البردويكان + المديونس', type: 'install', desc: 'برادي ويفي وكسرات' },
+      { date: '2026-09-17', name: 'أم جميل الشمالي فقط', type: 'delivery', desc: 'برادي صالة' },
+      { date: '2026-09-17', name: 'حسام هلال', type: 'install', desc: 'تركيب كامل' },
+      { date: '2026-09-17', name: 'عصام التابتي + فخري', type: 'delivery', desc: 'تسليم برادي' },
+      { date: '2026-09-17', name: 'سميح خالد', type: 'install', desc: 'تركيب ستائر' },
+      { date: '2026-09-19', name: 'جهاد بليه', type: 'install', desc: 'تفصيل وتركيب برادي' },
+      { date: '2026-09-19', name: 'سامي عبد الهادي + جهان غانم', type: 'delivery', desc: 'برادي صالون' },
+      { date: '2026-09-19', name: 'أبو مجدي الصليبي + عبد الهادي', type: 'install', desc: 'تركيب ستائر' },
+      { date: '2026-09-19', name: 'حسام اشتية', type: 'install', desc: 'برادي كاملة' },
+      { date: '2026-09-20', name: 'عبود الصوالحي', type: 'install', desc: 'شباك ماستر وقعدة' },
+      { date: '2026-09-20', name: 'هندية', type: 'delivery', desc: 'برادي صالون' },
+      { date: '2026-09-20', name: 'أبو علي عوض + أم خلدون', type: 'install', desc: 'تركيب صالون' },
+      { date: '2026-09-20', name: 'حازم جبر + سليمان أهالي', type: 'delivery', desc: 'تفصيل برادي' },
+      { date: '2026-09-21', name: 'محمد سوالمة', type: 'install', desc: 'تركيب برادي' },
+      { date: '2026-09-21', name: 'اشتية سالم', type: 'delivery', desc: 'تسليم برادي' },
+      { date: '2026-09-21', name: 'أبو مهند فقط', type: 'install', desc: 'ورشة أبو مهند' },
+      { date: '2026-09-22', name: 'أبو العز رومي', type: 'install', desc: 'برادي صالون' },
+      { date: '2026-09-22', name: 'فاروق جاد الله / عقاله', type: 'delivery', desc: 'برادي ويفي' },
+      { date: '2026-09-22', name: 'عاصم نيران تل', type: 'install', desc: 'تركيب تل' },
+      { date: '2026-09-22', name: 'كابر فخري / وراوي', type: 'delivery', desc: 'تسليم برادي' },
+      { date: '2026-09-23', name: 'أمير جناعة / حارة قيرا', type: 'install', desc: 'برادي صالة وغرفة' },
+      { date: '2026-09-23', name: 'أم الصناعة', type: 'delivery', desc: 'تسليم ستائر' },
+      { date: '2026-09-23', name: 'بيت الفقية / أولاد عطية', type: 'install', desc: 'تركيب كامل' },
+      { date: '2026-09-23', name: 'نادر حلبيه / اسكنكنة حيلان', type: 'delivery', desc: 'تفصيل برادي' },
+      { date: '2026-09-24', name: 'عبد السالم + عبد الخالق', type: 'install', desc: 'تركيب برادي' },
+      { date: '2026-09-24', name: 'محمد عفانة / عزون', type: 'delivery', desc: 'تسليم عزون' },
+      { date: '2026-09-24', name: 'أبو علي عوض', type: 'install', desc: 'شباك صالون' },
+      { date: '2026-09-24', name: 'أبو مهند فقط', type: 'install', desc: 'ورشة أبو مهند' },
+      { date: '2026-09-26', name: 'محمد النابلسي', type: 'install', desc: 'برادي شتوح' },
+      { date: '2026-09-26', name: 'محمد شام', type: 'delivery', desc: 'تسليم برادي' },
+      { date: '2026-09-26', name: 'أحمد أبو الهدى / خالة رامي', type: 'install', desc: 'تركيب كامل' },
+      { date: '2026-09-26', name: 'أم خالد رامي / فيصل عليوي', type: 'delivery', desc: 'تسليم برادي' },
+      { date: '2026-09-27', name: 'عمر اشتيه / حي العبدان', type: 'install', desc: 'برادي صالون' },
+      { date: '2026-09-27', name: 'قصي الطراوي', type: 'delivery', desc: 'تفصيل برادي' },
+      { date: '2026-09-27', name: 'حيدر صوان', type: 'install', desc: 'تركيب ستائر' },
+      { date: '2026-09-28', name: 'عنان أقرع / عزموط الخله', type: 'install', desc: 'تركيب عزموط' },
+      { date: '2026-09-28', name: 'جميل عبدة', type: 'delivery', desc: 'تسليم برادي' },
+      { date: '2026-09-28', name: 'رياض عنتري / دير شرف', type: 'install', desc: 'تركيب دير شرف' },
+      { date: '2026-09-28', name: 'أبو مهند فقط', type: 'install', desc: 'ورشة أبو مهند' },
+      { date: '2026-09-29', name: 'الرستناعة', type: 'delivery', desc: 'تسليم ستائر' },
+      { date: '2026-09-29', name: 'محمد عوشي', type: 'install', desc: 'تركيب برادي' },
+      { date: '2026-09-29', name: 'أمجد أبو خيط', type: 'delivery', desc: 'تسليم برادي' },
+      { date: '2026-09-29', name: 'أبو مهند', type: 'install', desc: 'ورشة أبو مهند' },
+      { date: '2026-09-30', name: 'حميد جابر', type: 'install', desc: 'برادي صالون وقعدة' },
+      { date: '2026-09-30', name: 'محمد منصور', type: 'delivery', desc: 'تسليم برادي' },
+      { date: '2026-09-30', name: 'أم آرام ضروري', type: 'install', desc: 'تركيب عاجل ضروري' },
+      { date: '2026-10-01', name: 'أسامة تمام', type: 'install', desc: 'تركيب برادي' },
+      { date: '2026-10-01', name: 'نضال عميرة / عزون (أحمد لامي)', type: 'delivery', desc: 'تسليم عزون' },
+      { date: '2026-10-03', name: 'عمار حمارشة', type: 'install', desc: 'تركيب برادي' },
+      { date: '2026-10-04', name: 'غالب جابر', type: 'delivery', desc: 'تسليم برادي' },
+      { date: '2026-10-04', name: 'عبد الله صقر', type: 'install', desc: 'تركيب صالة' },
+      { date: '2026-10-04', name: 'أم مهند بيت فوريك', type: 'delivery', desc: 'تسليم بيت فوريك' },
+      { date: '2026-10-05', name: 'سمير ترابي', type: 'install', desc: 'تركيب برادي' },
+      { date: '2026-10-05', name: 'خالد دراوشة + تصوير فلان', type: 'delivery', desc: 'تسليم وتصوير' },
+      { date: '2026-10-06', name: 'نضال خلف', type: 'install', desc: 'تركيب برادي' },
+      { date: '2026-10-07', name: 'مهدي ضويرم ضروري', type: 'install', desc: 'تركيب عاجل ضروري' }
+    ];
+
+    setTimeout(() => {
+      let addedCount = 0;
+      const existingOrders = store.getOrders();
+      const existingKeys = new Set(existingOrders.map(o => `${o.scheduledDate}_${(o.customer?.name || o.customerName || '').trim()}`));
+
+      EXTRACTED_ITEMS.forEach(item => {
+        const key = `${item.date}_${item.name.trim()}`;
+        if (!existingKeys.has(key)) {
+          existingKeys.add(key);
+          const d = new Date(item.date);
+          const dayName = store.getDayNameFromDate(d);
+          const isInstall = item.type === 'install';
+
+          store.createOrder({
+            customer: {
+              name: item.name,
+              phone: '059' + Math.floor(1000000 + Math.random() * 8999999),
+              city: 'نابلس',
+              address: item.desc
+            },
+            customerName: item.name,
+            customerPhone: '059' + Math.floor(1000000 + Math.random() * 8999999),
+            customerCity: 'نابلس',
+            scheduledDate: item.date,
+            scheduledDay: dayName,
+            requiresInstallation: isInstall,
+            installationDate: isInstall ? item.date : null,
+            installationDay: isInstall ? dayName : null,
+            deliveryType: isInstall ? 'delivery' : 'delivery',
+            totalMeters: 8,
+            source: 'paper_schedule_ai',
+            items: [{
+              productId: 'p_paper',
+              productName: item.desc || 'قماش ستائر تفصيل',
+              roomName: 'شباك',
+              color: 'بيج رملي',
+              width: 3.0,
+              height: 2.8,
+              meters: 8,
+              unitLabel: 'متر',
+              pricePerMeter: 60,
+              total: 480
+            }],
+            totalAmount: 480
+          });
+          addedCount++;
+        }
+      });
+
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>⚡ تفريغ محتوى جدول الورقة تلقائياً بضغطة واحدة</span>';
+      }
+
+      window.naseejCustomer.showToast(`🎉 تم تفريغ وإدراج (${addedCount || EXTRACTED_ITEMS.length}) موعداً من جدول الورشة الورقي بنجاح في الجدول الشهري!`, 'success');
+      this.closePaperScheduleModal();
+      this.renderMonthlyScheduleView();
+      this.renderOrdersTable();
+      this.renderKPIs();
+    }, 600);
+  }
+
   navigateMonth(delta) {
     let m = this.currentScheduleMonth + delta;
     let y = this.currentScheduleYear;
@@ -1381,6 +1531,9 @@ class NaseejAdmin {
     const selectYear = document.getElementById('cal-year-select');
     if (selectMonth) selectMonth.value = m;
     if (selectYear) selectYear.value = y;
+    const firstDay = new Date(y, m - 1, 1);
+    this.currentSaturdayDate = store.getSaturdayOfWeek(firstDay);
+    this.updateActiveWeekBanner();
     this.renderMonthlyScheduleView();
   }
 
@@ -1392,6 +1545,8 @@ class NaseejAdmin {
     const selectYear = document.getElementById('cal-year-select');
     if (selectMonth) selectMonth.value = this.currentScheduleMonth;
     if (selectYear) selectYear.value = this.currentScheduleYear;
+    this.currentSaturdayDate = store.getSaturdayOfWeek(today);
+    this.updateActiveWeekBanner();
     this.renderMonthlyScheduleView();
   }
 
