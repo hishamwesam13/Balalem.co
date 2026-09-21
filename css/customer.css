@@ -1581,6 +1581,17 @@
   background: #0d65d9;
 }
 
+.dock-btn.dock-tiktok {
+  background: #010101;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dock-btn.dock-tiktok:hover {
+  transform: scale(1.15);
+  background: #000000;
+  box-shadow: 0 4px 14px rgba(254, 44, 85, 0.55), -2px -2px 10px rgba(37, 244, 238, 0.45);
+}
+
 .dock-btn.dock-insta {
   background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
 }

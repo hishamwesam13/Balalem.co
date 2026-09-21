@@ -579,6 +579,8 @@ class NaseejCustomer {
       categoryName: product.categoryName,
       image: product.image,
       color: this.activeCalculator.selectedColor,
+      width: this.activeCalculator.windowWidth || null,
+      height: this.activeCalculator.windowHeight || null,
       sewingType: sewingType,
       isTarsoon: isTarsoon,
       unitLabel: isTarsoon ? 'م²' : 'متر',

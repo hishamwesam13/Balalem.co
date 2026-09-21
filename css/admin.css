@@ -1609,12 +1609,64 @@
 
 .walkin-item-fields-grid {
   display: grid;
-  grid-template-columns: 1.8fr 1.2fr 1fr 1fr;
+  grid-template-columns: 2fr 1.1fr 0.9fr 0.9fr 1fr;
   gap: 10px;
+  align-items: flex-end;
+}
+
+@media (max-width: 992px) {
+  .walkin-item-fields-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .walkin-item-fields-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.walkin-item-dims-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.3fr 1.1fr;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+.walkin-dim-title-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #0f172a;
+  border-bottom: 1px dashed #cbd5e1;
+  padding-bottom: 5px;
+  margin-bottom: 2px;
+}
+
+.walkin-dim-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.walkin-dim-suffix {
+  position: absolute;
+  left: 8px;
+  font-size: 11px;
+  color: #64748b;
+  pointer-events: none;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {
-  .walkin-item-fields-grid {
+  .walkin-item-dims-grid {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -2238,6 +2290,371 @@
   font-size: 11.5px;
   color: #94a3b8;
   font-style: italic;
+}
+
+/* ========================================================
+   ADMIN TOP BAR CUSTOMER SEARCH (البحث عن زبون / صاحب طلبية)
+   ======================================================== */
+.admin-top-search-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.admin-top-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 5px 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.admin-top-search-box:focus-within {
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+}
+
+.top-search-icon {
+  font-size: 14px;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.admin-top-search-input {
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #0f172a;
+  background: transparent;
+  min-width: 210px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.admin-top-search-input::placeholder {
+  color: #94a3b8;
+  font-weight: normal;
+}
+
+.admin-top-search-clear {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.admin-top-search-clear:hover {
+  color: #ef4444;
+}
+
+.admin-top-search-results-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 440px;
+  max-width: 95vw;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+  max-height: 520px;
+  overflow-y: auto;
+  z-index: 10001;
+  padding: 12px;
+}
+
+.search-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.search-result-card {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  transition: all 0.2s ease;
+}
+
+.search-result-card:hover {
+  border-color: var(--gold-primary);
+  background: #fffdf7;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
+}
+
+.search-result-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.search-cust-name {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.search-cust-meta {
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.search-windows-list {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin: 8px 0;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.search-window-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed #f1f5f9;
+  padding-bottom: 3px;
+}
+
+.search-window-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.search-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+/* ========================================================
+   MONTHLY SCHEDULE TABLE & VIEW (جدول مواعيد الطلبيات الشهري)
+   ======================================================== */
+.monthly-schedule-card {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+.monthly-table-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid #e2e8f0;
+}
+
+.monthly-table-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.monthly-stats-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.monthly-stat-pill {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.monthly-stat-pill.active-gold {
+  background: #fefce8;
+  border-color: #fde047;
+  color: #854d0e;
+}
+
+/* 3-Column Schedule Table */
+.monthly-table-responsive {
+  overflow-x: auto;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.monthly-schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: right;
+}
+
+.monthly-schedule-table thead th {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 12px 14px;
+  font-weight: 700;
+  font-size: 13px;
+  border-bottom: 2px solid var(--gold-primary);
+  white-space: nowrap;
+}
+
+.monthly-schedule-table tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+  transition: background 0.15s ease;
+}
+
+.monthly-schedule-table tbody tr:hover {
+  background: #fffdf5;
+}
+
+.monthly-schedule-table tbody tr.row-today {
+  background: #fefce8;
+  border-right: 4px solid var(--gold-primary);
+}
+
+.monthly-schedule-table tbody tr.row-friday {
+  background: #fef2f2;
+  opacity: 0.85;
+}
+
+.monthly-schedule-table td {
+  padding: 10px 14px;
+  vertical-align: middle;
+}
+
+.day-date-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+}
+
+.day-badge-num {
+  background: #e2e8f0;
+  color: #0f172a;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 13px;
+  font-weight: 800;
+  min-width: 32px;
+  text-align: center;
+}
+
+.day-date-cell.today .day-badge-num {
+  background: var(--gold-primary);
+  color: #0f172a;
+}
+
+.order-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.order-type-badge.install {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.order-type-badge.delivery {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.order-type-badge.pickup {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+/* ========================================================
+   PAPER SCHEDULE IMAGE UPLOAD & PROMPT SECTION
+   ======================================================== */
+.paper-schedule-section {
+  background: linear-gradient(135deg, #f8fafc 0%, #fffdf7 100%);
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.paper-schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.paper-prompt-banner {
+  margin-top: 12px;
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
+}
+
+.paper-preview-thumb {
+  width: 90px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1.5px solid #cbd5e1;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.paper-preview-thumb:hover {
+  transform: scale(1.05);
+  border-color: var(--gold-primary);
 }
 
 

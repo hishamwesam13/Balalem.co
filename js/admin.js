@@ -48,13 +48,17 @@ class NaseejAdmin {
       this.renderKPIs();
     });
 
-    // Close walkin fabric & product category combobox dropdowns when clicking outside
+    // Close dropdowns & search panel when clicking outside
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.walkin-fabric-combobox-wrapper')) {
         this.closeAllFabricDropdowns();
       }
       if (!e.target.closest('.prod-category-combobox-wrapper')) {
         this.closeCategoryDropdown();
+      }
+      if (!e.target.closest('#admin-top-search-wrap')) {
+        const res = document.getElementById('admin-top-search-results');
+        if (res) res.style.display = 'none';
       }
     });
   }
@@ -111,8 +115,13 @@ class NaseejAdmin {
     if (tabName === 'products') this.renderProductsTable();
     if (tabName === 'orders') this.renderOrdersTable();
     if (tabName === 'schedule') {
-      this.renderWeeklySchedule();
-      this.renderInstallationSchedule();
+      if (this.currentScheduleSubTab === 'monthly') {
+        this.renderMonthlyScheduleView();
+      } else if (this.currentScheduleSubTab === 'installation') {
+        this.renderInstallationSchedule();
+      } else {
+        this.renderWeeklySchedule();
+      }
     }
     if (tabName === 'customers') this.renderCustomersTable();
     if (tabName === 'categories') this.renderCategoriesTable();
@@ -240,13 +249,26 @@ class NaseejAdmin {
     const workDays = store.getWorkDays();
 
     tbody.innerHTML = orders.map(order => {
-      const itemsList = (order.items || []).map(i => `
+      const itemsList = (order.items || []).map(i => {
+        let width = i.width;
+        let height = i.height;
+        if ((!width || !height) && i.details) {
+          const wMatch = i.details.match(/عرض\s*([\d.]+)/);
+          const hMatch = i.details.match(/ارتفاع(?:\/طول)?\s*([\d.]+)/);
+          if (wMatch) width = wMatch[1];
+          if (hMatch) height = hMatch[1];
+        }
+        const dimsBadge = (width && height)
+          ? `<span style="background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-left: 4px;">📐 ${width}م عرض × ${height}م ارتفاع</span>`
+          : '';
+
+        return `
         <div class="admin-order-item-row">
           • ${i.roomName ? `<span style="background: #e0f2fe; color: #0369a1; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 4px;">🪟 ${i.roomName}</span>` : ''}
-          <strong>${i.productName}</strong> (${i.color}) ${i.sewingType ? `<span style="color:#b45309; font-weight:700; font-size:11.5px;">[${i.sewingType}]</span>` : ''} - <span class="badge-meters-count">${i.meters} ${i.unitLabel || 'متر'}</span>
+          <strong>${i.productName}</strong> (${i.color}) ${dimsBadge}${i.sewingType ? `<span style="color:#b45309; font-weight:700; font-size:11.5px;">[${i.sewingType}]</span>` : ''} - <span class="badge-meters-count">${i.meters} ${i.unitLabel || 'متر'}</span>
           ${i.notes ? `<small class="text-muted d-block">${i.notes}</small>` : ''}
         </div>
-      `).join('');
+      `;}).join('');
 
       const dateStr = new Date(order.date).toLocaleDateString('ar-SA', {
         month: 'short',
@@ -494,25 +516,10 @@ class NaseejAdmin {
 
   setCalendarViewMode(mode) {
     this.calendarViewMode = mode;
-    const btnWeekly = document.getElementById('btn-mode-weekly');
-    const btnMonthly = document.getElementById('btn-mode-monthly');
-    const weeklyTailoring = document.getElementById('admin-subview-tailoring');
-    const weeklyInstall = document.getElementById('admin-subview-installation');
-    const monthlyView = document.getElementById('admin-view-monthly-calendar');
-
-    if (btnWeekly) btnWeekly.classList.toggle('active', mode === 'weekly');
-    if (btnMonthly) btnMonthly.classList.toggle('active', mode === 'monthly');
-
     if (mode === 'monthly') {
-      if (weeklyTailoring) weeklyTailoring.style.display = 'none';
-      if (weeklyInstall) weeklyInstall.style.display = 'none';
-      if (monthlyView) {
-        monthlyView.style.display = 'block';
-        this.renderMonthlyCalendar();
-      }
+      this.switchScheduleSubTab('monthly');
     } else {
-      if (monthlyView) monthlyView.style.display = 'none';
-      this.switchScheduleSubTab(this.currentScheduleSubTab);
+      this.switchScheduleSubTab('tailoring');
     }
   }
 
@@ -757,7 +764,18 @@ class NaseejAdmin {
         </div>
       ` : dayInfo.orders.map(order => {
         const windowsCount = (order.items || []).length;
-        const fabricsSummary = (order.items || []).map(i => `${i.roomName ? `[${i.roomName}] ` : ''}${i.productName} (${i.color}) ${i.meters}${i.unitLabel || 'م'}`).join(' + ');
+        const fabricsSummary = (order.items || []).map(i => {
+          let width = i.width;
+          let height = i.height;
+          if ((!width || !height) && i.details) {
+            const wMatch = i.details.match(/عرض\s*([\d.]+)/);
+            const hMatch = i.details.match(/ارتفاع(?:\/طول)?\s*([\d.]+)/);
+            if (wMatch) width = wMatch[1];
+            if (hMatch) height = hMatch[1];
+          }
+          const dimPart = (width && height) ? `(${width}×${height}م) ` : '';
+          return `${i.roomName ? `[${i.roomName}] ` : ''}${i.productName} (${i.color}) ${dimPart}${i.meters}${i.unitLabel || 'م'}`;
+        }).join(' + ');
 
         const statusBadges = {
           pending: '⏳ قيد المراجعة',
@@ -881,29 +899,667 @@ class NaseejAdmin {
     }).join('');
   }
 
-  // Switch Schedule Sub-Tab (Tailoring Workshop vs Installation Board)
+  // Switch Schedule Sub-Tab (Tailoring Workshop vs Installation Board vs Monthly Schedule)
   switchScheduleSubTab(subTab) {
     this.currentScheduleSubTab = subTab;
     const btnTailoring = document.getElementById('btn-schedule-tailoring');
     const btnInstallation = document.getElementById('btn-schedule-installation');
+    const btnMonthly = document.getElementById('btn-schedule-monthly');
     const viewTailoring = document.getElementById('admin-subview-tailoring');
     const viewInstallation = document.getElementById('admin-subview-installation');
-    const monthlyView = document.getElementById('admin-view-monthly-calendar');
+    const viewMonthly = document.getElementById('admin-subview-monthly');
+    const monthlyCalendarView = document.getElementById('admin-view-monthly-calendar');
 
-    if (monthlyView) monthlyView.style.display = 'none';
+    if (monthlyCalendarView) monthlyCalendarView.style.display = 'none';
     const btnWeekly = document.getElementById('btn-mode-weekly');
-    const btnMonthly = document.getElementById('btn-mode-monthly');
-    if (btnWeekly) btnWeekly.classList.add('active');
-    if (btnMonthly) btnMonthly.classList.remove('active');
-    this.calendarViewMode = 'weekly';
+    const btnMonthlyMode = document.getElementById('btn-mode-monthly');
+
+    if (subTab === 'monthly') {
+      if (btnWeekly) btnWeekly.classList.remove('active');
+      if (btnMonthlyMode) btnMonthlyMode.classList.add('active');
+      this.calendarViewMode = 'monthly';
+    } else {
+      if (btnWeekly) btnWeekly.classList.add('active');
+      if (btnMonthlyMode) btnMonthlyMode.classList.remove('active');
+      this.calendarViewMode = 'weekly';
+    }
 
     if (btnTailoring) btnTailoring.classList.toggle('active', subTab === 'tailoring');
     if (btnInstallation) btnInstallation.classList.toggle('active', subTab === 'installation');
+    if (btnMonthly) btnMonthly.classList.toggle('active', subTab === 'monthly');
+
     if (viewTailoring) viewTailoring.style.display = subTab === 'tailoring' ? 'block' : 'none';
     if (viewInstallation) viewInstallation.style.display = subTab === 'installation' ? 'block' : 'none';
+    if (viewMonthly) viewMonthly.style.display = subTab === 'monthly' ? 'block' : 'none';
 
     if (subTab === 'tailoring') this.renderWeeklySchedule();
     if (subTab === 'installation') this.renderInstallationSchedule();
+    if (subTab === 'monthly') this.renderMonthlyScheduleView();
+  }
+
+  // ==========================================
+  // MONTHLY SCHEDULE TABLE & PAPER SCHEDULE ENGINE
+  // ==========================================
+
+  renderMonthlyScheduleView() {
+    const container = document.getElementById('admin-subview-monthly');
+    if (!container) return;
+
+    const year = this.currentScheduleYear;
+    const month = this.currentScheduleMonth;
+    const data = store.getMonthlyScheduleData(year, month);
+    const monthNames = [
+      'كانون الثاني (1)', 'شباط (2)', 'آذار (3)', 'نيسان (4)', 'أيار (5)', 'حزيران (6)',
+      'تموز (7)', 'آب (8)', 'أيلول (9)', 'تشرين الأول (10)', 'تشرين الثاني (11)', 'كانون الأول (12)'
+    ];
+    const monthName = monthNames[month - 1] || `شهر ${month}`;
+
+    let totalScheduledOrders = 0;
+    let totalInstallOrders = 0;
+    let totalDeliveryOrders = 0;
+    let totalPickupOrders = 0;
+    let totalMetersMonth = 0;
+
+    const ordersMapByDate = {};
+    data.days.forEach(d => {
+      const combined = [];
+      const seenIds = new Set();
+      (d.tailoringOrders || []).forEach(o => {
+        if (!seenIds.has(o.id)) {
+          seenIds.add(o.id);
+          combined.push(o);
+        }
+      });
+      (d.installOrders || []).forEach(o => {
+        if (!seenIds.has(o.id)) {
+          seenIds.add(o.id);
+          combined.push(o);
+        }
+      });
+
+      ordersMapByDate[d.dateStr] = combined;
+
+      combined.forEach(o => {
+        totalScheduledOrders++;
+        totalMetersMonth += (o.totalMeters || 0);
+        if (o.requiresInstallation) totalInstallOrders++;
+        else if (o.deliveryType === 'delivery') totalDeliveryOrders++;
+        else totalPickupOrders++;
+      });
+    });
+
+    totalMetersMonth = Math.round(totalMetersMonth * 10) / 10;
+
+    const badgeMonthly = document.getElementById('badge-monthly-count');
+    if (badgeMonthly) badgeMonthly.textContent = totalScheduledOrders;
+
+    // Check for saved paper schedule image
+    const paperImgKey = `naseej_paper_sched_${year}_${month}`;
+    const savedPaperImg = localStorage.getItem(paperImgKey);
+
+    // Build Paper Schedule Section HTML
+    let paperSectionHtml = '';
+    if (savedPaperImg) {
+      paperSectionHtml = `
+        <div class="paper-schedule-section">
+          <div class="paper-schedule-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <img src="${savedPaperImg}" alt="صورة جدول الورشة الورقي" class="paper-preview-thumb" onclick="window.naseejAdmin.openPaperScheduleModal()" title="انقر لتكبير الصورة وتفريغ المواعيد">
+              <div>
+                <div style="font-weight: 800; font-size: 13.5px; color: #0f172a;">📸 صورة جدول الورشة الورقي لشهر ${monthName} (${year})</div>
+                <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">تم حفظ صورة الجدول الورقي بنجاح ومتاح للرجوع إليها في أي وقت.</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button type="button" class="btn btn-sm btn-gold" onclick="window.naseejAdmin.openPaperScheduleModal()">
+                <span>🔍 معاينة الصورة وتفريغ المواعيد</span>
+              </button>
+              <label class="btn btn-sm btn-outline" style="cursor: pointer; margin-bottom: 0;">
+                <span>🔄 تغيير الصورة</span>
+                <input type="file" accept="image/*" style="display: none;" onchange="window.naseejAdmin.handlePaperScheduleUpload(this)">
+              </label>
+            </div>
+          </div>
+          <div class="paper-prompt-banner">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">📋</span>
+              <span style="font-size: 12.5px; font-weight: 800; color: #92400e;">هل تريد تفريغ محتوى الصورة داخل الجدول؟</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-sm btn-primary" onclick="window.naseejAdmin.openPaperScheduleModal()" style="font-weight: 700;">
+                نعم، تفريغ المواعيد وإدراجها بالجدول الآن ➔
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      paperSectionHtml = `
+        <div class="paper-schedule-section" style="background: #ffffff;">
+          <div class="paper-schedule-header">
+            <div>
+              <div style="font-weight: 800; font-size: 13.5px; color: #0f172a;">📸 إرفاق صورة جدول الورشة الورقي لشهر ${monthName} (${year})</div>
+              <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">إذا كان لديكم جدول ورقي مكتوب يدوياً بالورشة، يمكنك تصويره أو رفعه هنا لحفظه وتفريغ مواعيده آلياً.</div>
+            </div>
+            <div>
+              <label class="btn btn-sm btn-gold" style="cursor: pointer; margin-bottom: 0; box-shadow: 0 2px 8px rgba(212,175,55,0.25);">
+                <span>📷 رفع صورة الجدول الورقي</span>
+                <input type="file" accept="image/*" style="display: none;" onchange="window.naseejAdmin.handlePaperScheduleUpload(this)">
+              </label>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Build Table Rows for all days or scheduled days only
+    let rowsHtml = '';
+    const filteredDays = this.monthlyFilterOnlyScheduled 
+      ? data.days.filter(d => (ordersMapByDate[d.dateStr] || []).length > 0)
+      : data.days;
+
+    if (filteredDays.length === 0) {
+      rowsHtml = `<tr><td colspan="5" style="text-align: center; padding: 30px; color: #64748b; font-size: 13px;">لا توجد طلبيات مجدولة في هذا الشهر حتى الآن. استخدم زر "إضافة طلبية زبون من المعرض" أو قم بإرفاق صورة الجدول الورقي لتفريغها.</td></tr>`;
+    } else {
+      filteredDays.forEach(d => {
+        const orders = ordersMapByDate[d.dateStr] || [];
+        const isFriday = d.isFriday;
+        const rowClass = `${d.isToday ? 'row-today' : ''} ${isFriday ? 'row-friday' : ''}`;
+
+        if (orders.length === 0) {
+          rowsHtml += `
+            <tr class="${rowClass}">
+              <td>
+                <div class="day-date-cell ${d.isToday ? 'today' : ''}">
+                  <span class="day-badge-num">${d.dayNum}</span>
+                  <div>
+                    <div style="color: #0f172a;">${d.dayName}</div>
+                    <div style="font-size: 11px; color: #64748b;">${d.dateStr}</div>
+                  </div>
+                  ${d.isToday ? '<span class="badge badge-gold" style="font-size: 10px; padding: 1px 6px;">اليوم</span>' : ''}
+                </div>
+              </td>
+              <td colspan="2" style="color: ${isFriday ? '#991b1b' : '#94a3b8'}; font-style: italic;">
+                ${isFriday ? '⚠️ عطلة الجمعة الرسمية للورشة' : '🕊️ يوم شاغر ومتاح - لا توجد طلبيات'}
+              </td>
+              <td style="color: #94a3b8; font-size: 11.5px;">-</td>
+              <td>
+                ${!isFriday ? `
+                  <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 3px 8px;" onclick="window.naseejAdmin.quickAddOrderForDate('${d.dateStr}')">
+                    ➕ حجز موعد
+                  </button>
+                ` : ''}
+              </td>
+            </tr>
+          `;
+        } else {
+          orders.forEach((o, ordIdx) => {
+            const isFirstForDay = ordIdx === 0;
+            const dateCellHtml = isFirstForDay ? `
+              <div class="day-date-cell ${d.isToday ? 'today' : ''}">
+                <span class="day-badge-num">${d.dayNum}</span>
+                <div>
+                  <div style="color: #0f172a;">${d.dayName}</div>
+                  <div style="font-size: 11px; color: #64748b;">${d.dateStr}</div>
+                </div>
+                ${d.isToday ? '<span class="badge badge-gold" style="font-size: 10px; padding: 1px 6px;">اليوم</span>' : ''}
+              </div>
+            ` : `<div style="font-size: 11px; color: #94a3b8; text-align: center;">تابع ليوم ${d.dayName} (${d.dayNum})</div>`;
+
+            let badgeTypeHtml = '';
+            if (o.requiresInstallation) {
+              badgeTypeHtml = `<span class="order-type-badge install">🔧 تركيب منزلي (${o.installerName || 'فني معتمد'})</span>`;
+            } else if (o.deliveryType === 'delivery') {
+              badgeTypeHtml = `<span class="order-type-badge delivery">🚚 توصيل (${o.deliveryRegion || o.customerCity || 'الضفة'})</span>`;
+            } else {
+              badgeTypeHtml = `<span class="order-type-badge pickup">🏪 استلام من الفرع</span>`;
+            }
+
+            const windowsCount = (o.items || []).length || 1;
+            const windowsCountLabel = windowsCount === 1 ? 'شباك واحد' : (windowsCount === 2 ? 'شباكان' : `${windowsCount} شبابيك`);
+            const fabricsSummary = (o.items || []).map(it => it.productName || 'قماش').slice(0, 2).join(' + ');
+
+            rowsHtml += `
+              <tr class="${rowClass}">
+                <td style="${isFirstForDay ? '' : 'border-top: 1px dashed #e2e8f0;'}">
+                  ${dateCellHtml}
+                </td>
+                <td style="${isFirstForDay ? '' : 'border-top: 1px dashed #e2e8f0;'}">
+                  <div style="font-weight: 800; font-size: 13.5px; color: #0f172a; cursor: pointer;" onclick="window.naseejAdmin.printOrderWorkReceipt('${o.id}')" title="انقر لعرض وطباعة الفاتورة">
+                    ${o.customerName || 'زبون الورشة'}
+                  </div>
+                  <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">
+                    📞 ${o.customerPhone || 'بدون هاتف'} • 📍 ${o.customerCity || 'نابلس'} • <span style="color: var(--gold-dark); font-weight: 700;">#${o.id}</span>
+                  </div>
+                </td>
+                <td style="${isFirstForDay ? '' : 'border-top: 1px dashed #e2e8f0;'}">
+                  ${badgeTypeHtml}
+                </td>
+                <td style="${isFirstForDay ? '' : 'border-top: 1px dashed #e2e8f0;'}">
+                  <div style="font-weight: 700; color: #1e293b;">
+                    🪟 ${windowsCountLabel} (${o.totalMeters || 0} م)
+                  </div>
+                  <div style="font-size: 11.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">
+                    ${fabricsSummary} • <strong>${(o.totalAmount || o.total || 0).toLocaleString()} ₪</strong>
+                  </div>
+                </td>
+                <td style="${isFirstForDay ? '' : 'border-top: 1px dashed #e2e8f0;'}">
+                  <div style="display: flex; gap: 4px; align-items: center;">
+                    <button type="button" class="btn btn-sm btn-outline" onclick="window.naseejAdmin.printOrderWorkReceipt('${o.id}')" title="طباعة أمر تفصيل الورشة">
+                      🖨️ تفصيل
+                    </button>
+                    ${o.customerPhone ? `
+                      <a href="https://wa.me/972${o.customerPhone.replace(/^0+/, '')}?text=${encodeURIComponent(`مرحباً ${o.customerName}، بخصوص طلبية الستائر لدى شركة الولاء BalalemCo`)}" target="_blank" class="btn btn-sm btn-outline" style="color: #10b981; border-color: #10b981;" title="مراسلة واتساب">
+                        💬
+                      </a>
+                    ` : ''}
+                  </div>
+                </td>
+              </tr>
+            `;
+          });
+        }
+      });
+    }
+
+    container.innerHTML = `
+      <div class="monthly-schedule-card">
+        <!-- Top Title & Navigation Bar -->
+        <div class="monthly-table-header-bar">
+          <div>
+            <div class="monthly-table-title">
+              <span>📆 جدول مواعيد الطلبيات الشهري (شهر ${monthName} ${year})</span>
+              <span class="badge badge-gold" style="font-size: 12px;">شهر كامل</span>
+            </div>
+            <p style="font-size: 12.5px; color: #64748b; margin: 4px 0 0 0;">
+              جدول شامل يوضح مواعيد كافة الزبائن باليوم والتاريخ ونوع الموعد (تسليم أو تركيب) مع إمكانية حفظ صورة الجدول الورقي.
+            </p>
+          </div>
+
+          <!-- Month & Year Controls -->
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn-cal-nav" onclick="window.naseejAdmin.navigateMonth(-1)" title="الانتقال للشهر السابق">
+              <span>◀ الشهر السابق</span>
+            </button>
+            <button type="button" class="btn-cal-nav btn-cal-today" onclick="window.naseejAdmin.goToCurrentMonth()" title="الرجوع للشهر الحالي">
+              <span>📍 الشهر الحالي</span>
+            </button>
+            <button type="button" class="btn-cal-nav" onclick="window.naseejAdmin.navigateMonth(1)" title="الانتقال للشهر التالي">
+              <span>الشهر التالي ▶</span>
+            </button>
+            
+            <button type="button" class="btn btn-sm ${this.monthlyFilterOnlyScheduled ? 'btn-gold' : 'btn-outline'}" onclick="window.naseejAdmin.toggleMonthlyOnlyScheduled()" title="التبديل بين عرض كافة الأيام أو المجدولة فقط">
+              <span>${this.monthlyFilterOnlyScheduled ? '📋 إظهار كافة أيام الشهر' : '🎯 إظهار الأيام المجدولة فقط'}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Monthly Aggregate KPIs -->
+        <div class="monthly-stats-pills" style="margin-bottom: 14px;">
+          <div class="monthly-stat-pill active-gold">
+            <span>📦 إجمالي طلبيات الشهر:</span>
+            <strong>${totalScheduledOrders} طلبية</strong>
+          </div>
+          <div class="monthly-stat-pill">
+            <span>🔧 مواعيد التركيب الميداني:</span>
+            <strong style="color: #2563eb;">${totalInstallOrders} موعد</strong>
+          </div>
+          <div class="monthly-stat-pill">
+            <span>🚚🏪 مواعيد التسليم والاستلام:</span>
+            <strong style="color: #16a34a;">${totalDeliveryOrders + totalPickupOrders} موعد</strong>
+          </div>
+          <div class="monthly-stat-pill">
+            <span>📐 إجمالي أمتار القماش:</span>
+            <strong>${totalMetersMonth} متر</strong>
+          </div>
+        </div>
+
+        <!-- Paper Schedule Image & Extractor Section -->
+        ${paperSectionHtml}
+
+        <!-- 3-Column Schedule Table -->
+        <div class="monthly-table-responsive">
+          <table class="monthly-schedule-table">
+            <thead>
+              <tr>
+                <th style="width: 22%;">اليوم والتاريخ 📅</th>
+                <th style="width: 28%;">اسم الزبون والطلبية 👤</th>
+                <th style="width: 22%;">نوع الموعد (تسليم / تركيب) 🏷️</th>
+                <th style="width: 18%;">الشبابيك والأمتار 🪟</th>
+                <th style="width: 10%;">الإجراء ⚙️</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  handlePaperScheduleUpload(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      const key = `naseej_paper_sched_${this.currentScheduleYear}_${this.currentScheduleMonth}`;
+      try {
+        localStorage.setItem(key, dataUrl);
+      } catch (err) {
+        console.warn('Storage quota exceeded for paper schedule image:', err);
+      }
+      window.naseejCustomer.showToast('تم حفظ صورة جدول الورشة الورقي لهذا الشهر بنجاح! ✓', 'success');
+      this.renderMonthlyScheduleView();
+      setTimeout(() => {
+        this.openPaperScheduleModal();
+      }, 200);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  openPaperScheduleModal() {
+    const key = `naseej_paper_sched_${this.currentScheduleYear}_${this.currentScheduleMonth}`;
+    const imgData = localStorage.getItem(key) || 'assets/images/curtain_brocade.jpg';
+    const modal = document.getElementById('admin-paper-schedule-modal');
+    const imgEl = document.getElementById('paper-modal-img-full');
+    const linkEl = document.getElementById('paper-modal-img-link');
+    const badgeEl = document.getElementById('paper-modal-month-badge');
+    const dateInput = document.getElementById('extract-order-date');
+
+    if (!modal) return;
+    if (imgEl) imgEl.src = imgData;
+    if (linkEl) linkEl.href = imgData;
+    if (badgeEl) badgeEl.textContent = `شهر ${this.currentScheduleMonth} / ${this.currentScheduleYear}`;
+    if (dateInput) {
+      const mStr = String(this.currentScheduleMonth).padStart(2, '0');
+      dateInput.value = `${this.currentScheduleYear}-${mStr}-15`;
+    }
+
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.style.pointerEvents = 'auto';
+    modal.style.zIndex = '99999';
+    document.body.style.overflow = 'hidden';
+  }
+
+  closePaperScheduleModal() {
+    const modal = document.getElementById('admin-paper-schedule-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
+      modal.style.zIndex = '';
+      document.body.style.overflow = '';
+    }
+  }
+
+  deletePaperScheduleImage() {
+    if (confirm('هل أنت متأكد من حذف صورة الجدول الورقي لهذا الشهر؟')) {
+      const key = `naseej_paper_sched_${this.currentScheduleYear}_${this.currentScheduleMonth}`;
+      localStorage.removeItem(key);
+      window.naseejCustomer.showToast('تم حذف صورة الجدول الورقي', 'info');
+      this.closePaperScheduleModal();
+      this.renderMonthlyScheduleView();
+    }
+  }
+
+  submitExtractedEntry(event) {
+    if (event) event.preventDefault();
+    const name = document.getElementById('extract-cust-name').value.trim();
+    const dateStr = document.getElementById('extract-order-date').value;
+    const type = document.getElementById('extract-order-type').value;
+    const windowsDesc = document.getElementById('extract-windows-desc').value.trim();
+    const phone = document.getElementById('extract-cust-phone').value.trim();
+
+    if (!name || !dateStr) {
+      window.naseejCustomer.showToast('يرجى كتابة اسم الزبون وتحديد التاريخ', 'error');
+      return;
+    }
+
+    const d = new Date(dateStr);
+    const dayName = store.getDayNameFromDate(d);
+    const isInstall = type === 'install';
+    const isDelivery = type === 'delivery';
+
+    store.createOrder({
+      customerName: name,
+      customerPhone: phone || '0590000000',
+      customerCity: 'نابلس',
+      customerAddress: 'الورشة',
+      scheduledDate: dateStr,
+      scheduledDay: dayName,
+      requiresInstallation: isInstall,
+      installationDate: isInstall ? dateStr : null,
+      installationDay: isInstall ? dayName : null,
+      deliveryType: isDelivery ? 'delivery' : 'pickup',
+      totalMeters: 8,
+      source: 'walkin_paper',
+      items: [{
+        productId: 'p_paper',
+        productName: windowsDesc || 'قماش ستائر (جدول ورقي)',
+        roomName: 'شباك',
+        color: 'حسب الورقة',
+        width: 3.0,
+        height: 2.8,
+        meters: 8,
+        unitLabel: 'متر',
+        pricePerMeter: 60,
+        total: 480
+      }],
+      totalAmount: 480
+    });
+
+    window.naseejCustomer.showToast(`تم تفريغ وإدراج طلبية (${name}) في جدول يوم ${dayName} (${dateStr}) بنجاح! ✓`, 'success');
+    document.getElementById('extract-cust-name').value = '';
+    document.getElementById('extract-windows-desc').value = '';
+    document.getElementById('extract-cust-phone').value = '';
+
+    this.renderMonthlyScheduleView();
+    this.renderOrdersTable();
+    this.renderKPIs();
+  }
+
+  navigateMonth(delta) {
+    let m = this.currentScheduleMonth + delta;
+    let y = this.currentScheduleYear;
+    if (m > 12) {
+      m = 1;
+      y++;
+    } else if (m < 1) {
+      m = 12;
+      y--;
+    }
+    this.currentScheduleMonth = m;
+    this.currentScheduleYear = y;
+    const selectMonth = document.getElementById('cal-month-select');
+    const selectYear = document.getElementById('cal-year-select');
+    if (selectMonth) selectMonth.value = m;
+    if (selectYear) selectYear.value = y;
+    this.renderMonthlyScheduleView();
+  }
+
+  goToCurrentMonth() {
+    const today = new Date();
+    this.currentScheduleYear = today.getFullYear();
+    this.currentScheduleMonth = today.getMonth() + 1;
+    const selectMonth = document.getElementById('cal-month-select');
+    const selectYear = document.getElementById('cal-year-select');
+    if (selectMonth) selectMonth.value = this.currentScheduleMonth;
+    if (selectYear) selectYear.value = this.currentScheduleYear;
+    this.renderMonthlyScheduleView();
+  }
+
+  toggleMonthlyOnlyScheduled() {
+    this.monthlyFilterOnlyScheduled = !this.monthlyFilterOnlyScheduled;
+    this.renderMonthlyScheduleView();
+  }
+
+  quickAddOrderForDate(dateStr) {
+    this.openWalkinOrderModal();
+    const dateInput = document.getElementById('walkin-schedule-date');
+    if (dateInput && dateStr) {
+      dateInput.value = dateStr;
+      this.handleWalkinDateChange(dateStr);
+    }
+    const installDateInput = document.getElementById('walkin-install-date');
+    if (installDateInput && dateStr) {
+      installDateInput.value = dateStr;
+      this.handleWalkinInstallDateChange(dateStr);
+    }
+  }
+
+  // ==========================================
+  // CUSTOMER SEARCH ENGINE (البحث عن زبون / صاحب طلبية)
+  // ==========================================
+
+  handleTopCustomerSearch(query) {
+    const clearBtn = document.getElementById('admin-top-search-clear');
+    const resultsPanel = document.getElementById('admin-top-search-results');
+    if (!resultsPanel) return;
+
+    const q = (query || '').trim();
+    if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+
+    if (!q) {
+      resultsPanel.style.display = 'none';
+      return;
+    }
+
+    const normalizeArabic = (s) => (s || '').toLowerCase()
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .replace(/[\u064B-\u065F]/g, '')
+      .trim();
+
+    const qNorm = normalizeArabic(q);
+    const orders = store.getOrders();
+
+    const matches = orders.filter(o => {
+      const name = normalizeArabic(o.customerName);
+      const phone = (o.customerPhone || '').replace(/\D/g, '');
+      const id = normalizeArabic(o.id);
+      const city = normalizeArabic(o.customerCity);
+      return name.includes(qNorm) || phone.includes(q.replace(/\D/g, '')) || id.includes(qNorm) || city.includes(qNorm);
+    });
+
+    resultsPanel.style.display = 'block';
+
+    if (matches.length === 0) {
+      resultsPanel.innerHTML = `
+        <div style="text-align: center; padding: 20px 10px; color: #64748b;">
+          <div style="font-size: 28px; margin-bottom: 6px;">🔍</div>
+          <div style="font-weight: 700; color: #0f172a;">لا يوجد زبون مطابق لـ "${q}"</div>
+          <div style="font-size: 11.5px; margin-top: 4px;">تأكد من كتابة الاسم أو رقم الهاتف بشكل صحيح، أو سجل طلبية جديدة.</div>
+          <button type="button" class="btn btn-sm btn-gold" style="margin-top: 10px;" onclick="window.naseejAdmin.clearTopCustomerSearch(); window.openWalkinOrderModal();">
+            ➕ تسجيل طلبية جديدة لهذا الزبون
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    const cardsHtml = matches.map(o => {
+      const windowsCount = (o.items || []).length || 1;
+      const windowsCountLabel = windowsCount === 1 ? 'شباك واحد' : (windowsCount === 2 ? 'شباكان' : `${windowsCount} شبابيك`);
+      
+      const windowsDetailsHtml = (o.items || []).map((it, idx) => {
+        const dimStr = (it.width && it.height) ? `[${it.width}م عرض × ${it.height}م ارتفاع]` : '';
+        return `
+          <div class="search-window-item">
+            <div>
+              <strong>#${idx + 1} ${it.roomName || 'شباك'}:</strong>
+              <span>${it.productName || 'قماش'} (${it.color || 'بيج'})</span>
+              ${dimStr ? `<span style="color: #b45309; font-weight: 700; margin-right: 4px;">${dimStr}</span>` : ''}
+            </div>
+            <div style="white-space: nowrap; font-weight: 700; color: #0f172a;">
+              ${it.meters || 0} ${it.unitLabel || 'متر'} • ${(it.total || 0).toLocaleString()} ₪
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      let apptBadge = '';
+      if (o.requiresInstallation) {
+        apptBadge = `<span class="order-type-badge install" style="font-size: 10.5px;">🔧 موعد تركيب (${o.installationDate || o.scheduledDate || 'قريباً'})</span>`;
+      } else if (o.deliveryType === 'delivery') {
+        apptBadge = `<span class="order-type-badge delivery" style="font-size: 10.5px;">🚚 توصيل (${o.scheduledDate || 'قريباً'})</span>`;
+      } else {
+        apptBadge = `<span class="order-type-badge pickup" style="font-size: 10.5px;">🏪 استلام بالفرع (${o.scheduledDate || 'قريباً'})</span>`;
+      }
+
+      return `
+        <div class="search-result-card">
+          <div class="search-result-top">
+            <div>
+              <div class="search-cust-name">👤 ${o.customerName || 'زبون'}</div>
+              <div class="search-cust-meta">
+                <span>📞 ${o.customerPhone || 'لا يوجد هاتف'}</span>
+                <span>•</span>
+                <span>📍 ${o.customerCity || 'نابلس'}</span>
+                <span>•</span>
+                <span class="badge badge-gold" style="font-size: 10px;">${o.id}</span>
+              </div>
+            </div>
+            <div>
+              ${apptBadge}
+            </div>
+          </div>
+
+          <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-top: 6px;">
+            🪟 ${windowsCountLabel} (إجمالي ${o.totalMeters || 0} متر)
+          </div>
+
+          <div class="search-windows-list">
+            ${windowsDetailsHtml}
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+            <div style="font-size: 13.5px; font-weight: 800; color: #b45309;">
+              المجموع: ${(o.totalAmount || o.total || 0).toLocaleString()} ₪
+            </div>
+            <div class="search-card-actions">
+              <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 3px 8px;" onclick="window.naseejAdmin.printOrderWorkReceipt('${o.id}'); window.naseejAdmin.clearTopCustomerSearch();">
+                🖨️ أمر الورشة
+              </button>
+              ${o.customerPhone ? `
+                <a href="https://wa.me/972${o.customerPhone.replace(/^0+/, '')}?text=${encodeURIComponent(`مرحباً ${o.customerName}، شركة الولاء للستائر BalalemCo بخصوص طلبية الستائر رقم ${o.id}`)}" target="_blank" class="btn btn-sm btn-outline" style="color: #10b981; border-color: #10b981; font-size: 11px; padding: 3px 8px;" title="مراسلة واتساب">
+                  💬 واتساب
+                </a>
+              ` : ''}
+              <button type="button" class="btn btn-sm btn-gold" style="font-size: 11px; padding: 3px 8px;" onclick="window.naseejAdmin.jumpToDate('${o.scheduledDate || o.installationDate}'); window.naseejAdmin.clearTopCustomerSearch();">
+                📅 عرض بالجدول
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    resultsPanel.innerHTML = `
+      <div class="search-results-header">
+        <span>تم العثور على ${matches.length} طلبية / زبون:</span>
+        <button type="button" onclick="window.naseejAdmin.clearTopCustomerSearch()" style="background: none; border: none; font-size: 11.5px; color: #64748b; cursor: pointer;">إغلاق ✕</button>
+      </div>
+      <div>
+        ${cardsHtml}
+      </div>
+    `;
+  }
+
+  clearTopCustomerSearch() {
+    const input = document.getElementById('admin-top-customer-search-input');
+    const clearBtn = document.getElementById('admin-top-search-clear');
+    const resultsPanel = document.getElementById('admin-top-search-results');
+    if (input) input.value = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+    if (resultsPanel) resultsPanel.style.display = 'none';
   }
 
   // Filter Installers on Installation Board
@@ -1204,15 +1860,25 @@ class NaseejAdmin {
     const products = store.getProducts();
     const defaultProduct = products[0] || { id: 'p1', name: 'شانيل تركي فاخر', pricePerMeter: 65, category: 'curtain' };
     const defaultColor = (defaultProduct.colors && defaultProduct.colors[0] && defaultProduct.colors[0].name) || 'بيج رملي';
+    const isTarsoon = defaultProduct.category === 'tarsoon';
+    const width = 3.0;
+    const height = 2.8;
+    const fullnessRatio = 2.8;
+    const sewingType = isTarsoon ? 'ستائر ترسون (بالمتر المربع)' : 'كسرات أمريكي / شتوح';
+    const meters = isTarsoon ? Math.round(width * height * 100) / 100 : Math.round(width * fullnessRatio * 10) / 10;
     return {
       id: 'w_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
       roomName: roomName,
       productId: defaultProduct.id,
       productName: defaultProduct.name,
       color: defaultColor,
-      meters: 8,
+      width: width,
+      height: height,
+      sewingType: sewingType,
+      fullnessRatio: fullnessRatio,
+      meters: meters,
       unitPrice: defaultProduct.pricePerMeter || 65,
-      unitLabel: defaultProduct.category === 'tarsoon' ? 'م²' : 'متر',
+      unitLabel: isTarsoon ? 'م²' : 'متر',
       notes: ''
     };
   }
@@ -1314,22 +1980,88 @@ class NaseejAdmin {
         item.productId = product.id;
         item.productName = product.name;
         item.unitPrice = product.pricePerMeter || 65;
-        item.unitLabel = product.category === 'tarsoon' ? 'م²' : 'متر';
+        const wasTarsoon = item.unitLabel === 'م²';
+        const isTarsoon = product.category === 'tarsoon';
+        item.unitLabel = isTarsoon ? 'م²' : 'متر';
         if (product.colors && product.colors[0]) {
           item.color = product.colors[0].name;
+        }
+        if (isTarsoon) {
+          item.sewingType = 'ستائر ترسون (بالمتر المربع)';
+          item.fullnessRatio = null;
+          item.meters = Math.round((item.width || 3.0) * (item.height || 2.8) * 100) / 100;
+        } else if (wasTarsoon) {
+          item.sewingType = 'كسرات أمريكي / شتوح';
+          item.fullnessRatio = 2.8;
+          item.meters = Math.round((item.width || 3.0) * 2.8 * 10) / 10;
         }
         // Update DOM inputs directly without losing focus
         const searchInput = document.getElementById(`walkin-fabric-search-${index}`);
         const priceInput = document.getElementById(`walkin-item-price-${index}`);
         const colorInput = document.getElementById(`walkin-item-color-${index}`);
         const unitBadge = document.getElementById(`walkin-item-unit-${index}`);
+        const sewingSelect = document.getElementById(`walkin-item-sewing-${index}`);
+        const metersInput = document.getElementById(`walkin-item-meters-${index}`);
         if (searchInput) searchInput.value = item.productName;
         if (priceInput) priceInput.value = item.unitPrice;
         if (colorInput) colorInput.value = item.color;
         if (unitBadge) unitBadge.textContent = item.unitLabel;
+        if (sewingSelect) sewingSelect.value = isTarsoon ? 'tarsoon' : 'american';
+        if (metersInput) metersInput.value = item.meters;
       }
     } else if (field === 'productName') {
       item.productName = value;
+    } else if (field === 'width') {
+      item.width = parseFloat(value) || 0;
+      if (item.unitLabel === 'م²') {
+        item.meters = Math.round(item.width * (item.height || 1) * 100) / 100;
+      } else {
+        const ratio = item.fullnessRatio || 2.8;
+        item.meters = Math.round(item.width * ratio * 10) / 10;
+      }
+      const metersInput = document.getElementById(`walkin-item-meters-${index}`);
+      if (metersInput) metersInput.value = item.meters;
+    } else if (field === 'height') {
+      item.height = parseFloat(value) || 0;
+      if (item.unitLabel === 'م²') {
+        item.meters = Math.round((item.width || 1) * item.height * 100) / 100;
+        const metersInput = document.getElementById(`walkin-item-meters-${index}`);
+        if (metersInput) metersInput.value = item.meters;
+      }
+    } else if (field === 'sewingType') {
+      if (value === 'american') {
+        item.sewingType = 'كسرات أمريكي / شتوح';
+        item.fullnessRatio = 2.8;
+        item.unitLabel = 'متر';
+        item.meters = Math.round((item.width || 3.0) * 2.8 * 10) / 10;
+      } else if (value === 'wave') {
+        item.sewingType = 'ويفي ملكي Wave (3.0x)';
+        item.fullnessRatio = 3.0;
+        item.unitLabel = 'متر';
+        item.meters = Math.round((item.width || 3.0) * 3.0 * 10) / 10;
+      } else if (value === 'rings_tight') {
+        item.sewingType = 'رنج مزموم (2.5x)';
+        item.fullnessRatio = 2.5;
+        item.unitLabel = 'متر';
+        item.meters = Math.round((item.width || 3.0) * 2.5 * 10) / 10;
+      } else if (value === 'rings_single') {
+        item.sewingType = 'رنج فرد (1.5x)';
+        item.fullnessRatio = 1.5;
+        item.unitLabel = 'متر';
+        item.meters = Math.round((item.width || 3.0) * 1.5 * 10) / 10;
+      } else if (value === 'tarsoon') {
+        item.sewingType = 'ستائر ترسون (بالمتر المربع)';
+        item.fullnessRatio = null;
+        item.unitLabel = 'م²';
+        item.meters = Math.round((item.width || 3.0) * (item.height || 2.8) * 100) / 100;
+      } else {
+        item.sewingType = 'تحديد الأمتار يدوياً';
+        item.fullnessRatio = null;
+      }
+      const unitBadge = document.getElementById(`walkin-item-unit-${index}`);
+      if (unitBadge) unitBadge.textContent = item.unitLabel;
+      const metersInput = document.getElementById(`walkin-item-meters-${index}`);
+      if (metersInput) metersInput.value = item.meters;
     } else if (field === 'meters') {
       item.meters = parseFloat(value) || 0;
     } else if (field === 'unitPrice') {
@@ -1346,7 +2078,8 @@ class NaseejAdmin {
     const itemSubtotal = Math.round((item.meters || 0) * (item.unitPrice || 0));
     const subtotalEl = document.getElementById(`walkin-item-subtotal-${index}`);
     if (subtotalEl) {
-      subtotalEl.innerHTML = `المجموع: <strong>${itemSubtotal.toLocaleString()} ₪</strong> (${item.meters} ${item.unitLabel} × ${item.unitPrice} ₪)`;
+      const dimInfo = (item.width && item.height) ? `مقاس [${item.width}م عرض × ${item.height}م ارتفاع] • ` : '';
+      subtotalEl.innerHTML = `${dimInfo}المجموع: <strong>${itemSubtotal.toLocaleString()} ₪</strong> (${item.meters} ${item.unitLabel} × ${item.unitPrice} ₪)`;
     }
 
     this.recalcWalkinTotal();
@@ -1524,9 +2257,19 @@ class NaseejAdmin {
     item.productId = product.id;
     item.productName = product.name;
     item.unitPrice = product.pricePerMeter || 65;
-    item.unitLabel = product.category === 'tarsoon' ? 'م²' : 'متر';
+    const isTarsoon = product.category === 'tarsoon';
+    item.unitLabel = isTarsoon ? 'م²' : 'متر';
     if (product.colors && product.colors[0]) {
       item.color = product.colors[0].name;
+    }
+    if (isTarsoon) {
+      item.sewingType = 'ستائر ترسون (بالمتر المربع)';
+      item.fullnessRatio = null;
+      item.meters = Math.round((item.width || 3.0) * (item.height || 2.8) * 100) / 100;
+    } else if (item.unitLabel === 'م²' || !item.fullnessRatio) {
+      item.sewingType = 'كسرات أمريكي / شتوح';
+      item.fullnessRatio = 2.8;
+      item.meters = Math.round((item.width || 3.0) * 2.8 * 10) / 10;
     }
 
     if (updateInputValue) {
@@ -1537,15 +2280,20 @@ class NaseejAdmin {
     const priceInput = document.getElementById(`walkin-item-price-${index}`);
     const colorInput = document.getElementById(`walkin-item-color-${index}`);
     const unitBadge = document.getElementById(`walkin-item-unit-${index}`);
+    const sewingSelect = document.getElementById(`walkin-item-sewing-${index}`);
+    const metersInput = document.getElementById(`walkin-item-meters-${index}`);
     if (priceInput) priceInput.value = item.unitPrice;
     if (colorInput) colorInput.value = item.color;
     if (unitBadge) unitBadge.textContent = item.unitLabel;
+    if (sewingSelect) sewingSelect.value = isTarsoon ? 'tarsoon' : 'american';
+    if (metersInput) metersInput.value = item.meters;
 
     // Update subtotal badge
     const itemSubtotal = Math.round((item.meters || 0) * (item.unitPrice || 0));
     const subtotalEl = document.getElementById(`walkin-item-subtotal-${index}`);
     if (subtotalEl) {
-      subtotalEl.innerHTML = `المجموع: <strong>${itemSubtotal.toLocaleString()} ₪</strong> (${item.meters} ${item.unitLabel} × ${item.unitPrice} ₪)`;
+      const dimInfo = (item.width && item.height) ? `مقاس [${item.width}م عرض × ${item.height}م ارتفاع] • ` : '';
+      subtotalEl.innerHTML = `${dimInfo}المجموع: <strong>${itemSubtotal.toLocaleString()} ₪</strong> (${item.meters} ${item.unitLabel} × ${item.unitPrice} ₪)`;
     }
 
     this.closeFabricDropdown(index);
@@ -1716,23 +2464,41 @@ class NaseejAdmin {
 
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px; display: flex; justify-content: space-between;">
-                <span>الأمتار المطلوبة *</span>
-                <span id="walkin-item-unit-${idx}" style="color: #64748b; font-weight: normal;">${item.unitLabel}</span>
+                <span>القياس بالعرض *</span>
+                <span style="color: #64748b; font-weight: normal;">متر</span>
               </label>
-              <input type="number" class="form-control" style="font-size: 13px; height: 36px; padding: 4px 8px; font-weight: 700;" value="${item.meters}" step="0.5" min="0.5" required oninput="window.naseejAdmin.updateWalkinItem(${idx}, 'meters', this.value)">
+              <div class="walkin-dim-input-wrap">
+                <input type="number" id="walkin-item-width-${idx}" class="form-control" style="font-size: 13px; height: 36px; padding: 4px 8px; font-weight: 700;" value="${item.width || 3.0}" step="0.1" min="0.1" max="30" placeholder="مثال: 3.0" required oninput="window.naseejAdmin.updateWalkinItem(${idx}, 'width', this.value)">
+                <span class="walkin-dim-suffix">متر</span>
+              </div>
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px;">سعر المتر (₪) *</label>
+              <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px; display: flex; justify-content: space-between;">
+                <span>القياس بالارتفاع *</span>
+                <span style="color: #64748b; font-weight: normal;">متر</span>
+              </label>
+              <div class="walkin-dim-input-wrap">
+                <input type="number" id="walkin-item-height-${idx}" class="form-control" style="font-size: 13px; height: 36px; padding: 4px 8px; font-weight: 700;" value="${item.height || 2.8}" step="0.1" min="0.1" max="15" placeholder="مثال: 2.8" required oninput="window.naseejAdmin.updateWalkinItem(${idx}, 'height', this.value)">
+                <span class="walkin-dim-suffix">متر</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px;">سعر المتر / م² (₪) *</label>
               <input type="number" id="walkin-item-price-${idx}" class="form-control" style="font-size: 13px; height: 36px; padding: 4px 8px; font-weight: 700;" value="${item.unitPrice}" min="1" required oninput="window.naseejAdmin.updateWalkinItem(${idx}, 'unitPrice', this.value)">
             </div>
           </div>
 
-          <div class="walkin-item-footer">
-            <input type="text" class="form-control walkin-item-notes-input" value="${item.notes}" placeholder="ملاحظة خاصة بهذا الشباك (ارتفاع، تفصيل كسرات، إضافات...)" oninput="window.naseejAdmin.updateWalkinItem(${idx}, 'notes', this.value)">
+          <!-- Hidden helper inputs to keep references alive -->
+          <input type="hidden" id="walkin-item-meters-${idx}" value="${item.meters}">
+          <span id="walkin-item-unit-${idx}" style="display: none;">${item.unitLabel}</span>
+
+          <div class="walkin-item-footer" style="margin-top: 10px;">
+            <input type="text" class="form-control walkin-item-notes-input" value="${item.notes}" placeholder="ملاحظة خاصة بهذا الشباك (تفصيل كسرات، إضافات، ملاحظات فنية...)" oninput="window.naseejAdmin.updateWalkinItem(${idx}, 'notes', this.value)">
             
             <div class="walkin-item-total-badge" id="walkin-item-subtotal-${idx}">
-              المجموع: <strong>${itemSubtotal.toLocaleString()} ₪</strong> (${item.meters} ${item.unitLabel} × ${item.unitPrice} ₪)
+              ${(item.width && item.height) ? `مقاس [${item.width}م عرض × ${item.height}م ارتفاع] • ` : ''}المجموع: <strong>${itemSubtotal.toLocaleString()} ₪</strong> (${item.meters} ${item.unitLabel} × ${item.unitPrice} ₪)
             </div>
           </div>
         </div>
@@ -1933,12 +2699,18 @@ class NaseejAdmin {
       totalMeters += itemMeters;
       subtotal += itemTotal;
 
+      const itemWidth = parseFloat(item.width) || null;
+      const itemHeight = parseFloat(item.height) || null;
+
       return {
         productId: item.productId,
         productName: product.name,
         roomName: item.roomName || `شباك ${index + 1}`,
         color: item.color || 'بيج رملي',
-        sewingType: 'تفصيل وخياطة متقنة',
+        width: itemWidth,
+        height: itemHeight,
+        sewingType: item.sewingType || 'تفصيل وخياطة متقنة',
+        fullnessRatio: item.fullnessRatio || null,
         meters: itemMeters,
         unitLabel: item.unitLabel || (product.category === 'tarsoon' ? 'م²' : 'متر'),
         pricePerMeter: itemUnitPrice,
@@ -2047,11 +2819,25 @@ class NaseejAdmin {
             </tr>
           </thead>
           <tbody>
-            ${(order.items || []).map(i => `
+            ${(order.items || []).map(i => {
+              let width = i.width;
+              let height = i.height;
+              if ((!width || !height) && i.details) {
+                const wMatch = i.details.match(/عرض\s*([\d.]+)/);
+                const hMatch = i.details.match(/ارتفاع(?:\/طول)?\s*([\d.]+)/);
+                if (wMatch) width = wMatch[1];
+                if (hMatch) height = hMatch[1];
+              }
+              const dimHtml = (width && height)
+                ? `<div style="color: #065f46; font-size: 12px; font-weight: bold; margin-top: 2px;">📐 المقاسات: عرض ${width} م × ارتفاع/طول ${height} م</div>`
+                : '';
+
+              return `
               <tr>
                 <td>
                   <strong>${i.productName}</strong>
                   ${i.roomName ? `<div style="color: #0284c7; font-size: 12px; font-weight: bold; margin-top: 2px;">🪟 الغرفة: ${i.roomName}</div>` : ''}
+                  ${dimHtml}
                   ${i.sewingType ? `<div style="color:#b45309; font-size:12px; font-weight:bold; margin-top: 2px;">[${i.sewingType}]</div>` : ''}
                   <small style="color:#475569;">${i.notes || ''}</small>
                 </td>
@@ -2060,7 +2846,7 @@ class NaseejAdmin {
                 <td>${i.pricePerMeter} شيكل</td>
                 <td>${i.total.toLocaleString()} شيكل</td>
               </tr>
-            `).join('')}
+            `;}).join('')}
           </tbody>
         </table>
         <div class="total-box">

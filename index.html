@@ -217,7 +217,10 @@
           <a href="https://www.facebook.com/search/top?q=شركة%20الولاء%20للستائر%20BalalemCo" target="_blank" rel="noopener noreferrer" class="top-social-circle facebook" title="فيسبوك - شركة الولاء للستائر BalalemCo">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
           </a>
-          <a href="https://www.instagram.com/explore/tags/BalalemCo/" target="_blank" rel="noopener noreferrer" class="top-social-circle instagram" title="إنستغرام - شركة الولاء للستائر BalalemCo">
+          <a href="https://www.tiktok.com/@alwalaabalalemco" target="_blank" rel="noopener noreferrer" class="top-social-circle tiktok" title="تيك توك - شركة الولاء للستائر @alwalaabalalemco">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.47 6.3 6.3 0 0 0 1.96-4.54V9.01a8.28 8.28 0 0 0 4.81 1.54V7.1a4.84 4.84 0 0 1-1-.41z"/></svg>
+          </a>
+          <a href="https://www.instagram.com/alwalaabalalemco/" target="_blank" rel="noopener noreferrer" class="top-social-circle instagram" title="إنستغرام - شركة الولاء للستائر @alwalaabalalemco">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
           </a>
         </div>
@@ -549,6 +552,35 @@
           <p>إدارة مخزون أقمشة الستائر، تزويد أصناف جديدة، إدارة وتحديث طلبات الزبائن، ومتابعة ورشة التفصيل والتركيب</p>
         </div>
         <div class="admin-actions-group" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+          <!-- Quick Customer Search Bar -->
+          <div class="admin-top-search-wrap" id="admin-top-search-wrap">
+            <div class="admin-top-search-box">
+              <span class="top-search-icon">🔍</span>
+              <input 
+                type="text" 
+                id="admin-top-customer-search-input" 
+                class="admin-top-search-input" 
+                placeholder="البحث عن زبون (الاسم أو الهاتف)..." 
+                autocomplete="off"
+                oninput="window.naseejAdmin.handleTopCustomerSearch(this.value)"
+                onfocus="window.naseejAdmin.handleTopCustomerSearch(this.value)"
+              >
+              <button 
+                type="button" 
+                class="admin-top-search-clear" 
+                id="admin-top-search-clear" 
+                onclick="window.naseejAdmin.clearTopCustomerSearch()" 
+                style="display: none;"
+                title="مسح البحث"
+              >×</button>
+            </div>
+            
+            <!-- Floating Results Panel -->
+            <div id="admin-top-search-results" class="admin-top-search-results-panel" style="display: none;">
+              <!-- Dynamically populated by window.naseejAdmin.handleTopCustomerSearch() -->
+            </div>
+          </div>
+
           <button class="btn btn-outline" onclick="window.naseejApp.openStorefrontView()" title="الرجوع لمعاينة المتجر الرسمي">
             <span>👁️ معاينة المتجر كمدير</span>
           </button>
@@ -712,6 +744,11 @@
                 <span>جدول مواعيد التركيب الميداني (أسامة / عز / فني 3)</span>
                 <span id="badge-installations-count" class="badge badge-gold" style="font-size: 11px; padding: 2px 7px; margin-right: 6px;">0</span>
               </button>
+              <button id="btn-schedule-monthly" class="schedule-sub-nav-btn" onclick="window.naseejAdmin.switchScheduleSubTab('monthly')">
+                <span class="sub-nav-icon">📆</span>
+                <span>جدول مواعيد الطلبيات الشهري (شهر كامل)</span>
+                <span id="badge-monthly-count" class="badge badge-gold" style="font-size: 11px; padding: 2px 7px; margin-right: 6px;">0</span>
+              </button>
             </div>
             <div class="schedule-quick-add-btn" style="display: flex; gap: 8px;">
               <button type="button" class="btn btn-sm btn-outline" onclick="window.naseejAdmin.confirmClearAllOrders()" title="تصفير جدول العمل">
@@ -843,6 +880,11 @@
             <div id="admin-installation-schedule-board" class="weekly-schedule-board">
               <!-- Injected via admin.js -->
             </div>
+          </div>
+
+          <!-- Sub-Tab 3: Monthly Schedule Table & Paper Schedule View (شهر كامل) -->
+          <div id="admin-subview-monthly" class="schedule-subview-pane" style="display: none;">
+            <!-- Injected dynamically via admin.renderMonthlyScheduleView() -->
           </div>
         </div>
       </div>
@@ -1927,6 +1969,88 @@
     </div>
   </div>
 
+  <!-- Modal: Paper Schedule Image & Content Extractor -->
+  <div id="admin-paper-schedule-modal" class="modal" style="display: none; z-index: 99999;">
+    <div class="modal-backdrop" onclick="window.naseejAdmin.closePaperScheduleModal()"></div>
+    <div class="modal-dialog modal-lg" style="max-width: 820px; width: 95%;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <span>📸 صورة جدول الورشة الورقي وتفريغ المواعيد</span>
+          <span id="paper-modal-month-badge" class="badge badge-gold" style="font-size: 12px;">الشهر</span>
+        </h3>
+        <button type="button" class="modal-close" onclick="window.naseejAdmin.closePaperScheduleModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px;">
+          <!-- Image View Side -->
+          <div style="background: #0f172a; border-radius: 8px; padding: 8px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 280px;">
+            <img id="paper-modal-img-full" src="" alt="صورة جدول الورشة الورقي" style="max-width: 100%; max-height: 380px; object-fit: contain; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+              <a id="paper-modal-img-link" href="#" target="_blank" class="btn btn-sm btn-outline" style="color: #ffffff; border-color: rgba(255,255,255,0.3);">
+                🔍 فتح الصورة بحجمها الكامل
+              </a>
+              <button type="button" class="btn btn-sm btn-danger-soft" onclick="window.naseejAdmin.deletePaperScheduleImage()">
+                🗑️ حذف الصورة
+              </button>
+            </div>
+          </div>
+
+          <!-- Extraction & Quick Entry Side -->
+          <div>
+            <div style="background: #fffdf5; border: 1.5px solid #fde68a; border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+              <div style="font-weight: 800; font-size: 13.5px; color: #92400e; display: flex; align-items: center; gap: 6px;">
+                <span>✨ تفريغ وإدراج المواعيد من الورقة للجدول:</span>
+              </div>
+              <p style="font-size: 12px; color: #78350f; margin: 4px 0 0 0;">
+                يمكنك كتابة بيانات كل سطر من جدول الورشة الورقي وإضافته بنقرة واحدة لتظهر فوراً في جدول المواعيد الشهري وقائمة الطلبيات.
+              </p>
+            </div>
+
+            <form onsubmit="window.naseejAdmin.submitExtractedEntry(event)" style="display: flex; flex-direction: column; gap: 10px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 12px; margin-bottom: 2px;">اسم الزبون *</label>
+                <input type="text" id="extract-cust-name" class="form-control" placeholder="اسم الزبون من الجدول الورقي" required style="font-size: 13px; height: 36px;">
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" style="font-size: 12px; margin-bottom: 2px;">اليوم والتاريخ بالجدول *</label>
+                  <input type="date" id="extract-order-date" class="form-control" required style="font-size: 13px; height: 36px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" style="font-size: 12px; margin-bottom: 2px;">نوع الموعد *</label>
+                  <select id="extract-order-type" class="form-control" style="font-size: 12px; height: 36px;">
+                    <option value="install">🔧 موعد تركيب منزلي</option>
+                    <option value="delivery">🚚 موعد توصيل وتسليم</option>
+                    <option value="pickup">🏪 استلام من المعرض</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" style="font-size: 12px; margin-bottom: 2px;">عدد الشبابيك أو الأمتار</label>
+                  <input type="text" id="extract-windows-desc" class="form-control" placeholder="مثال: شباكين / 15 متر" style="font-size: 12.5px; height: 36px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" style="font-size: 12px; margin-bottom: 2px;">رقم هاتف الزبون (اختياري)</label>
+                  <input type="tel" id="extract-cust-phone" class="form-control" placeholder="059xxxxxxx" style="font-size: 12.5px; height: 36px;">
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-gold" style="margin-top: 4px; padding: 10px; font-weight: 800; font-size: 13px;">
+                ➕ إدراج الطلبية بالجدول الشهري فوراً
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="window.naseejAdmin.closePaperScheduleModal()">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="site-footer">
     <div class="container">
@@ -1961,7 +2085,8 @@
           <p style="font-size: 12.5px; color: var(--gold-light); margin-bottom: 8px; font-weight: 700;">شركة الولاء للستائر BalalemCo</p>
           <ul>
             <li><a href="https://www.facebook.com/search/top?q=شركة%20الولاء%20للستائر%20BalalemCo" target="_blank" rel="noopener noreferrer" style="color: #60a5fa; text-decoration: none; font-weight: 600;">🔵 فيسبوك: BalalemCo</a></li>
-            <li><a href="https://www.instagram.com/explore/tags/BalalemCo/" target="_blank" rel="noopener noreferrer" style="color: #f472b6; text-decoration: none; font-weight: 600;">📸 إنستغرام: BalalemCo</a></li>
+            <li><a href="https://www.tiktok.com/@alwalaabalalemco" target="_blank" rel="noopener noreferrer" style="color: #ffffff; text-decoration: none; font-weight: 600;">🎵 تيك توك: @alwalaabalalemco</a></li>
+            <li><a href="https://www.instagram.com/alwalaabalalemco/" target="_blank" rel="noopener noreferrer" style="color: #f472b6; text-decoration: none; font-weight: 600;">📸 إنستغرام: @alwalaabalalemco</a></li>
             <li><a href="tel:0599842231" style="color: #ffffff; text-decoration: none; font-weight: 700;">📱 اتصال: <span dir="ltr">0599842231</span></a></li>
             <li><a href="https://wa.me/972599842231" target="_blank" style="color: #10b981; text-decoration: none; font-weight: 700;">💬 واتساب: <span dir="ltr">0599842231</span></a></li>
             <li>📍 فلسطين (نابلس • رام الله • الخليل • القدس • جنين)</li>
@@ -2013,9 +2138,13 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
       <span class="dock-tooltip">فيسبوك BalalemCo</span>
     </a>
-    <a href="https://www.instagram.com/explore/tags/BalalemCo/" target="_blank" rel="noopener noreferrer" class="dock-btn dock-insta" title="إنستغرام - شركة الولاء للستائر BalalemCo">
+    <a href="https://www.tiktok.com/@alwalaabalalemco" target="_blank" rel="noopener noreferrer" class="dock-btn dock-tiktok" title="تيك توك - شركة الولاء للستائر @alwalaabalalemco">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.47 6.3 6.3 0 0 0 1.96-4.54V9.01a8.28 8.28 0 0 0 4.81 1.54V7.1a4.84 4.84 0 0 1-1-.41z"/></svg>
+      <span class="dock-tooltip">تيك توك @alwalaabalalemco</span>
+    </a>
+    <a href="https://www.instagram.com/alwalaabalalemco/" target="_blank" rel="noopener noreferrer" class="dock-btn dock-insta" title="إنستغرام - شركة الولاء للستائر @alwalaabalalemco">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-      <span class="dock-tooltip">إنستغرام BalalemCo</span>
+      <span class="dock-tooltip">إنستغرام @alwalaabalalemco</span>
     </a>
     <a href="https://wa.me/972599842231" target="_blank" rel="noopener noreferrer" class="dock-btn dock-wa" title="واتساب مبيعات - شركة الولاء للستائر BalalemCo">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.044c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z"/></svg>
