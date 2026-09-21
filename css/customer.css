@@ -2479,34 +2479,31 @@
 /* MOBILE & TABLET ULTRA SMOOTH PERFORMANCE (Eliminates Drop Frames & Blur)  */
 /* ========================================================================= */
 @media (max-width: 991px) {
-  /* Disable costly continuous 3D keyframe animations on mobile GPUs */
+  /* Keep the animated moving curtain fully active with smooth GPU acceleration */
   .curtain-full-canvas {
-    animation: none !important;
-    transform: none !important;
-    will-change: auto !important;
-    background-attachment: scroll !important;
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
   }
 
   .curtain-bg-layer {
-    transform: none !important;
-    will-change: auto !important;
-    transition: none !important;
-  }
-
-  .customer-hero {
-    perspective: none !important;
-    -webkit-perspective: none !important;
-  }
-
-  /* Replace heavy multi-layered backdrop-filters with crisp solid luxury surfaces */
-  .hero-glass-card {
-    background: #ffffff !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    border: 1.5px solid rgba(212, 175, 55, 0.45) !important;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08) !important;
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
+  }
+
+  /* Luxury Glass Card: Crisp semi-translucent styling with hardware acceleration to prevent blur glitch */
+  .hero-glass-card {
+    background: rgba(255, 255, 255, 0.94) !important;
+    border: 1.5px solid rgba(212, 175, 55, 0.5) !important;
+    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12) !important;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    isolation: isolate;
   }
 
   .hero-feature-item {
