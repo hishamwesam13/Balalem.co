@@ -1605,41 +1605,49 @@ class NaseejCustomer {
         }
       };
 
-      // 360 / 3D Parallax on mouse move
+      // Performance Optimization: Check for touch / mobile / small tablet devices
+      const isMobileOrTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth < 992);
+
+      // On mobile/touch devices: completely skip RAF parallax loop and touch listeners to eliminate drop frames and battery/GPU drain
+      if (isMobileOrTouch) {
+        return;
+      }
+
+      let isLoopRunning = false;
+
+      // 360 / 3D Parallax on mouse move (Desktop only)
       const handleMouseMove = (e) => {
         const rect = stage.getBoundingClientRect();
         const x = (e.clientX - rect.left) / rect.width - 0.5; // -0.5 to 0.5
         const y = (e.clientY - rect.top) / rect.height - 0.5;
         targetX = Math.max(-0.5, Math.min(0.5, x));
         targetY = Math.max(-0.5, Math.min(0.5, y));
+
+        if (!isLoopRunning) {
+          isLoopRunning = true;
+          requestAnimationFrame(updateMotion);
+        }
       };
 
       const handleMouseLeave = () => {
         targetX = 0;
         targetY = 0;
-      };
-
-      // Touch support for mobile devices
-      const handleTouchMove = (e) => {
-        if (e.touches && e.touches[0]) {
-          const touch = e.touches[0];
-          const rect = stage.getBoundingClientRect();
-          const x = (touch.clientX - rect.left) / rect.width - 0.5;
-          const y = (touch.clientY - rect.top) / rect.height - 0.5;
-          targetX = Math.max(-0.5, Math.min(0.5, x));
-          targetY = Math.max(-0.5, Math.min(0.5, y));
+        if (!isLoopRunning) {
+          isLoopRunning = true;
+          requestAnimationFrame(updateMotion);
         }
       };
 
       stage.addEventListener('mousemove', handleMouseMove, { passive: true });
       stage.addEventListener('mouseleave', handleMouseLeave);
-      stage.addEventListener('touchmove', handleTouchMove, { passive: true });
-      stage.addEventListener('touchend', handleMouseLeave);
 
-      // Smooth physics loop for organic motion and 3D parallax
+      // Smooth physics loop for organic motion: automatically pauses when settled to save 100% GPU
       const updateMotion = () => {
-        mouseX += (targetX - mouseX) * 0.08;
-        mouseY += (targetY - mouseY) * 0.08;
+        const dx = targetX - mouseX;
+        const dy = targetY - mouseY;
+
+        mouseX += dx * 0.08;
+        mouseY += dy * 0.08;
 
         const rotY = (mouseX * 14).toFixed(2);
         const rotX = (-mouseY * 7).toFixed(2);
@@ -1648,10 +1656,12 @@ class NaseejCustomer {
 
         curtainLayer.style.transform = `perspective(1000px) rotateY(${rotY}deg) rotateX(${rotX}deg) translate3d(${transX}px, ${transY}px, 0)`;
 
-        requestAnimationFrame(updateMotion);
+        if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) {
+          requestAnimationFrame(updateMotion);
+        } else {
+          isLoopRunning = false;
+        }
       };
-
-      requestAnimationFrame(updateMotion);
     };
 
     if (document.readyState === 'loading') {

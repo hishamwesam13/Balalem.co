@@ -2475,3 +2475,61 @@
   }
 }
 
+/* ========================================================================= */
+/* MOBILE & TABLET ULTRA SMOOTH PERFORMANCE (Eliminates Drop Frames & Blur)  */
+/* ========================================================================= */
+@media (max-width: 991px) {
+  /* Disable costly continuous 3D keyframe animations on mobile GPUs */
+  .curtain-full-canvas {
+    animation: none !important;
+    transform: none !important;
+    will-change: auto !important;
+    background-attachment: scroll !important;
+  }
+
+  .curtain-bg-layer {
+    transform: none !important;
+    will-change: auto !important;
+    transition: none !important;
+  }
+
+  .customer-hero {
+    perspective: none !important;
+    -webkit-perspective: none !important;
+  }
+
+  /* Replace heavy multi-layered backdrop-filters with crisp solid luxury surfaces */
+  .hero-glass-card {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1.5px solid rgba(212, 175, 55, 0.45) !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08) !important;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  .hero-feature-item {
+    background: #f8fafc !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+  }
+
+  .hero-badge {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Prevent blurriness, tearing and flicker on WebKit (iOS & Android) */
+  .fabric-card,
+  .tailoring-card,
+  .catalog-stat-card {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
