@@ -2152,7 +2152,9 @@ class NaseejAdmin {
     const width = 3.0;
     const height = 2.8;
     const fullnessRatio = 2.8;
-    const sewingType = isTarsoon ? 'ستائر ترسون (بالمتر المربع)' : 'كسرات أمريكي / شتوح';
+    const sewingStyle = isTarsoon ? 'tarsoon' : 'american';
+    const sewingBaseName = isTarsoon ? 'ستائر ترسون' : 'كسرات أمريكي / شتوح';
+    const sewingType = isTarsoon ? 'ستائر ترسون (بالمتر المربع)' : 'كسرات أمريكي / شتوح (2.8 م قماش/م حيط)';
     const meters = isTarsoon ? Math.round(width * height * 100) / 100 : Math.round(width * fullnessRatio * 10) / 10;
     return {
       id: 'w_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
@@ -2162,8 +2164,10 @@ class NaseejAdmin {
       color: defaultColor,
       width: width,
       height: height,
+      sewingStyle: sewingStyle,
+      sewingBaseName: sewingBaseName,
       sewingType: sewingType,
-      fullnessRatio: fullnessRatio,
+      fullnessRatio: isTarsoon ? null : fullnessRatio,
       meters: meters,
       unitPrice: defaultProduct.pricePerMeter || 65,
       unitLabel: isTarsoon ? 'م²' : 'متر',
@@ -2275,12 +2279,16 @@ class NaseejAdmin {
           item.color = product.colors[0].name;
         }
         if (isTarsoon) {
+          item.sewingStyle = 'tarsoon';
+          item.sewingBaseName = 'ستائر ترسون';
           item.sewingType = 'ستائر ترسون (بالمتر المربع)';
           item.fullnessRatio = null;
           item.meters = Math.round((item.width || 3.0) * (item.height || 2.8) * 100) / 100;
         } else if (wasTarsoon) {
-          item.sewingType = 'كسرات أمريكي / شتوح';
+          item.sewingStyle = 'american';
+          item.sewingBaseName = 'كسرات أمريكي / شتوح';
           item.fullnessRatio = 2.8;
+          item.sewingType = 'كسرات أمريكي / شتوح (2.8 م قماش/م حيط)';
           item.meters = Math.round((item.width || 3.0) * 2.8 * 10) / 10;
         }
         // Update DOM inputs directly without losing focus
@@ -2318,26 +2326,36 @@ class NaseejAdmin {
       }
     } else if (field === 'sewingType') {
       if (value === 'american') {
-        item.sewingType = 'كسرات أمريكي / شتوح';
+        item.sewingStyle = 'american';
+        item.sewingBaseName = 'كسرات أمريكي / شتوح';
         item.fullnessRatio = 2.8;
+        item.sewingType = 'كسرات أمريكي / شتوح (2.8 م قماش/م حيط)';
         item.unitLabel = 'متر';
         item.meters = Math.round((item.width || 3.0) * 2.8 * 10) / 10;
       } else if (value === 'wave') {
-        item.sewingType = 'ويفي ملكي Wave (3.0x)';
+        item.sewingStyle = 'wave';
+        item.sewingBaseName = 'ويفي (Wave)';
         item.fullnessRatio = 3.0;
+        item.sewingType = 'ويفي (Wave) (3.0 م قماش/م حيط)';
         item.unitLabel = 'متر';
         item.meters = Math.round((item.width || 3.0) * 3.0 * 10) / 10;
       } else if (value === 'rings_tight') {
-        item.sewingType = 'رنج مزموم (2.5x)';
+        item.sewingStyle = 'rings_tight';
+        item.sewingBaseName = 'رنج مزموم';
         item.fullnessRatio = 2.5;
+        item.sewingType = 'رنج مزموم (2.5 م قماش/م حيط)';
         item.unitLabel = 'متر';
         item.meters = Math.round((item.width || 3.0) * 2.5 * 10) / 10;
       } else if (value === 'rings_single') {
-        item.sewingType = 'رنج فرد (1.5x)';
+        item.sewingStyle = 'rings_single';
+        item.sewingBaseName = 'رنج فرد';
         item.fullnessRatio = 1.5;
+        item.sewingType = 'رنج فرد (1.5 م قماش/م حيط)';
         item.unitLabel = 'متر';
         item.meters = Math.round((item.width || 3.0) * 1.5 * 10) / 10;
       } else if (value === 'tarsoon') {
+        item.sewingStyle = 'tarsoon';
+        item.sewingBaseName = 'ستائر ترسون';
         item.sewingType = 'ستائر ترسون (بالمتر المربع)';
         item.fullnessRatio = null;
         item.unitLabel = 'م²';
@@ -2379,21 +2397,46 @@ class NaseejAdmin {
     }
   }
 
-  setWalkinPleat(index, ratio, title, btnEl) {
+  setWalkinPleat(index, styleKey, baseName, defaultRatio, btnEl) {
     if (!this.walkinItems || !this.walkinItems[index]) return;
     const item = this.walkinItems[index];
-    item.fullnessRatio = parseFloat(ratio) || 2.8;
-    item.sewingType = title;
+
+    // Support both new (index, styleKey, baseName, defaultRatio, btnEl)
+    // and legacy (index, ratio, title, btnEl)
+    if (typeof styleKey === 'number' || (!isNaN(parseFloat(styleKey)) && typeof baseName === 'string' && isNaN(parseFloat(baseName)))) {
+      const ratio = parseFloat(styleKey);
+      if (ratio === 1.5) { styleKey = 'rings_single'; baseName = 'رنج فرد'; defaultRatio = 1.5; }
+      else if (ratio === 2.5) { styleKey = 'rings_tight'; baseName = 'رنج مزموم'; defaultRatio = 2.5; }
+      else if (ratio === 3.0) { styleKey = 'wave'; baseName = 'ويفي (Wave)'; defaultRatio = 3.0; }
+      else { styleKey = 'american'; baseName = 'كسرات أمريكي / شتوح'; defaultRatio = 2.8; }
+    }
+
+    item.sewingStyle = styleKey;
+    item.sewingBaseName = baseName;
+    item.fullnessRatio = parseFloat(defaultRatio) || 2.8;
+    item.sewingType = `${baseName} (${item.fullnessRatio} م قماش/م حيط)`;
 
     // Recalculate meters = width * ratio
     const width = parseFloat(item.width) || 3.0;
     item.meters = Math.round(width * item.fullnessRatio * 10) / 10;
 
-    // Update active button state within card
+    // Update active button state within card and reset subtitles to default
     const card = document.getElementById(`walkin-item-card-${index}`);
     if (card) {
-      card.querySelectorAll('.fullness-btn').forEach(btn => btn.classList.remove('active'));
-      if (btnEl) btnEl.classList.add('active');
+      card.querySelectorAll('.fullness-btn').forEach(btn => {
+        btn.classList.remove('active');
+        const dRatio = btn.getAttribute('data-default-ratio');
+        const ratioSpan = btn.querySelector('.fullness-ratio');
+        if (ratioSpan && dRatio) {
+          ratioSpan.textContent = `${dRatio} م قماش / م حيط`;
+        }
+      });
+      if (btnEl) {
+        btnEl.classList.add('active');
+      } else {
+        const targetBtn = card.querySelector(`.fullness-btn[data-style="${styleKey}"]`);
+        if (targetBtn) targetBtn.classList.add('active');
+      }
     }
 
     // Update custom ratio input in card
@@ -2417,33 +2460,43 @@ class NaseejAdmin {
 
     item.fullnessRatio = Math.round(ratio * 100) / 100;
 
-    // Determine sewing type name
-    if (Math.abs(ratio - 1.5) < 0.05) {
-      item.sewingType = 'رنج فرد (1.5x)';
-    } else if (Math.abs(ratio - 2.5) < 0.05) {
-      item.sewingType = 'رنج مزموم (2.5x)';
-    } else if (Math.abs(ratio - 2.8) < 0.05) {
-      item.sewingType = 'كسرات أمريكي / شتوح (2.8x)';
-    } else if (Math.abs(ratio - 3.0) < 0.05) {
-      item.sewingType = 'ويفي Wave (3.0x)';
-    } else {
-      item.sewingType = `كسرات معدّلة (${ratio}x)`;
+    // Ensure style and base name are preserved
+    if (!item.sewingStyle) {
+      if (item.sewingType && item.sewingType.includes('رنج مزموم')) {
+        item.sewingStyle = 'rings_tight';
+        item.sewingBaseName = 'رنج مزموم';
+      } else if (item.sewingType && item.sewingType.includes('رنج فرد')) {
+        item.sewingStyle = 'rings_single';
+        item.sewingBaseName = 'رنج فرد';
+      } else if (item.sewingType && (item.sewingType.includes('ويفي') || item.sewingType.toLowerCase().includes('wave'))) {
+        item.sewingStyle = 'wave';
+        item.sewingBaseName = 'ويفي (Wave)';
+      } else {
+        item.sewingStyle = 'american';
+        item.sewingBaseName = 'كسرات أمريكي / شتوح';
+      }
     }
+
+    const baseName = item.sewingBaseName || 'كسرات أمريكي / شتوح';
+    item.sewingType = `${baseName} (${item.fullnessRatio} م قماش/م حيط)`;
 
     // Recalculate meters
     const width = parseFloat(item.width) || 3.0;
-    item.meters = Math.round(width * ratio * 10) / 10;
+    item.meters = Math.round(width * item.fullnessRatio * 10) / 10;
 
-    // Update preset buttons active state
+    // Keep the chosen sewing style active, and update its subtitle ratio display
     const card = document.getElementById(`walkin-item-card-${index}`);
     if (card) {
       card.querySelectorAll('.fullness-btn').forEach(btn => {
-        const btnText = btn.textContent || '';
-        const isPresetMatch = (Math.abs(ratio - 1.5) < 0.05 && btnText.includes('1.5')) ||
-                              (Math.abs(ratio - 2.5) < 0.05 && btnText.includes('2.5')) ||
-                              (Math.abs(ratio - 2.8) < 0.05 && btnText.includes('2.8')) ||
-                              (Math.abs(ratio - 3.0) < 0.05 && btnText.includes('3.0'));
-        btn.classList.toggle('active', isPresetMatch);
+        const btnStyle = btn.getAttribute('data-style');
+        const isMatch = btnStyle === item.sewingStyle;
+        btn.classList.toggle('active', isMatch);
+        if (isMatch) {
+          const ratioSpan = btn.querySelector('.fullness-ratio');
+          if (ratioSpan) {
+            ratioSpan.textContent = `${item.fullnessRatio} م قماش / م حيط`;
+          }
+        }
       });
     }
 
@@ -2634,11 +2687,15 @@ class NaseejAdmin {
       item.color = product.colors[0].name;
     }
     if (isTarsoon) {
+      item.sewingStyle = 'tarsoon';
+      item.sewingBaseName = 'ستائر ترسون';
       item.sewingType = 'ستائر ترسون (بالمتر المربع)';
       item.fullnessRatio = null;
       item.meters = Math.round((item.width || 3.0) * (item.height || 2.8) * 100) / 100;
     } else if (item.unitLabel === 'م²' || !item.fullnessRatio) {
-      item.sewingType = 'كسرات أمريكي / شتوح';
+      item.sewingStyle = 'american';
+      item.sewingBaseName = 'كسرات أمريكي / شتوح';
+      item.sewingType = 'كسرات أمريكي / شتوح (2.8 م قماش/م حيط)';
       item.fullnessRatio = 2.8;
       item.meters = Math.round((item.width || 3.0) * 2.8 * 10) / 10;
     }
@@ -2660,12 +2717,7 @@ class NaseejAdmin {
     if (metersInput) metersInput.value = item.meters;
 
     // Update subtotal badge
-    const itemSubtotal = Math.round((item.meters || 0) * (item.unitPrice || 0));
-    const subtotalEl = document.getElementById(`walkin-item-subtotal-${index}`);
-    if (subtotalEl) {
-      const dimInfo = (item.width && item.height) ? `مقاس [${item.width}م عرض × ${item.height}م ارتفاع] • ` : '';
-      subtotalEl.innerHTML = `${dimInfo}المجموع: <strong>${itemSubtotal.toLocaleString()} ₪</strong> (${item.meters} ${item.unitLabel} × ${item.unitPrice} ₪)`;
-    }
+    this.updateWalkinCardSubtotal(index);
 
     this.closeFabricDropdown(index);
     this.recalcWalkinTotal();
@@ -2749,6 +2801,22 @@ class NaseejAdmin {
     ];
 
     container.innerHTML = this.walkinItems.map((item, idx) => {
+      if (!item.sewingStyle && item.unitLabel !== 'م²') {
+        if (item.sewingType && item.sewingType.includes('رنج مزموم')) {
+          item.sewingStyle = 'rings_tight';
+          item.sewingBaseName = 'رنج مزموم';
+        } else if (item.sewingType && item.sewingType.includes('رنج فرد')) {
+          item.sewingStyle = 'rings_single';
+          item.sewingBaseName = 'رنج فرد';
+        } else if (item.sewingType && (item.sewingType.includes('ويفي') || item.sewingType.toLowerCase().includes('wave'))) {
+          item.sewingStyle = 'wave';
+          item.sewingBaseName = 'ويفي (Wave)';
+        } else {
+          item.sewingStyle = 'american';
+          item.sewingBaseName = 'كسرات أمريكي / شتوح';
+        }
+      }
+
       const itemSubtotal = Math.round((item.meters || 0) * (item.unitPrice || 0));
 
       const roomChipsHtml = commonRooms.map(r => `
@@ -2878,25 +2946,33 @@ class NaseejAdmin {
               </div>
 
               <div class="fullness-options-row">
-                <div class="fullness-btn ${Number(item.fullnessRatio) === 1.5 ? 'active' : ''}" 
-                     onclick="window.naseejAdmin.setWalkinPleat(${idx}, 1.5, 'رنج فرد (1.5x)', this)">
+                <div class="fullness-btn ${item.sewingStyle === 'rings_single' ? 'active' : ''}" 
+                     data-style="rings_single"
+                     data-default-ratio="1.5"
+                     onclick="window.naseejAdmin.setWalkinPleat(${idx}, 'rings_single', 'رنج فرد', 1.5, this)">
                   <span class="fullness-title">رنج فرد</span>
-                  <span class="fullness-ratio">1.5 م قماش / م حيط</span>
+                  <span class="fullness-ratio">${item.sewingStyle === 'rings_single' && item.fullnessRatio ? `${item.fullnessRatio} م قماش / م حيط` : '1.5 م قماش / م حيط'}</span>
                 </div>
-                <div class="fullness-btn ${Number(item.fullnessRatio) === 2.5 ? 'active' : ''}" 
-                     onclick="window.naseejAdmin.setWalkinPleat(${idx}, 2.5, 'رنج مزموم (2.5x)', this)">
+                <div class="fullness-btn ${item.sewingStyle === 'rings_tight' ? 'active' : ''}" 
+                     data-style="rings_tight"
+                     data-default-ratio="2.5"
+                     onclick="window.naseejAdmin.setWalkinPleat(${idx}, 'rings_tight', 'رنج مزموم', 2.5, this)">
                   <span class="fullness-title">رنج مزموم</span>
-                  <span class="fullness-ratio">2.5 م قماش / م حيط</span>
+                  <span class="fullness-ratio">${item.sewingStyle === 'rings_tight' && item.fullnessRatio ? `${item.fullnessRatio} م قماش / م حيط` : '2.5 م قماش / م حيط'}</span>
                 </div>
-                <div class="fullness-btn ${(Number(item.fullnessRatio) === 2.8 || !item.fullnessRatio) ? 'active' : ''}" 
-                     onclick="window.naseejAdmin.setWalkinPleat(${idx}, 2.8, 'كسرات أمريكي / شتوح (2.8x)', this)">
+                <div class="fullness-btn ${(!item.sewingStyle || item.sewingStyle === 'american') ? 'active' : ''}" 
+                     data-style="american"
+                     data-default-ratio="2.8"
+                     onclick="window.naseejAdmin.setWalkinPleat(${idx}, 'american', 'كسرات أمريكي / شتوح', 2.8, this)">
                   <span class="fullness-title">كسرات أمريكي / شتوح</span>
-                  <span class="fullness-ratio">2.8 م قماش / م حيط</span>
+                  <span class="fullness-ratio">${(!item.sewingStyle || item.sewingStyle === 'american') && item.fullnessRatio ? `${item.fullnessRatio} م قماش / م حيط` : '2.8 م قماش / م حيط'}</span>
                 </div>
-                <div class="fullness-btn ${Number(item.fullnessRatio) === 3.0 ? 'active' : ''}" 
-                     onclick="window.naseejAdmin.setWalkinPleat(${idx}, 3.0, 'ويفي Wave (3.0x)', this)">
+                <div class="fullness-btn ${item.sewingStyle === 'wave' ? 'active' : ''}" 
+                     data-style="wave"
+                     data-default-ratio="3.0"
+                     onclick="window.naseejAdmin.setWalkinPleat(${idx}, 'wave', 'ويفي (Wave)', 3.0, this)">
                   <span class="fullness-title">ويفي (Wave)</span>
-                  <span class="fullness-ratio">3.0 م قماش / م حيط</span>
+                  <span class="fullness-ratio">${item.sewingStyle === 'wave' && item.fullnessRatio ? `${item.fullnessRatio} م قماش / م حيط` : '3.0 م قماش / م حيط'}</span>
                 </div>
               </div>
             </div>
