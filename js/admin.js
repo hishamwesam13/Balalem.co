@@ -2401,10 +2401,9 @@ class NaseejAdmin {
     if (!this.walkinItems || !this.walkinItems[index]) return;
     const item = this.walkinItems[index];
 
-    // Support both new (index, styleKey, baseName, defaultRatio, btnEl)
-    // and legacy (index, ratio, title, btnEl)
-    if (typeof styleKey === 'number' || (!isNaN(parseFloat(styleKey)) && typeof baseName === 'string' && isNaN(parseFloat(baseName)))) {
-      const ratio = parseFloat(styleKey);
+    // Support legacy (index, ratio, title, btnEl)
+    if (typeof styleKey === 'number') {
+      const ratio = styleKey;
       if (ratio === 1.5) { styleKey = 'rings_single'; baseName = 'رنج فرد'; defaultRatio = 1.5; }
       else if (ratio === 2.5) { styleKey = 'rings_tight'; baseName = 'رنج مزموم'; defaultRatio = 2.5; }
       else if (ratio === 3.0) { styleKey = 'wave'; baseName = 'ويفي (Wave)'; defaultRatio = 3.0; }
@@ -2491,10 +2490,15 @@ class NaseejAdmin {
         const btnStyle = btn.getAttribute('data-style');
         const isMatch = btnStyle === item.sewingStyle;
         btn.classList.toggle('active', isMatch);
-        if (isMatch) {
-          const ratioSpan = btn.querySelector('.fullness-ratio');
-          if (ratioSpan) {
+        const ratioSpan = btn.querySelector('.fullness-ratio');
+        if (ratioSpan) {
+          if (isMatch) {
             ratioSpan.textContent = `${item.fullnessRatio} م قماش / م حيط`;
+          } else {
+            const dRatio = btn.getAttribute('data-default-ratio');
+            if (dRatio) {
+              ratioSpan.textContent = `${dRatio} م قماش / م حيط`;
+            }
           }
         }
       });
