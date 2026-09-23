@@ -1251,9 +1251,23 @@ class NaseejCustomer {
       modal.style.zIndex = '99999';
       this.switchAuthTab(tab);
       document.body.style.overflow = 'hidden';
+      // Auto fill remembered credentials on this specific device if previously opted in
+      try {
+        const savedCreds = localStorage.getItem('balalem_remembered_user');
+        if (savedCreds) {
+          const parsed = JSON.parse(savedCreds);
+          const idInput = document.getElementById('login-identifier');
+          const passInput = document.getElementById('login-password');
+          const remBox = document.getElementById('login-remember-me');
+          if (idInput && parsed.identifier) idInput.value = parsed.identifier;
+          if (passInput && parsed.password) passInput.value = parsed.password;
+          if (remBox) remBox.checked = true;
+        }
+      } catch (e) {}
+
       setTimeout(() => {
         const idInput = document.getElementById('login-identifier');
-        if (idInput && tab === 'login') idInput.focus();
+        if (idInput && tab === 'login' && !idInput.value) idInput.focus();
       }, 100);
     }
   }
@@ -1313,6 +1327,15 @@ class NaseejCustomer {
 
     try {
       const session = auth.login(identifier, password);
+
+      // Save or clear remembered credentials on this device
+      const remBox = document.getElementById('login-remember-me');
+      if (remBox && remBox.checked) {
+        localStorage.setItem('balalem_remembered_user', JSON.stringify({ identifier, password }));
+      } else {
+        localStorage.removeItem('balalem_remembered_user');
+      }
+
       this.closeAuthModal();
       this.updateUserUI();
 

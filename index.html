@@ -1466,15 +1466,22 @@
 
             <div class="form-group">
               <label class="form-label">البريد الإلكتروني / اسم المستخدم / الهاتف *</label>
-              <input type="text" id="login-identifier" class="form-control" placeholder="اسم المستخدم، البريد، أو رقم الهاتف" required dir="ltr" style="text-align: right;">
+              <input type="text" id="login-identifier" name="username" autocomplete="username" class="form-control" placeholder="اسم المستخدم، البريد، أو رقم الهاتف" required dir="ltr" style="text-align: right;">
             </div>
 
             <div class="form-group">
               <label class="form-label">كلمة المرور *</label>
               <div class="password-input-group">
-                <input type="password" id="login-password" class="form-control" placeholder="أدخل كلمة المرور" required dir="ltr" style="text-align: right;">
+                <input type="password" id="login-password" name="password" autocomplete="current-password" class="form-control" placeholder="أدخل كلمة المرور" required dir="ltr" style="text-align: right;">
                 <button type="button" class="btn-toggle-pwd" onclick="window.naseejCustomer.togglePasswordVisibility('login-password', this)" title="إظهار/إخفاء كلمة المرور">👁️</button>
               </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px; margin-bottom: 6px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #334155; user-select: none;">
+                <input type="checkbox" id="login-remember-me" checked style="width: 17px; height: 17px; accent-color: #b87c10; cursor: pointer;">
+                <span>تذكر بيانات الدخول على هذا الجهاز 🔐</span>
+              </label>
             </div>
           </div>
           <div class="modal-footer">
