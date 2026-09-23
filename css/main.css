@@ -954,8 +954,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 #auth-modal .auth-tab-pane {
-  display: block !important;
+  display: none !important;
   height: auto !important;
+}
+
+#auth-modal .auth-tab-pane.active {
+  display: block !important;
 }
 
 #auth-modal .auth-tab-pane form {

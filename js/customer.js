@@ -1294,14 +1294,26 @@ class NaseejCustomer {
     if (tab === 'register') {
       if (loginTabBtn) loginTabBtn.classList.remove('active');
       if (regTabBtn) regTabBtn.classList.add('active');
-      if (loginPane) loginPane.style.display = 'none';
-      if (regPane) regPane.style.display = 'block';
+      if (loginPane) {
+        loginPane.classList.remove('active');
+        loginPane.style.display = 'none';
+      }
+      if (regPane) {
+        regPane.classList.add('active');
+        regPane.style.display = 'block';
+      }
       if (modalTitle) modalTitle.textContent = 'إنشاء حساب عميل جديد';
     } else {
       if (loginTabBtn) loginTabBtn.classList.add('active');
       if (regTabBtn) regTabBtn.classList.remove('active');
-      if (loginPane) loginPane.style.display = 'block';
-      if (regPane) regPane.style.display = 'none';
+      if (loginPane) {
+        loginPane.classList.add('active');
+        loginPane.style.display = 'block';
+      }
+      if (regPane) {
+        regPane.classList.remove('active');
+        regPane.style.display = 'none';
+      }
       if (modalTitle) modalTitle.textContent = 'تسجيل الدخول إلى حسابك';
     }
   }

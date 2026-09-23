@@ -5,7 +5,7 @@
 import { store } from './store.js';
 import { auth, MASTER_ADMIN } from './auth.js';
 import { customer } from './customer.js';
-import { admin } from './admin.js?v=20260923d';
+import { admin } from './admin.js?v=20260923e';
 
 // Expose globals for intuitive inline HTML event triggers
 window.naseejStore = store;
