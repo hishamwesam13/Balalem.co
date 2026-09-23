@@ -947,24 +947,28 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 #auth-modal .modal-dialog {
-  max-width: 480px;
-  width: 95vw;
+  max-width: 480px !important;
+  width: 95vw !important;
+  height: auto !important;
+  max-height: 92vh !important;
 }
 
 #auth-modal .auth-tab-pane {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+  display: block !important;
+  height: auto !important;
 }
 
 #auth-modal .auth-tab-pane form {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+  display: flex !important;
+  flex-direction: column !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+#auth-modal .modal-body {
+  padding: 20px 24px !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 .naseej-modal.active .modal-dialog {
