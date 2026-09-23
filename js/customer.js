@@ -1244,8 +1244,17 @@ class NaseejCustomer {
     const modal = document.getElementById('auth-modal');
     if (modal) {
       modal.classList.add('active');
+      modal.style.display = 'flex';
+      modal.style.opacity = '1';
+      modal.style.visibility = 'visible';
+      modal.style.pointerEvents = 'auto';
+      modal.style.zIndex = '99999';
       this.switchAuthTab(tab);
       document.body.style.overflow = 'hidden';
+      setTimeout(() => {
+        const idInput = document.getElementById('login-identifier');
+        if (idInput && tab === 'login') idInput.focus();
+      }, 100);
     }
   }
 
@@ -1253,6 +1262,10 @@ class NaseejCustomer {
     const modal = document.getElementById('auth-modal');
     if (modal) {
       modal.classList.remove('active');
+      modal.style.display = '';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
       document.body.style.overflow = '';
     }
   }
@@ -1390,6 +1403,12 @@ class NaseejCustomer {
 
   // Header Account Dropdown
   toggleAccountDropdown() {
+    const user = auth.getCurrentUser();
+    if (!user) {
+      // Direct opening for quick frictionless login
+      this.openAuthModal('login');
+      return;
+    }
     const dropdown = document.getElementById('header-account-dropdown');
     if (dropdown) {
       dropdown.classList.toggle('active');

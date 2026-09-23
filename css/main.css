@@ -910,7 +910,7 @@ h1, h2, h3, h4, h5, h6 {
 .naseej-modal {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 2500;
   background: rgba(11, 17, 32, 0.65);
   backdrop-filter: blur(6px);
   display: flex;
@@ -940,6 +940,31 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(20px) scale(0.97);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+#auth-modal {
+  z-index: 99999 !important;
+}
+
+#auth-modal .modal-dialog {
+  max-width: 480px;
+  width: 95vw;
+}
+
+#auth-modal .auth-tab-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#auth-modal .auth-tab-pane form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .naseej-modal.active .modal-dialog {

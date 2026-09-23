@@ -39,7 +39,7 @@ while ($listener.IsListening) {
         $response = $context.Response
 
         $rawPath = $request.Url.LocalPath.TrimStart('/')
-        if ([string]::IsNullOrWhiteSpace($rawPath)) {
+        if ([string]::IsNullOrWhiteSpace($rawPath) -or $rawPath -eq "admin" -or $rawPath -eq "admin/") {
             $rawPath = "index.html"
         }
 

@@ -5,7 +5,7 @@
 import { store } from './store.js';
 import { auth, MASTER_ADMIN } from './auth.js';
 import { customer } from './customer.js';
-import { admin } from './admin.js?v=20260922b';
+import { admin } from './admin.js?v=20260923';
 
 // Expose globals for intuitive inline HTML event triggers
 window.naseejStore = store;
@@ -32,7 +32,8 @@ class NaseejApp {
 
     // Check if URL or storage requests admin view
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('view') === 'admin') {
+    const isAdminRequested = urlParams.get('view') === 'admin' || window.location.pathname.endsWith('/admin') || window.location.pathname.endsWith('/admin/');
+    if (isAdminRequested) {
       if (auth.isAdmin()) {
         this.switchView('admin');
       } else {

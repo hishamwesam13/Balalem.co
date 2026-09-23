@@ -1645,53 +1645,94 @@
     font-size: 11px;
   }
 
-  /* Hero Banner on Mobile */
+  /* Hero Banner on Mobile - Compact Royal Showcase */
   .customer-hero {
-    padding: 24px 0 20px;
+    padding: 16px 0 16px;
+    min-height: auto;
   }
 
   .hero-glass-card {
-    padding: 20px 15px;
-    border-radius: 16px;
+    padding: 16px 14px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(212, 175, 55, 0.45);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
   }
 
   .hero-badge {
-    font-size: 11.5px;
-    padding: 4px 12px;
-    margin-bottom: 12px;
+    font-size: 10.5px;
+    padding: 3px 10px;
+    margin-bottom: 8px;
     text-align: center;
     width: 100%;
     justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(212, 175, 55, 0.5);
   }
 
   .hero-title {
-    font-size: clamp(21px, 6vw, 27px);
-    line-height: 1.35;
-    margin-bottom: 12px;
+    font-size: clamp(19px, 5.5vw, 24px);
+    line-height: 1.3;
+    margin-bottom: 8px;
     text-align: center;
   }
 
   .hero-desc {
-    font-size: 13px;
-    line-height: 1.6;
-    margin-bottom: 18px;
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 12px;
     text-align: center;
+    color: #334155;
+    font-weight: 500;
   }
 
+  /* 2x2 Grid (تنتين تنتين) for Hero USPs on Mobile */
   .hero-features-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
   }
 
   .hero-feature-item {
-    padding: 8px 10px;
-    font-size: 11.5px;
-    border-radius: 8px;
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    padding: 8px 9px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    border-radius: 10px !important;
+    background: rgba(255, 255, 255, 0.88) !important;
+    border: 1px solid rgba(212, 175, 55, 0.35) !important;
+    color: #0f172a !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05) !important;
+    min-height: 46px !important;
+    justify-content: flex-start !important;
   }
 
-  .hero-feature-item span.icon {
-    font-size: 15px;
+  .hero-feature-item .feature-svg-wrap {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    border-radius: 6px !important;
+    background: rgba(212, 175, 55, 0.15) !important;
+    color: #8c6808 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  .hero-feature-item .feature-svg-wrap svg {
+    width: 13px !important;
+    height: 13px !important;
+  }
+
+  .hero-feature-item span:last-child {
+    flex: 1 !important;
+    text-align: right !important;
   }
 
   /* Wholesale Contacts Table -> Mobile Cards Transformation */
@@ -2458,13 +2499,9 @@
 
 @media (max-width: 480px) {
   .hero-features-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  .hero-feature-item {
-    padding: 10px 14px;
-    font-size: 12.5px;
-    justify-content: flex-start;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
   }
   .products-grid {
     grid-template-columns: 1fr;
@@ -2496,27 +2533,28 @@
     transform: translateZ(0);
   }
 
-  /* Luxury Glass Card: Crisp semi-translucent styling with hardware acceleration to prevent blur glitch */
+  /* Luxury Glass Card: Crisp semi-translucent styling so the royal curtain is clearly visible */
   .hero-glass-card {
-    background: rgba(255, 255, 255, 0.94) !important;
-    border: 1.5px solid rgba(212, 175, 55, 0.5) !important;
-    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12) !important;
+    background: rgba(255, 255, 255, 0.78) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1.5px solid rgba(212, 175, 55, 0.45) !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1) !important;
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
     isolation: isolate;
   }
 
   .hero-feature-item {
-    background: #f8fafc !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+    background: rgba(255, 255, 255, 0.88) !important;
+    border: 1px solid rgba(212, 175, 55, 0.35) !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05) !important;
   }
 
   .hero-badge {
-    background: #ffffff !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(212, 175, 55, 0.5) !important;
+  }
   }
 
   /* Prevent blurriness, tearing and flicker on WebKit (iOS & Android) */
