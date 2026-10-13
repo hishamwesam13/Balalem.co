@@ -683,14 +683,27 @@ class NaseejStore {
     return order;
   }
 
-  // Determines if an order is prepared: either explicitly marked or date has arrived/passed (<= today)
+  // Determines if an order is prepared: automatically true if workshop date or target date <= today, or explicitly set
   isOrderPrepared(order) {
     if (!order) return false;
-    if (order.isPrepared !== undefined) return Boolean(order.isPrepared);
+    // Manual override by admin has highest priority
+    if (order.manualPreparedOverride !== undefined) {
+      return Boolean(order.manualPreparedOverride);
+    }
+    if (order.isPrepared === true) return true;
+
+    // Automatic date evaluation: if workshop prep date or scheduled date <= today, it's completed!
     const todayStr = this.formatDateISO(new Date());
-    const dateStr = order.scheduledDate || order.installationDate;
-    if (!dateStr) return false;
-    return dateStr <= todayStr;
+    const prepDateStr = order.workshopPrepDate;
+    if (prepDateStr && prepDateStr <= todayStr) {
+      return true;
+    }
+    const targetDateStr = order.scheduledDate || order.installationDate;
+    if (targetDateStr && targetDateStr <= todayStr) {
+      return true;
+    }
+
+    return Boolean(order.isPrepared);
   }
 
   deleteOrder(orderId) {

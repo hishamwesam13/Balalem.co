@@ -110,6 +110,7 @@ export default async function handler(req, res) {
           workshopPrepDate: d.workshopPrepDate || null,
           workshopPrepDay: d.workshopPrepDay || null,
           isPrepared: d.isPrepared !== undefined ? d.isPrepared : false,
+          manualPreparedOverride: d.manualPreparedOverride !== undefined ? d.manualPreparedOverride : undefined,
           totalMeters: Number(d.totalMeters || 0),
           notes: row.notes || d.notes || d.customer?.notes || '',
           createdAt: row.createdAt || d.createdAt || new Date().toISOString(),

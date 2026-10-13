@@ -796,17 +796,29 @@ class NaseejAdmin {
           return `${i.roomName ? `[${i.roomName}] ` : ''}${i.productName} (${i.color}) ${dimPart}${i.meters}${i.unitLabel || 'م'}`;
         }).join(' + ');
 
-        const statusBadges = {
-          pending: '⏳ قيد المراجعة',
-          in_tailoring: '✂️ جاري القص بالورشة',
-          ready: '📦 جاهز للتسليم',
-          shipped: '🚚 قيد التوصيل',
-          delivered: '✅ تم التسليم'
-        };
+        const isPrepared = store.isOrderPrepared(order);
+        const isInstall = Boolean(order.requiresInstallation);
+        const custName = (order.customer && order.customer.name) || order.customerName || 'زبون الورشة';
+        const custPhone = (order.customer && order.customer.phone) || order.customerPhone || '';
 
-        const fulfillmentHtml = order.deliveryType === 'pickup'
-          ? `<span class="schedule-fulfillment-badge badge-pickup">🏪 استلام: ${order.pickupBranch || 'باب الساحة'}</span>`
-          : `<span class="schedule-fulfillment-badge badge-delivery">🚚 توصيل: ${order.deliveryRegion || order.customer.city} (+${order.shippingFee} ₪)</span>`;
+        const typeBadge = isInstall
+          ? `<span class="badge" style="font-size: 11.5px; font-weight: 800; padding: 4px 8px; border-radius: 6px; background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; display: inline-flex; align-items: center; gap: 4px;">🔧 تركيب منزلي</span>`
+          : `<span class="badge" style="font-size: 11.5px; font-weight: 800; padding: 4px 8px; border-radius: 6px; background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; display: inline-flex; align-items: center; gap: 4px;">🏪 تسليم / استلام من المعرض</span>`;
+
+        const prepBadge = `
+          <button type="button" class="badge ${isPrepared ? 'badge-prepared' : 'badge-pending'}" 
+                  onclick="window.naseejAdmin.toggleOrderPrepStatus('${order.id}', event)" 
+                  title="انقر لتعديل حالة التجهيز يدوياً"
+                  style="font-size: 11px; padding: 2.5px 8px; cursor: pointer; user-select: none; border-radius: 6px; border: none; font-weight: 800; transition: transform 0.15s ease;">
+            ${isPrepared ? '✅ تم التجهيز' : '⏳ قيد التجهيز'}
+          </button>
+        `;
+
+        const photoBtn = order.notebookImage
+          ? `<button type="button" class="btn-schedule-notebook-photo" onclick="window.naseejAdmin.previewOrderNotebookImage('${order.id}')" title="عرض وتكبير صورة الطلبية الأصلية المحفوظة" style="width: 100%; margin: 6px 0; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1px solid #38bdf8; border-radius: 6px; padding: 6px 10px; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);">
+               📷 صورة الطلبية / الدفتر
+             </button>`
+          : '';
 
         const nextSatDate = new Date(dayObj.dateObj);
         nextSatDate.setDate(nextSatDate.getDate() + 7);
@@ -827,63 +839,39 @@ class NaseejAdmin {
         const otherDaysOptions = `<optgroup label="أيام هذا الأسبوع">${currentWeekOpts}</optgroup><optgroup label="أيام الأسبوع التالي (2)">${nextWeekOpts}</optgroup>`;
 
         return `
-          <div class="schedule-order-card" draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${order.id}')">
-            <div class="schedule-card-top">
-              <div style="display: flex; align-items: center; gap: 4px;">
-                <span class="schedule-order-num">${order.id}</span>
-                ${order.source === 'showroom' ? '<span class="badge badge-source badge-source-showroom">معرض</span>' : ''}
-              </div>
-              <select class="schedule-status-mini-select" onchange="window.naseejAdmin.handleOrderStatusChange('${order.id}', this.value)" style="font-size: 11px; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbd5e1; background: #ffffff; color: #1e293b; font-weight: 700; cursor: pointer;">
-                <option value="pending" ${order.orderStatus === 'pending' ? 'selected' : ''}>⏳ قيد المراجعة</option>
-                <option value="in_cutting" ${order.orderStatus === 'in_cutting' ? 'selected' : ''}>✂️ جاري القص</option>
-                <option value="in_tailoring" ${order.orderStatus === 'in_tailoring' ? 'selected' : ''}>🧵 انتقلت للخياطة</option>
-                <option value="ready" ${order.orderStatus === 'ready' ? 'selected' : ''}>📦 تم التجهيز</option>
-                <option value="shipped" ${order.orderStatus === 'shipped' ? 'selected' : ''}>🚚 قيد التوصيل</option>
-                <option value="delivered" ${order.orderStatus === 'delivered' ? 'selected' : ''}>✅ تم التسليم</option>
-                <option value="cancelled" ${order.orderStatus === 'cancelled' ? 'selected' : ''}>❌ ملغي</option>
-              </select>
+          <div class="schedule-order-card" draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${order.id}')" style="background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 10px;">
+            <div class="schedule-card-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span class="schedule-order-num" style="font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700;">#${order.id}</span>
+              ${prepBadge}
             </div>
 
-            <div class="schedule-cust-row">
-              <span>👤 ${order.customer.name}</span>
-            </div>
-            <div class="schedule-phone-sub" style="display: flex; justify-content: space-between; align-items: center;">
-              <span>📱 <a href="tel:${order.customer.phone}" style="color: inherit; text-decoration: none;">${order.customer.phone}</a></span>
-              <a href="https://wa.me/972${(order.customer.phone || '').replace(/\D/g, '').replace(/^0+/, '')}?text=${encodeURIComponent(`السلام عليكم ${order.customer.name || ''}، معك إدارة شركة الولاء للستائر Balalem co بخصوص طلبيتكم رقم (${order.id || ''})`)}" target="_blank" rel="noopener noreferrer" class="schedule-wa-btn" title="مراسلة واتساب فورية">
-                💬 واتساب
-              </a>
+            <div class="schedule-cust-row" style="font-size: 14.5px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">
+              <span>👤 ${custName}</span>
             </div>
 
-            ${fulfillmentHtml}
-
-            ${order.requiresInstallation ? `
-              <div style="margin-bottom: 6px;">
-                <span class="badge-installer badge-installer-${order.installerId || 'osama'}" style="font-size: 11px;">
-                  🔧 تركيب: ${store.getInstallerName(order.installerId)} (${order.installationDay || 'مجدول'})
-                </span>
-              </div>
-            ` : ''}
-
-            <div class="schedule-fabrics-summary" title="${fabricsSummary}">
-              🧵 ${windowsCount > 1 ? `(${windowsCount} شبابيك): ` : ''}${fabricsSummary}
+            <div class="schedule-phone-sub" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 13px; font-weight: 700; color: #334155;">📱 <a href="tel:${custPhone}" style="color: inherit; text-decoration: none;">${custPhone || 'بدون رقم'}</a></span>
+              ${custPhone ? `
+                <a href="https://wa.me/972${custPhone.replace(/\D/g, '').replace(/^0+/, '')}?text=${encodeURIComponent(`السلام عليكم ${custName}، معك إدارة شركة الولاء للستائر Balalem co بخصوص طلبيتكم (${order.id})`)}" target="_blank" rel="noopener noreferrer" class="schedule-wa-btn" title="مراسلة واتساب فورية" style="font-size: 11px; padding: 2px 8px; background: #25d366; color: #fff; border-radius: 4px; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                  💬 واتساب
+                </a>
+              ` : ''}
             </div>
 
-            <div class="schedule-card-metrics">
-              <span class="schedule-meters-chip">📏 ${order.totalMeters} متر ${windowsCount > 1 ? `(${windowsCount} شبابيك)` : ''}</span>
-              <span class="schedule-price-chip">${order.grandTotal.toLocaleString()} شيكل</span>
+            <div style="margin-bottom: 6px;">
+              ${typeBadge}
             </div>
 
-            <div class="schedule-move-row" style="display: flex; gap: 5px; align-items: center;">
-              <select class="schedule-move-select" style="flex: 1;" onchange="window.naseejAdmin.changeOrderScheduleDay('${order.id}', this.value)" title="نقل ليوم آخر">
+            ${photoBtn}
+
+            <div class="schedule-move-row" style="display: flex; gap: 5px; align-items: center; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #e2e8f0;">
+              <select class="schedule-move-select" style="flex: 1; font-size: 11px; padding: 3px 5px; border-radius: 4px; border: 1px solid #cbd5e1;" onchange="window.naseejAdmin.changeOrderScheduleDay('${order.id}', this.value)" title="نقل ليوم آخر">
                 ${otherDaysOptions}
               </select>
-              <button class="btn-mini-status" onclick="window.naseejAdmin.quickAdvanceOrderStatus('${order.id}')" title="ترقية المرحلة">
-                ✂️
-              </button>
-              <button class="btn-mini-status" onclick="window.naseejAdmin.printOrderReceipt('${order.id}')" title="طباعة الإيصال">
+              <button class="btn-mini-status" onclick="window.naseejAdmin.printOrderReceipt('${order.id}')" title="طباعة الإيصال الفاتورة" style="padding: 3px 6px; border-radius: 4px; border: 1px solid #cbd5e1; background: #f8fafc; cursor: pointer;">
                 🖨️
               </button>
-              <button class="btn-mini-status btn-mini-delete" onclick="window.naseejAdmin.confirmDeleteOrder('${order.id}')" title="حذف وإلغاء الطلبية من الورشة والجداول" style="color: #dc2626; background: #fee2e2; border-color: #fca5a5; font-size: 12px;">
+              <button class="btn-mini-status btn-mini-delete" onclick="window.naseejAdmin.confirmDeleteOrder('${order.id}')" title="حذف وإلغاء الطلبية" style="color: #dc2626; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 4px; padding: 3px 6px; font-size: 11px; cursor: pointer;">
                 🗑️
               </button>
             </div>
@@ -1211,6 +1199,19 @@ class NaseejAdmin {
                           `}
                         </div>
 
+                        <div class="day-order-chip-phone-row" style="display: flex; justify-content: space-between; align-items: center; margin: 4px 0; font-size: 12px; font-weight: 700; color: #334155;">
+                          <span>📱 <a href="tel:${custPhone}" style="color: inherit; text-decoration: none;">${custPhone || 'بدون رقم'}</a></span>
+                          ${custPhone ? `
+                            <a href="https://wa.me/972${custPhone.replace(/\D/g, '').replace(/^0+/, '')}?text=${encodeURIComponent(`السلام عليكم ${custName}، معك إدارة شركة الولاء للستائر Balalem co بخصوص موعد ${isInstall ? 'التركيب' : 'التسليم بالمعرض'} لطلبيتكم رقم ${o.id}`)}" target="_blank" rel="noopener noreferrer" style="color: #10b981; font-weight: 700; text-decoration: none; font-size: 11px; display: inline-flex; align-items: center; gap: 3px;" title="واتساب">💬 واتساب</a>
+                          ` : ''}
+                        </div>
+
+                        ${o.notebookImage ? `
+                          <button type="button" class="btn btn-xs" onclick="window.naseejAdmin.previewOrderNotebookImage('${o.id}')" title="عرض وتكبير صورة دفتر الطلبية الأصلية" style="width: 100%; margin: 4px 0; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1px solid #38bdf8; border-radius: 5px; padding: 4px 8px; font-size: 11px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);">
+                            📷 صورة الطلبية / الدفتر
+                          </button>
+                        ` : ''}
+
                         <div class="day-order-chip-body">
                           <span>🪟 ${windowsCount} ${windowsCount === 1 ? 'شباك' : 'شبابيك'} • ${fabricsText}</span>
                           <div style="display: flex; gap: 8px; align-items: center;">
@@ -1229,9 +1230,6 @@ class NaseejAdmin {
                           <span style="font-size: 10px; color: #94a3b8; font-family: monospace;">#${o.id}</span>
                           <div style="display: flex; gap: 4px;">
                             <button type="button" class="btn btn-xs btn-outline" onclick="window.naseejAdmin.printOrderReceipt('${o.id}')" title="طباعة أمر تفصيل الورشة">🖨️ أمر الورشة</button>
-                            ${custPhone ? `
-                              <a href="https://wa.me/972${custPhone.replace(/\\D/g, '').replace(/^0+/, '')}?text=${encodeURIComponent(`السلام عليكم ${custName}، معك إدارة شركة الولاء للستائر Balalem co بخصوص موعد ${isInstall ? 'التركيب' : 'التسليم بالمعرض'} لطلبيتكم رقم ${o.id}`)}" target="_blank" rel="noopener noreferrer" class="btn btn-xs btn-outline" style="color: #10b981; border-color: #10b981;" title="واتساب">💬</a>
-                            ` : ''}
                             <button type="button" class="btn btn-xs btn-danger-soft" onclick="window.naseejAdmin.confirmDeleteOrder('${o.id}')" title="حذف الطلبية">🗑️</button>
                           </div>
                         </div>
@@ -1349,7 +1347,7 @@ class NaseejAdmin {
     const currentStatus = store.isOrderPrepared(order);
     const newStatus = !currentStatus;
 
-    store.updateOrder(orderId, { isPrepared: newStatus });
+    store.updateOrder(orderId, { isPrepared: newStatus, manualPreparedOverride: newStatus });
 
     const custName = (order.customer && order.customer.name) || order.customerName || 'الطلبية';
     if (newStatus) {
@@ -2076,6 +2074,12 @@ class NaseejAdmin {
               📍 ${order.customer.city} - ${order.customer.address || 'حسب العنوان'}
             </div>
 
+            ${order.notebookImage ? `
+              <button type="button" class="btn btn-xs" onclick="window.naseejAdmin.previewOrderNotebookImage('${order.id}')" title="عرض وتكبير صورة دفتر الطلبية الأصلية" style="width: 100%; margin: 6px 0; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1px solid #38bdf8; border-radius: 6px; padding: 6px 10px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);">
+                📷 صورة الطلبية / الدفتر
+              </button>
+            ` : ''}
+
             <div class="schedule-card-metrics">
               <span class="schedule-meters-chip">📏 ${order.totalMeters} متر ${order.items && order.items.length > 1 ? `(${order.items.length} شبابيك)` : ''}</span>
               <span class="schedule-price-chip" style="color: #4338ca; font-size: 11.5px; cursor: pointer; text-decoration: underline;" onclick="window.naseejAdmin.quickEditInstallFee('${order.id}')" title="انقر لتعديل أجور التركيب المتفق عليها">
@@ -2252,18 +2256,55 @@ class NaseejAdmin {
     const statusBar = document.getElementById('notebook-ocr-status-bar');
     const statusText = document.getElementById('notebook-ocr-status-text');
 
+    if (statusBar) statusBar.style.display = 'flex';
+    if (statusText) statusText.textContent = 'جاري معالجة وضبط صورة الطلبية...';
+
     reader.onload = (e) => {
-      const dataUrl = e.target.result;
-      this.currentNotebookImage = dataUrl;
+      const rawDataUrl = e.target.result;
+      const img = new Image();
+      img.onload = () => {
+        // Optimize resolution: max dimension 1600px with high JPEG quality (0.84)
+        // Keeps handwritten text super sharp while cutting file size to ~250KB for fast Neon DB persistence
+        let w = img.width;
+        let h = img.height;
+        const maxDim = 1600;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.84);
 
-      if (placeholder) placeholder.style.display = 'none';
-      if (previewHolder) previewHolder.style.display = 'block';
-      if (capturedImg) capturedImg.src = dataUrl;
-      if (scanBeam) scanBeam.style.display = 'block';
-      if (statusBar) statusBar.style.display = 'flex';
-      if (statusText) statusText.textContent = 'جاري مسح صورة الدفتر ضوئياً واستخراج خط اليد...';
+        this.currentNotebookImage = compressedDataUrl;
 
-      this.runNotebookOCR(dataUrl, file.name || 'دفتر المعرض');
+        if (placeholder) placeholder.style.display = 'none';
+        if (previewHolder) previewHolder.style.display = 'block';
+        if (capturedImg) capturedImg.src = compressedDataUrl;
+        if (scanBeam) scanBeam.style.display = 'block';
+        if (statusBar) statusBar.style.display = 'flex';
+        if (statusText) statusText.textContent = 'جاري مسح صورة الدفتر ضوئياً واستخراج خط اليد...';
+
+        this.runNotebookOCR(compressedDataUrl, file.name || 'دفتر المعرض');
+      };
+
+      img.onerror = () => {
+        this.currentNotebookImage = rawDataUrl;
+        if (placeholder) placeholder.style.display = 'none';
+        if (previewHolder) previewHolder.style.display = 'block';
+        if (capturedImg) capturedImg.src = rawDataUrl;
+        this.runNotebookOCR(rawDataUrl, file.name || 'دفتر المعرض');
+      };
+
+      img.src = rawDataUrl;
     };
 
     reader.readAsDataURL(file);
