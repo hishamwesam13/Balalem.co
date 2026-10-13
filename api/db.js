@@ -5,9 +5,8 @@ import dotenv from 'dotenv';
 // Load local .env if available
 dotenv.config();
 
-// Connection string from environment variables or direct Neon fallback for Vercel deployment
-const NEON_DEFAULT_URL = 'postgresql://neondb_owner:npg_9YZsJK4eQEmT@ep-shiny-heart-b13ba8mr-pooler.c-5.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
-const dbUrl = process.env.DATABASE_URL || process.env.DIRECT_DATABASE_URL || NEON_DEFAULT_URL;
+// Connection string strictly from environment variables (never committed to git)
+const dbUrl = process.env.DATABASE_URL || process.env.DIRECT_DATABASE_URL;
 
 let neonSql = null;
 try {
