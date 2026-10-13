@@ -125,7 +125,17 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const o = req.body || {};
       // Prevent stale browser localStorage loops from resurrecting old sample data
-      if (o.id === 'ORD-SHOWROOM-101' || o.source === 'paper_schedule_ai') {
+      const cName = (o.customer?.name || o.customerName || '').trim();
+      if (
+        o.id === 'ORD-SHOWROOM-101' || 
+        o.source === 'paper_schedule_ai' || 
+        o.id === 'ORD-7634' || 
+        o.id === 'ORD-8218' || 
+        o.id === 'ORD-3310' || 
+        cName === 'عمر القواسمي' || 
+        cName === 'محمد سلبن' || 
+        cName === 'LL'
+      ) {
         return res.status(200).json({ success: true, message: 'Sample order skipped to maintain zero baseline' });
       }
 

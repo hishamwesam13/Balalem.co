@@ -1506,76 +1506,18 @@ class NaseejAdmin {
       btn.innerHTML = '<span>⏳ جاري قراءة خط اليد وتفريغ مواعيد الورشة...</span>';
     }
 
-    // Comprehensive transcribed schedule directly from the workshop handwritten ledger
-    const EXTRACTED_ITEMS = [
-      { date: '2026-09-13', name: 'أحمد الفار + سائد دهيمات', type: 'install', desc: 'تفصيل وتركيب برادي' },
-      { date: '2026-09-13', name: 'فراس السيد أحمد', type: 'delivery', desc: 'برادي صالون وقعدة' },
-      { date: '2026-09-13', name: 'محمود كماجة + حمزة الأمير', type: 'install', desc: 'ستائر غرف نوم' },
-      { date: '2026-09-13', name: 'عبد الله إله / كفر قفا', type: 'delivery', desc: 'تفصيل قماش' },
-      { date: '2026-09-14', name: 'علاء كيلاني', type: 'install', desc: 'شباك صالة ماستر' },
-      { date: '2026-09-14', name: 'أبو كامل + أنس أبو السعود', type: 'delivery', desc: 'برادي كاملة' },
-      { date: '2026-09-14', name: 'أم ضياء فتوح', type: 'install', desc: 'ستائر صالون' },
-      { date: '2026-09-15', name: 'سميح خضر / شاكر', type: 'install', desc: 'تركيب صالة وغرفة' },
-      { date: '2026-09-15', name: 'أبو مهند فقط', type: 'install', desc: 'ورشة أبو مهند' },
-      { date: '2026-09-16', name: 'معاذ قادوسية + بشار العقاد', type: 'install', desc: 'برادي شتوح وأمريكي' },
-      { date: '2026-09-16', name: 'أم محمد كنت حيلان', type: 'delivery', desc: 'تفصيل برادي' },
-      { date: '2026-09-16', name: 'البردويكان + المديونس', type: 'install', desc: 'برادي ويفي وكسرات' },
-      { date: '2026-09-17', name: 'أم جميل الشمالي فقط', type: 'delivery', desc: 'برادي صالة' },
-      { date: '2026-09-17', name: 'حسام هلال', type: 'install', desc: 'تركيب كامل' },
-      { date: '2026-09-17', name: 'عصام التابتي + فخري', type: 'delivery', desc: 'تسليم برادي' },
-      { date: '2026-09-17', name: 'سميح خالد', type: 'install', desc: 'تركيب ستائر' },
-      { date: '2026-09-19', name: 'جهاد بليه', type: 'install', desc: 'تفصيل وتركيب برادي' },
-      { date: '2026-09-19', name: 'سامي عبد الهادي + جهان غانم', type: 'delivery', desc: 'برادي صالون' },
-      { date: '2026-09-19', name: 'أبو مجدي الصليبي + عبد الهادي', type: 'install', desc: 'تركيب ستائر' },
-      { date: '2026-09-19', name: 'حسام اشتية', type: 'install', desc: 'برادي كاملة' },
-      { date: '2026-09-20', name: 'عبود الصوالحي', type: 'install', desc: 'شباك ماستر وقعدة' },
-      { date: '2026-09-20', name: 'هندية', type: 'delivery', desc: 'برادي صالون' },
-      { date: '2026-09-20', name: 'أبو علي عوض + أم خلدون', type: 'install', desc: 'تركيب صالون' },
-      { date: '2026-09-20', name: 'حازم جبر + سليمان أهالي', type: 'delivery', desc: 'تفصيل برادي' },
-      { date: '2026-09-21', name: 'محمد سوالمة', type: 'install', desc: 'تركيب برادي' },
-      { date: '2026-09-21', name: 'اشتية سالم', type: 'delivery', desc: 'تسليم برادي' },
-      { date: '2026-09-21', name: 'أبو مهند فقط', type: 'install', desc: 'ورشة أبو مهند' },
-      { date: '2026-09-22', name: 'أبو العز رومي', type: 'install', desc: 'برادي صالون' },
-      { date: '2026-09-22', name: 'فاروق جاد الله / عقاله', type: 'delivery', desc: 'برادي ويفي' },
-      { date: '2026-09-22', name: 'عاصم نيران تل', type: 'install', desc: 'تركيب تل' },
-      { date: '2026-09-22', name: 'كابر فخري / وراوي', type: 'delivery', desc: 'تسليم برادي' },
-      { date: '2026-09-23', name: 'أمير جناعة / حارة قيرا', type: 'install', desc: 'برادي صالة وغرفة' },
-      { date: '2026-09-23', name: 'أم الصناعة', type: 'delivery', desc: 'تسليم ستائر' },
-      { date: '2026-09-23', name: 'بيت الفقية / أولاد عطية', type: 'install', desc: 'تركيب كامل' },
-      { date: '2026-09-23', name: 'نادر حلبيه / اسكنكنة حيلان', type: 'delivery', desc: 'تفصيل برادي' },
-      { date: '2026-09-24', name: 'عبد السالم + عبد الخالق', type: 'install', desc: 'تركيب برادي' },
-      { date: '2026-09-24', name: 'محمد عفانة / عزون', type: 'delivery', desc: 'تسليم عزون' },
-      { date: '2026-09-24', name: 'أبو علي عوض', type: 'install', desc: 'شباك صالون' },
-      { date: '2026-09-24', name: 'أبو مهند فقط', type: 'install', desc: 'ورشة أبو مهند' },
-      { date: '2026-09-26', name: 'محمد النابلسي', type: 'install', desc: 'برادي شتوح' },
-      { date: '2026-09-26', name: 'محمد شام', type: 'delivery', desc: 'تسليم برادي' },
-      { date: '2026-09-26', name: 'أحمد أبو الهدى / خالة رامي', type: 'install', desc: 'تركيب كامل' },
-      { date: '2026-09-26', name: 'أم خالد رامي / فيصل عليوي', type: 'delivery', desc: 'تسليم برادي' },
-      { date: '2026-09-27', name: 'عمر اشتيه / حي العبدان', type: 'install', desc: 'برادي صالون' },
-      { date: '2026-09-27', name: 'قصي الطراوي', type: 'delivery', desc: 'تفصيل برادي' },
-      { date: '2026-09-27', name: 'حيدر صوان', type: 'install', desc: 'تركيب ستائر' },
-      { date: '2026-09-28', name: 'عنان أقرع / عزموط الخله', type: 'install', desc: 'تركيب عزموط' },
-      { date: '2026-09-28', name: 'جميل عبدة', type: 'delivery', desc: 'تسليم برادي' },
-      { date: '2026-09-28', name: 'رياض عنتري / دير شرف', type: 'install', desc: 'تركيب دير شرف' },
-      { date: '2026-09-28', name: 'أبو مهند فقط', type: 'install', desc: 'ورشة أبو مهند' },
-      { date: '2026-09-29', name: 'الرستناعة', type: 'delivery', desc: 'تسليم ستائر' },
-      { date: '2026-09-29', name: 'محمد عوشي', type: 'install', desc: 'تركيب برادي' },
-      { date: '2026-09-29', name: 'أمجد أبو خيط', type: 'delivery', desc: 'تسليم برادي' },
-      { date: '2026-09-29', name: 'أبو مهند', type: 'install', desc: 'ورشة أبو مهند' },
-      { date: '2026-09-30', name: 'حميد جابر', type: 'install', desc: 'برادي صالون وقعدة' },
-      { date: '2026-09-30', name: 'محمد منصور', type: 'delivery', desc: 'تسليم برادي' },
-      { date: '2026-09-30', name: 'أم آرام ضروري', type: 'install', desc: 'تركيب عاجل ضروري' },
-      { date: '2026-10-01', name: 'أسامة تمام', type: 'install', desc: 'تركيب برادي' },
-      { date: '2026-10-01', name: 'نضال عميرة / عزون (أحمد لامي)', type: 'delivery', desc: 'تسليم عزون' },
-      { date: '2026-10-03', name: 'عمار حمارشة', type: 'install', desc: 'تركيب برادي' },
-      { date: '2026-10-04', name: 'غالب جابر', type: 'delivery', desc: 'تسليم برادي' },
-      { date: '2026-10-04', name: 'عبد الله صقر', type: 'install', desc: 'تركيب صالة' },
-      { date: '2026-10-04', name: 'أم مهند بيت فوريك', type: 'delivery', desc: 'تسليم بيت فوريك' },
-      { date: '2026-10-05', name: 'سمير ترابي', type: 'install', desc: 'تركيب برادي' },
-      { date: '2026-10-05', name: 'خالد دراوشة + تصوير فلان', type: 'delivery', desc: 'تسليم وتصوير' },
-      { date: '2026-10-06', name: 'نضال خلف', type: 'install', desc: 'تركيب برادي' },
-      { date: '2026-10-07', name: 'مهدي ضويرم ضروري', type: 'install', desc: 'تركيب عاجل ضروري' }
-    ];
+    // Extracted items list - empty by default to maintain clean zero baseline
+    const EXTRACTED_ITEMS = [];
+
+    if (EXTRACTED_ITEMS.length === 0) {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>⚡ تفريغ محتوى جدول الورقة تلقائياً بضغطة واحدة</span>';
+      }
+      window.naseejCustomer.showToast('الجدول نظيف ولا توجد مواعيد مسجلة مسبقاً، يمكنك إضافة طلبية حقيقية بالضغط على تسجيل طلبية جديدة.', 'info');
+      this.closePaperScheduleModal();
+      return;
+    }
 
     setTimeout(() => {
       let addedCount = 0;
