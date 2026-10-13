@@ -264,9 +264,11 @@ class NaseejStore {
     }
     // Reset/clear fake demo orders so the store starts clean with 0 sales and 0 orders
     try {
+      const purgeFlag = localStorage.getItem('naseej_clean_start_20261013');
       const existingOrdersRaw = localStorage.getItem(STORAGE_KEYS.ORDERS);
-      if (!existingOrdersRaw || existingOrdersRaw.includes('ORD-100') || existingOrdersRaw.includes('الرياض') || existingOrdersRaw.includes('سامي عبد الله')) {
+      if (!purgeFlag || !existingOrdersRaw || existingOrdersRaw.includes('ORD-100') || existingOrdersRaw.includes('paper_schedule_ai') || existingOrdersRaw.includes('ORD-SHOWROOM-101') || existingOrdersRaw.includes('الرياض') || existingOrdersRaw.includes('سامي عبد الله')) {
         localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify([]));
+        localStorage.setItem('naseej_clean_start_20261013', 'true');
       }
     } catch (e) {
       localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify([]));

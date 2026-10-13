@@ -2,10 +2,10 @@
  * BALALEM CO & NASEEJ LUXURY CURTAIN FABRICS - MAIN APPLICATION CONTROLLER
  * Connects Store, Auth, Customer Storefront, and Admin Dashboard with strict RBAC.
  */
-import { store } from './store.js';
+import { store } from './store.js?v=20261013f';
 import { auth, MASTER_ADMIN } from './auth.js';
 import { customer } from './customer.js';
-import { admin } from './admin.js?v=20260923e';
+import { admin } from './admin.js?v=20261013f';
 
 // Expose globals for intuitive inline HTML event triggers
 window.naseejStore = store;

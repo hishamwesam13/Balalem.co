@@ -124,6 +124,11 @@ export default async function handler(req, res) {
     // POST /api/orders - create or sync order
     if (req.method === 'POST') {
       const o = req.body || {};
+      // Prevent stale browser localStorage loops from resurrecting old sample data
+      if (o.id === 'ORD-SHOWROOM-101' || o.source === 'paper_schedule_ai') {
+        return res.status(200).json({ success: true, message: 'Sample order skipped to maintain zero baseline' });
+      }
+
       const customerName = o.customer?.name || o.customerName || 'زبون المعرض';
       const customerPhone = o.customer?.phone || o.customerPhone || '';
 
