@@ -326,31 +326,6 @@ class NaseejStore {
         if (ordData.success && Array.isArray(ordData.orders)) {
           cloudSynced = true;
           const remoteOrders = ordData.orders;
-          const remoteIds = new Set(remoteOrders.map(o => o.id));
-
-          // Check if we have local orders in localStorage that haven't reached Neon DB yet
-          let localOrders = [];
-          try {
-            const raw = localStorage.getItem(STORAGE_KEYS.ORDERS);
-            if (raw) localOrders = JSON.parse(raw);
-          } catch (e) {}
-
-          const unsyncedLocalOrders = localOrders.filter(lo => lo && lo.id && !remoteIds.has(lo.id));
-          if (unsyncedLocalOrders.length > 0) {
-            for (const lo of unsyncedLocalOrders) {
-              try {
-                await fetch('/api/orders', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(lo)
-                });
-                remoteOrders.unshift(lo);
-              } catch (pushErr) {
-                console.warn('[Sync] Failed to push local order to cloud:', lo.id, pushErr);
-              }
-            }
-          }
-
           localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(remoteOrders));
           window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: { count: remoteOrders.length } }));
         }
