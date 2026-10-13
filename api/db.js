@@ -5,28 +5,21 @@ import dotenv from 'dotenv';
 // Load local .env if available
 dotenv.config();
 
-// Connection string strictly from environment variables (never committed to git)
-const dbUrl = process.env.DATABASE_URL ||
-              process.env.POSTGRES_URL ||
-              process.env.NEON_DATABASE_URL ||
-              process.env.NEON_URL ||
-              process.env.DIRECT_DATABASE_URL ||
-              process.env.DB_URL;
-
-let neonSql = null;
-try {
-  if (dbUrl) {
-    neonSql = neon(dbUrl);
-  }
-} catch (e) {
-  console.warn('[DB] neon driver fallback:', e.message);
+export function getDbUrl() {
+  return process.env.DATABASE_URL ||
+         process.env.POSTGRES_URL ||
+         process.env.NEON_DATABASE_URL ||
+         process.env.NEON_URL ||
+         process.env.DIRECT_DATABASE_URL ||
+         process.env.DB_URL;
 }
 
 let pgPool = null;
 export function getPool() {
-  if (!pgPool && dbUrl) {
+  const url = getDbUrl();
+  if (!pgPool && url) {
     pgPool = new pg.Pool({
-      connectionString: dbUrl,
+      connectionString: url,
       ssl: { rejectUnauthorized: false },
       max: 10,
       idleTimeoutMillis: 30000,
@@ -37,17 +30,19 @@ export function getPool() {
 }
 
 export function getDb() {
-  if (neonSql) return neonSql;
-  if (!dbUrl) {
-    throw new Error('DATABASE_URL is not configured. Please add it to your environment variables (.env).');
+  const url = getDbUrl();
+  if (!url) {
+    throw new Error('DATABASE_URL is not configured.');
   }
-  return neon(dbUrl);
+  return neon(url);
 }
 
 // Unified query runner that works with both Neon SQL tag and pg Pool
 export async function query(text, params = []) {
-  if (!dbUrl) {
-    throw new Error('DATABASE_URL is not configured.');
+  const url = getDbUrl();
+  if (!url) {
+    const keys = Object.keys(process.env).filter(k => !k.startsWith('npm_') && !k.startsWith('NODE_')).join(', ');
+    throw new Error('DATABASE_URL is not configured. Available env keys: [' + keys + ']');
   }
 
   // Try standard pg pool for maximum reliability with parameterized queries
