@@ -256,8 +256,14 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, message: 'Order updated successfully in Neon DB' });
     }
 
-    // DELETE /api/orders?id=...
+    // DELETE /api/orders?id=... OR /api/orders?all=true
     if (req.method === 'DELETE') {
+      const isAll = req.query?.all === 'true' || req.body?.all === true;
+      if (isAll) {
+        await query('DELETE FROM orders;');
+        return res.status(200).json({ success: true, message: 'All orders deleted successfully from Neon DB' });
+      }
+
       const id = req.query?.id || req.body?.id;
       if (!id) {
         return res.status(400).json({ success: false, error: 'Order id is required' });

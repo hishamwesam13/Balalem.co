@@ -725,6 +725,17 @@ class NaseejStore {
   clearAllOrders() {
     localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify([]));
     window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: { action: 'cleared' } }));
+
+    // Async sync to Neon DB: purge all orders permanently so polling doesn't bring them back
+    fetch('/api/orders?all=true', { method: 'DELETE' })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+          console.log('[Cloud Sync] All orders cleared from Neon DB successfully.');
+        }
+      })
+      .catch(e => console.warn('[Cloud Sync] clearAllOrders:', e.message));
+
     return true;
   }
 
