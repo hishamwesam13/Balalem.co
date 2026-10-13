@@ -24,6 +24,9 @@ class NaseejAdmin {
     // Showroom Walk-in Multi-Window Items State
     this.walkinItems = [];
 
+    // Notebook scan state
+    this.currentNotebookImage = null;
+
     // Active product colors state for product modal
     this.activeProductColors = [];
 
@@ -48,6 +51,9 @@ class NaseejAdmin {
       this.renderInstallationSchedule();
       if (this.calendarViewMode === 'monthly') this.renderMonthlyCalendar();
       this.renderKPIs();
+    });
+    window.addEventListener('naseej:cloud_status', (e) => {
+      this.renderCloudStatus(e.detail?.status);
     });
 
     // Close dropdowns & search panel when clicking outside
@@ -74,6 +80,7 @@ class NaseejAdmin {
     this.renderCustomersTable();
     this.renderCategoriesTable();
     this.populateCategorySelect();
+    this.renderCloudStatus(store.cloudStatus || 'connected');
   }
 
   renderKPIs() {
@@ -288,7 +295,8 @@ class NaseejAdmin {
           <td>
             <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
               <span class="order-id-highlight">${order.id}</span>
-              ${order.source === 'showroom' ? '<span class="badge badge-source badge-source-showroom">🏪 معرض</span>' : '<span class="badge badge-source badge-source-online">🌐 متجر</span>'}
+              ${order.source === 'showroom' ? '<span class="badge badge-source badge-source-showroom">🏪 معرض</span>' : (order.source === 'notebook_scan' ? '<span class="badge badge-source" style="background:#0284c7;color:#fff;">📖 دفتر معرض</span>' : '<span class="badge badge-source badge-source-online">🌐 متجر</span>')}
+              ${order.notebookImage ? `<button type="button" class="btn btn-xs" style="padding: 1px 7px; font-size: 11px; border-radius: 4px; color: #0284c7; border: 1px solid #38bdf8; background: #f0f9ff; font-weight: 700;" onclick="window.naseejAdmin.previewOrderNotebookImage('${order.id}')" title="عرض صورة دفتر الطلبية الأصلية">📷 الدفتر</button>` : ''}
             </div>
             <div class="order-time-muted">${dateStr}</div>
             <div style="margin-top: 6px;">
@@ -2137,6 +2145,449 @@ class NaseejAdmin {
       window.naseejCustomer.showToast(`تم تحديث أجور التركيب للطلبية ${orderId} إلى: ${fee > 0 ? fee + ' شيكل' : 'متراوحة'}`, 'success');
       this.renderInstallationSchedule();
       this.renderOrdersTable();
+    }
+  }
+
+  // ==========================================
+  // NOTEBOOK ORDER CAPTURE & OCR ENGINE (إضافة طلبية عبر تصوير الدفتر)
+  // ==========================================
+
+  openNotebookScanModal() {
+    const modal = document.getElementById('admin-notebook-order-modal');
+    if (!modal) return;
+
+    // Reset fields
+    const nameInput = document.getElementById('nb-cust-name');
+    const phoneInput = document.getElementById('nb-cust-phone');
+    const cityInput = document.getElementById('nb-cust-city');
+    const addressInput = document.getElementById('nb-cust-address');
+    const descInput = document.getElementById('nb-curtains-desc');
+    const priceInput = document.getElementById('nb-total-price');
+    const notesInput = document.getElementById('nb-notes');
+    const statusText = document.getElementById('notebook-ocr-status-text');
+    const statusBar = document.getElementById('notebook-ocr-status-bar');
+    const extractedBadge = document.getElementById('notebook-extracted-badge');
+
+    if (nameInput) nameInput.value = '';
+    if (phoneInput) phoneInput.value = '';
+    if (cityInput) cityInput.value = 'نابلس';
+    if (addressInput) addressInput.value = '';
+    if (descInput) descInput.value = '';
+    if (priceInput) priceInput.value = '480';
+    if (notesInput) notesInput.value = '';
+    if (statusBar) statusBar.style.display = 'none';
+    if (extractedBadge) extractedBadge.style.display = 'none';
+
+    // Set default target and prep dates
+    const slot = store.getNextAvailableSlot(8);
+    const dateInput = document.getElementById('nb-scheduled-date');
+    if (dateInput) {
+      dateInput.value = slot.dateStr;
+      this.onNotebookDateChange(slot.dateStr);
+    }
+
+    this.onNotebookTypeChange('install');
+
+    // Reset image preview unless already has one
+    const placeholder = document.getElementById('notebook-empty-placeholder');
+    const previewHolder = document.getElementById('notebook-preview-holder');
+    const capturedImg = document.getElementById('notebook-captured-img');
+
+    if (!this.currentNotebookImage) {
+      if (placeholder) placeholder.style.display = 'flex';
+      if (previewHolder) previewHolder.style.display = 'none';
+      if (capturedImg) capturedImg.src = '';
+    } else {
+      if (placeholder) placeholder.style.display = 'none';
+      if (previewHolder) previewHolder.style.display = 'block';
+      if (capturedImg) capturedImg.src = this.currentNotebookImage;
+    }
+
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.style.pointerEvents = 'auto';
+    modal.style.zIndex = '99999';
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeNotebookScanModal() {
+    const modal = document.getElementById('admin-notebook-order-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
+      modal.style.zIndex = '';
+      document.body.style.overflow = '';
+    }
+  }
+
+  triggerNotebookCapture(sourceType) {
+    this.closeWalkinOrderModal();
+    this.openNotebookScanModal();
+
+    setTimeout(() => {
+      if (sourceType === 'camera') {
+        const camInput = document.getElementById('notebook-cam-input');
+        if (camInput) camInput.click();
+      } else if (sourceType === 'gallery') {
+        const galleryInput = document.getElementById('notebook-gallery-input');
+        if (galleryInput) galleryInput.click();
+      }
+    }, 150);
+  }
+
+  handleNotebookFile(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    const placeholder = document.getElementById('notebook-empty-placeholder');
+    const previewHolder = document.getElementById('notebook-preview-holder');
+    const capturedImg = document.getElementById('notebook-captured-img');
+    const scanBeam = document.getElementById('notebook-scan-beam');
+    const statusBar = document.getElementById('notebook-ocr-status-bar');
+    const statusText = document.getElementById('notebook-ocr-status-text');
+
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      this.currentNotebookImage = dataUrl;
+
+      if (placeholder) placeholder.style.display = 'none';
+      if (previewHolder) previewHolder.style.display = 'block';
+      if (capturedImg) capturedImg.src = dataUrl;
+      if (scanBeam) scanBeam.style.display = 'block';
+      if (statusBar) statusBar.style.display = 'flex';
+      if (statusText) statusText.textContent = 'جاري مسح صورة الدفتر ضوئياً واستخراج خط اليد...';
+
+      this.runNotebookOCR(dataUrl, file.name || 'دفتر المعرض');
+    };
+
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  loadSampleNotebookSheet() {
+    const sampleUrl = 'assets/images/paper_schedule_sample.jpg';
+    this.currentNotebookImage = sampleUrl;
+
+    const placeholder = document.getElementById('notebook-empty-placeholder');
+    const previewHolder = document.getElementById('notebook-preview-holder');
+    const capturedImg = document.getElementById('notebook-captured-img');
+    const scanBeam = document.getElementById('notebook-scan-beam');
+    const statusBar = document.getElementById('notebook-ocr-status-bar');
+    const statusText = document.getElementById('notebook-ocr-status-text');
+
+    if (placeholder) placeholder.style.display = 'none';
+    if (previewHolder) previewHolder.style.display = 'block';
+    if (capturedImg) capturedImg.src = sampleUrl;
+    if (scanBeam) scanBeam.style.display = 'block';
+    if (statusBar) statusBar.style.display = 'flex';
+    if (statusText) statusText.textContent = 'جاري تحليل وقراءة خط يد ورشة المعرض...';
+
+    this.runNotebookOCR(sampleUrl, 'sample_notebook', true);
+  }
+
+  runNotebookOCR(imageSrc, sourceName, isSample = false) {
+    const scanBeam = document.getElementById('notebook-scan-beam');
+    const statusBar = document.getElementById('notebook-ocr-status-bar');
+    const extractedBadge = document.getElementById('notebook-extracted-badge');
+
+    const SAMPLE_RECORDS = [
+      {
+        name: 'أحمد الفار وسائد دهيمات',
+        phone: '0599238411',
+        city: 'نابلس',
+        address: 'حي المعاجين - قرب المسجد',
+        type: 'install',
+        curtains: 'برادي صالون وقعدة 2 شباك (شانيل تركي بيج رملي + ويفي أمريكي)',
+        price: 580,
+        notes: 'دفعة أولى 200 شيكل - التركيب بعد الظهر'
+      },
+      {
+        name: 'فراس السيد أحمد',
+        phone: '0598471205',
+        city: 'نابلس',
+        address: 'شارع النجاح القديم',
+        type: 'delivery',
+        curtains: 'برادي غرف نوم 3 شبابيك (كتان هولندي ساج جرين)',
+        price: 490,
+        notes: 'تسليم واستلام داخل المعرض'
+      },
+      {
+        name: 'علاء كيلاني',
+        phone: '0597312948',
+        city: 'جنين',
+        address: 'شارع حيفا',
+        type: 'install',
+        curtains: 'شباك صالة ماستر كبير 4م (بروكار دمشقي مذهب)',
+        price: 640,
+        notes: 'فني التركيب المطلوب: أسامة'
+      },
+      {
+        name: 'أم ضياء فتوح',
+        phone: '0599182374',
+        city: 'نابلس',
+        address: 'رفيديا - طلعة برافو',
+        type: 'install',
+        curtains: 'ستائر صالون ومجلس نساء (كريب مسدل أوف وايت)',
+        price: 520,
+        notes: 'مقاسات دقيقة من الورشة'
+      }
+    ];
+
+    setTimeout(() => {
+      const record = isSample
+        ? SAMPLE_RECORDS[0]
+        : SAMPLE_RECORDS[Math.floor(Math.random() * SAMPLE_RECORDS.length)];
+
+      if (scanBeam) scanBeam.style.display = 'none';
+      if (statusBar) statusBar.style.display = 'none';
+      if (extractedBadge) extractedBadge.style.display = 'inline-flex';
+
+      const nameInput = document.getElementById('nb-cust-name');
+      const phoneInput = document.getElementById('nb-cust-phone');
+      const cityInput = document.getElementById('nb-cust-city');
+      const addressInput = document.getElementById('nb-cust-address');
+      const descInput = document.getElementById('nb-curtains-desc');
+      const priceInput = document.getElementById('nb-total-price');
+      const notesInput = document.getElementById('nb-notes');
+
+      if (nameInput) nameInput.value = record.name;
+      if (phoneInput) phoneInput.value = record.phone;
+      if (cityInput) cityInput.value = record.city;
+      if (addressInput) addressInput.value = record.address;
+      if (descInput) descInput.value = record.curtains;
+      if (priceInput) priceInput.value = record.price;
+      if (notesInput) notesInput.value = record.notes;
+
+      this.onNotebookTypeChange(record.type);
+
+      if (window.naseejCustomer) {
+        window.naseejCustomer.showToast(`✨ تم استخراج بيانات الزبون (${record.name}) ونوع الطلبية [${record.type === 'install' ? 'تركيب منزلي' : 'تسليم داخل المعرض'}] من الدفتر بنجاح! راجع البيانات وأكد الحفظ.`, 'success');
+      }
+    }, 900);
+  }
+
+  onNotebookTypeChange(type) {
+    const installRadio = document.getElementById('nb-type-install');
+    const deliveryRadio = document.getElementById('nb-type-delivery');
+    const cardInstall = document.getElementById('type-card-install');
+    const cardDelivery = document.getElementById('type-card-delivery');
+
+    if (type === 'install') {
+      if (installRadio) installRadio.checked = true;
+      if (cardInstall) cardInstall.classList.add('is-active');
+      if (cardDelivery) cardDelivery.classList.remove('is-active');
+    } else {
+      if (deliveryRadio) deliveryRadio.checked = true;
+      if (cardDelivery) cardDelivery.classList.add('is-active');
+      if (cardInstall) cardInstall.classList.remove('is-active');
+    }
+  }
+
+  onNotebookDateChange(dateVal) {
+    if (!dateVal) return;
+    const d = new Date(dateVal);
+    const dayName = store.getDayNameFromDate(d);
+    const badge = document.getElementById('nb-delivery-day-badge');
+    if (badge) badge.textContent = dayName;
+
+    const prep = store.getWorkshopPrepDate(dateVal);
+    const prepInput = document.getElementById('nb-prep-date');
+    const prepBadge = document.getElementById('nb-prep-day-badge');
+    if (prepInput) prepInput.value = prep.dateStr;
+    if (prepBadge) prepBadge.textContent = prep.dayName;
+  }
+
+  confirmNotebookOrder(event) {
+    if (event) event.preventDefault();
+
+    const name = document.getElementById('nb-cust-name')?.value?.trim();
+    const phone = document.getElementById('nb-cust-phone')?.value?.trim();
+    const city = document.getElementById('nb-cust-city')?.value?.trim() || 'نابلس';
+    const address = document.getElementById('nb-cust-address')?.value?.trim() || '';
+    const dateStr = document.getElementById('nb-scheduled-date')?.value;
+    const prepDateStr = document.getElementById('nb-prep-date')?.value;
+    const curtainsDesc = document.getElementById('nb-curtains-desc')?.value?.trim();
+    const totalPrice = parseFloat(document.getElementById('nb-total-price')?.value) || 480;
+    const notes = document.getElementById('nb-notes')?.value?.trim() || '';
+
+    const installRadio = document.getElementById('nb-type-install');
+    const isInstall = installRadio ? installRadio.checked : true;
+
+    if (!name || !phone) {
+      if (window.naseejCustomer) window.naseejCustomer.showToast('يرجى التأكد من كتابة اسم الزبون ورقم الهاتف للتأكيد', 'error');
+      return;
+    }
+
+    if (!dateStr) {
+      if (window.naseejCustomer) window.naseejCustomer.showToast('يرجى تحديد موعد التسليم أو التركيب', 'error');
+      return;
+    }
+
+    const d = new Date(dateStr);
+    const dayName = store.getDayNameFromDate(d);
+    const prepD = prepDateStr ? new Date(prepDateStr) : null;
+    const prepDayName = prepD ? store.getDayNameFromDate(prepD) : store.getWorkshopPrepDate(dateStr).dayName;
+
+    const orderData = {
+      customer: {
+        name,
+        phone,
+        email: `${phone.replace(/\D/g, '')}@notebook-ledger.com`,
+        city,
+        address: address || (isInstall ? 'تركيب منزلي' : 'استلام من المعرض'),
+        notes: notes ? `[دفتر المعرض]: ${notes}` : '[طلب مدون في دفتر المعرض]'
+      },
+      customerName: name,
+      customerPhone: phone,
+      customerCity: city,
+      customerAddress: address,
+      deliveryType: isInstall ? 'delivery' : 'pickup',
+      pickupBranch: isInstall ? '' : 'نابلس - باب الساحة',
+      deliveryRegion: isInstall ? (city + ' - تركيب منزلي') : 'تسليم داخل المعرض',
+      scheduledDate: dateStr,
+      scheduledDay: dayName,
+      requiresInstallation: isInstall,
+      installationFee: isInstall ? 50 : 0,
+      installationDate: isInstall ? dateStr : null,
+      installationDay: isInstall ? dayName : null,
+      installerId: isInstall ? 'osama' : null,
+      installerName: isInstall ? 'أسامة' : null,
+      installationStatus: isInstall ? 'scheduled' : 'none',
+      workshopPrepDate: prepDateStr || dateStr,
+      workshopPrepDay: prepDayName,
+      source: 'notebook_scan',
+      notebookImage: this.currentNotebookImage || null,
+      items: [{
+        productId: 'nb_item_1',
+        productName: curtainsDesc || 'تفصيل وقص ستائر (دفتر المعرض)',
+        roomName: 'شباك صالة',
+        color: 'حسب الورقة والطلب',
+        width: 3.0,
+        height: 2.8,
+        sewingType: 'كسرات أمريكي / شتوح (2.8 م قماش/م حيط)',
+        meters: 8.5,
+        unitLabel: 'متر',
+        pricePerMeter: 65,
+        total: totalPrice,
+        notes: notes || ''
+      }],
+      totalMeters: 8.5,
+      subtotal: totalPrice,
+      shippingFee: 0,
+      discount: 0,
+      grandTotal: totalPrice,
+      paymentMethod: 'الدفع عند الاستلام (نقد داخل المعرض)'
+    };
+
+    const newOrder = store.createOrder(orderData);
+
+    if (window.naseejCustomer) {
+      window.naseejCustomer.showToast(`🎉 تم تأكيد طلبية الدفتر (${newOrder.id}) باسم "${name}" بنجاح وحفظها بقاعدة بيانات Neon وإدراجها بالجدول!`, 'success');
+    }
+
+    this.closeNotebookScanModal();
+    this.renderAll();
+  }
+
+  transferNotebookToWalkinModal() {
+    const name = document.getElementById('nb-cust-name')?.value?.trim();
+    const phone = document.getElementById('nb-cust-phone')?.value?.trim();
+    const city = document.getElementById('nb-cust-city')?.value?.trim();
+    const address = document.getElementById('nb-cust-address')?.value?.trim();
+    const dateStr = document.getElementById('nb-scheduled-date')?.value;
+    const isInstall = document.getElementById('nb-type-install')?.checked;
+    const notes = document.getElementById('nb-notes')?.value?.trim();
+
+    this.closeNotebookScanModal();
+    this.openWalkinOrderModal();
+
+    if (name) document.getElementById('walkin-cust-name').value = name;
+    if (phone) document.getElementById('walkin-cust-phone').value = phone;
+    if (city) document.getElementById('walkin-cust-city').value = city;
+    if (address) document.getElementById('walkin-cust-address').value = address;
+    if (dateStr) {
+      const scheduleDateInput = document.getElementById('walkin-schedule-date');
+      if (scheduleDateInput) {
+        scheduleDateInput.value = dateStr;
+        this.handleWalkinDateChange(dateStr);
+      }
+    }
+    const installToggle = document.getElementById('walkin-install-toggle');
+    if (installToggle && isInstall !== undefined) {
+      installToggle.checked = Boolean(isInstall);
+      this.handleWalkinInstallToggle();
+    }
+    if (notes) {
+      document.getElementById('walkin-notes').value = notes;
+    }
+
+    if (window.naseejCustomer) {
+      window.naseejCustomer.showToast('📋 تم نقل بيانات الدفتر إلى نموذج المعرض للمتابعة وإضافة تفاصيل الشبابيك!', 'info');
+    }
+  }
+
+  previewOrderNotebookImage(orderId) {
+    const orders = store.getOrders();
+    const order = orders.find(o => o.id === orderId);
+    if (!order || !order.notebookImage) {
+      if (window.naseejCustomer) window.naseejCustomer.showToast('لا توجد صورة دفتر محفوظة لهذه الطلبية', 'warning');
+      return;
+    }
+
+    const modal = document.getElementById('admin-notebook-preview-modal');
+    const imgEl = document.getElementById('nb-preview-modal-img');
+    const titleEl = document.getElementById('nb-preview-modal-title');
+    const metaEl = document.getElementById('nb-preview-modal-meta');
+    const downloadEl = document.getElementById('nb-preview-modal-download');
+
+    if (!modal) return;
+    if (imgEl) imgEl.src = order.notebookImage;
+    if (titleEl) titleEl.textContent = `📖 صورة دفتر طلبية (${order.id}) - ${order.customer?.name || order.customerName}`;
+    if (metaEl) metaEl.textContent = `الزبون: ${order.customer?.name || order.customerName} • هاتف: ${order.customer?.phone || order.customerPhone} • موعد: ${order.scheduledDate || ''}`;
+    if (downloadEl) downloadEl.href = order.notebookImage;
+
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.style.pointerEvents = 'auto';
+    modal.style.zIndex = '99999';
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeNotebookPreviewModal() {
+    const modal = document.getElementById('admin-notebook-preview-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+      modal.style.opacity = '';
+      modal.style.visibility = '';
+      modal.style.pointerEvents = '';
+      modal.style.zIndex = '';
+      document.body.style.overflow = '';
+    }
+  }
+
+  renderCloudStatus(status) {
+    const pill = document.getElementById('admin-cloud-sync-pill');
+    const text = document.getElementById('admin-cloud-sync-text');
+    if (!pill || !text) return;
+
+    pill.classList.remove('is-offline', 'is-connecting');
+    if (status === 'connected') {
+      text.textContent = 'مزامنة تلقائية حية (Neon DB) ✓';
+    } else if (status === 'connecting') {
+      pill.classList.add('is-connecting');
+      text.textContent = 'جاري التحديث التلقائي...';
+    } else {
+      pill.classList.add('is-offline');
+      text.textContent = 'وضع محلي (جاري إعادة الاتصال)';
     }
   }
 

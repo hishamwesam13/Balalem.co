@@ -276,10 +276,31 @@ class NaseejStore {
     }
 
     // Trigger asynchronous Neon Cloud synchronization
+    this.cloudStatus = 'connecting';
     this.syncCloud();
+
+    // Continuous automatic background sync every 3.5 seconds across all devices
+    if (typeof window !== 'undefined') {
+      setInterval(() => {
+        this.syncCloud();
+      }, 3500);
+
+      window.addEventListener('focus', () => {
+        this.syncCloud();
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) this.syncCloud();
+      });
+
+      window.addEventListener('online', () => {
+        this.syncCloud();
+      });
+    }
   }
 
-  async syncCloud() {
+  async syncCloud(isManual = false) {
+    let cloudSynced = false;
     try {
       const prodRes = await fetch('/api/products');
       if (prodRes.ok) {
@@ -290,6 +311,7 @@ class NaseejStore {
             localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(prodData.categories));
           }
           window.dispatchEvent(new CustomEvent('naseej:products_updated'));
+          cloudSynced = true;
         } else if (prodData.success && prodData.products && prodData.products.length === 0) {
           // Initialize DB if empty
           fetch('/api/init').then(r => r.json()).then(initData => {
@@ -302,13 +324,50 @@ class NaseejStore {
       if (ordRes.ok) {
         const ordData = await ordRes.json();
         if (ordData.success && Array.isArray(ordData.orders)) {
-          localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(ordData.orders));
-          window.dispatchEvent(new CustomEvent('naseej:orders_updated'));
+          cloudSynced = true;
+          const remoteOrders = ordData.orders;
+          const remoteIds = new Set(remoteOrders.map(o => o.id));
+
+          // Check if we have local orders in localStorage that haven't reached Neon DB yet
+          let localOrders = [];
+          try {
+            const raw = localStorage.getItem(STORAGE_KEYS.ORDERS);
+            if (raw) localOrders = JSON.parse(raw);
+          } catch (e) {}
+
+          const unsyncedLocalOrders = localOrders.filter(lo => lo && lo.id && !remoteIds.has(lo.id));
+          if (unsyncedLocalOrders.length > 0) {
+            for (const lo of unsyncedLocalOrders) {
+              try {
+                await fetch('/api/orders', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(lo)
+                });
+                remoteOrders.unshift(lo);
+              } catch (pushErr) {
+                console.warn('[Sync] Failed to push local order to cloud:', lo.id, pushErr);
+              }
+            }
+          }
+
+          localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(remoteOrders));
+          window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: { count: remoteOrders.length } }));
         }
       }
+
+      this.cloudStatus = cloudSynced ? 'connected' : 'offline';
+      window.dispatchEvent(new CustomEvent('naseej:cloud_status', { detail: { status: this.cloudStatus } }));
+      if (isManual && window.naseejCustomer) {
+        window.naseejCustomer.showToast('✅ تمت مزامنة الطلبيات مع قاعدة بيانات Neon السحابية بنجاح!', 'success');
+      }
     } catch (err) {
-      // Graceful offline fallback
+      this.cloudStatus = 'offline';
+      window.dispatchEvent(new CustomEvent('naseej:cloud_status', { detail: { status: 'offline' } }));
       console.log('[Store Cloud Sync] Using local storage mode:', err.message);
+      if (isManual && window.naseejCustomer) {
+        window.naseejCustomer.showToast('⚠️ تعذر الاتصال بالسيرفر السحابي، يعمل النظام حالياً بالوضع المحلي.', 'warning');
+      }
     }
   }
 
@@ -511,7 +570,8 @@ class NaseejStore {
       installerId: installerId,
       installerName: installerName,
       installationStatus: requiresInstallation ? 'pending_install' : 'not_required',
-      source: source, // 'online' or 'showroom'
+      source: source, // 'online', 'showroom', 'notebook_scan', etc.
+      notebookImage: orderData.notebookImage || null,
       items: orderData.items || [],
       totalMeters: Number(orderData.totalMeters) || 0,
       subtotal: subtotal,
@@ -552,32 +612,16 @@ class NaseejStore {
 
     window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: newOrder }));
 
-    // Async sync to Neon DB
+    // Immediate asynchronous push to Neon PostgreSQL Database
     fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: newOrder.id,
-        customerName: newOrder.customer?.name || '',
-        customerPhone: newOrder.customer?.phone || '',
-        city: newOrder.customer?.city || newOrder.deliveryRegion || 'نابلس',
-        address: newOrder.customer?.address || '',
-        items: newOrder.items,
-        totalPrice: newOrder.grandTotal,
-        fabricTotal: newOrder.subtotal,
-        tailoringTotal: 0,
-        deliveryFee: newOrder.shippingFee,
-        installationFee: newOrder.installationFee,
-        discount: newOrder.discount,
-        orderStatus: newOrder.orderStatus,
-        tailoringStatus: 'pending',
-        installationStatus: newOrder.installationStatus,
-        scheduledDate: newOrder.scheduledDate,
-        scheduledSlot: newOrder.scheduledDay,
-        requiresInstallation: newOrder.requiresInstallation,
-        installerId: newOrder.installerId,
-        notes: newOrder.customer?.notes || ''
-      })
+      body: JSON.stringify(newOrder)
+    }).then(res => res.json()).then(data => {
+      if (data && data.success) {
+        this.cloudStatus = 'connected';
+        window.dispatchEvent(new CustomEvent('naseej:cloud_status', { detail: { status: 'connected' } }));
+      }
     }).catch(e => console.warn('[Cloud Sync] createOrder:', e.message));
 
     return newOrder;

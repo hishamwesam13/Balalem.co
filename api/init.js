@@ -75,9 +75,13 @@ export default async function handler(req, res) {
         requires_installation BOOLEAN DEFAULT false,
         installer_id VARCHAR(64),
         notes TEXT,
+        details JSONB DEFAULT NULL,
+        source VARCHAR(64) DEFAULT 'showroom',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS details JSONB DEFAULT NULL;
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS source VARCHAR(64) DEFAULT 'showroom';
     `);
 
     // 4. Create customers table

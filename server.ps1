@@ -1,5 +1,11 @@
 param([int]$Port = 5500)
 
+if (Get-Command node -ErrorAction SilentlyContinue) {
+    Write-Host "Running Node.js server with Neon DB on port $Port..." -ForegroundColor Green
+    & node "$PSScriptRoot\server.js" $Port
+    exit $LASTEXITCODE
+}
+
 $listener = New-Object System.Net.HttpListener
 $prefix = "http://localhost:$Port/"
 $listener.Prefixes.Add($prefix)

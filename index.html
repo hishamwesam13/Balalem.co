@@ -177,11 +177,19 @@
       }
     }
 
+    function openNotebookScanModal(ev) {
+      if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+      if (window.naseejAdmin && typeof window.naseejAdmin.openNotebookScanModal === 'function') {
+        window.naseejAdmin.openNotebookScanModal();
+      }
+    }
+
     window.scrollToSection = scrollToSection;
     window.openSmartCalculator = openSmartCalculator;
     window.enterAdminPortal = enterAdminPortal;
     window.openAddProductModal = openAddProductModal;
     window.openWalkinOrderModal = openWalkinOrderModal;
+    window.openNotebookScanModal = openNotebookScanModal;
     window.closeAdminProductModal = closeAdminProductModal;
     window.closeWalkinOrderModal = closeWalkinOrderModal;
   </script>
@@ -581,8 +589,17 @@
             </div>
           </div>
 
+          <div id="admin-cloud-sync-pill" class="admin-cloud-sync-pill" title="مزامنة تلقائية حية وفورية مع قاعدة بيانات Neon عبر جميع الأجهزة">
+            <span class="cloud-sync-dot"></span>
+            <span id="admin-cloud-sync-text">مزامنة تلقائية حية (Neon DB) ✓</span>
+            <span class="cloud-sync-icon">⚡</span>
+          </div>
+
           <button class="btn btn-outline" onclick="window.naseejApp.openStorefrontView()" title="الرجوع لمعاينة المتجر الرسمي">
             <span>👁️ معاينة المتجر كمدير</span>
+          </button>
+          <button type="button" class="btn btn-notebook" onclick="window.naseejAdmin.openNotebookScanModal()" title="إضافة طلبية جديدة عبر تصوير ورقة دفتر المعرض بالكاميرا أو رفع صورة" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: 1px solid #38bdf8; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);">
+            <span>📷 إضافة طلبية عبر تصوير الدفتر</span>
           </button>
           <button type="button" class="btn btn-primary" onclick="window.openWalkinOrderModal(event)" style="box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);">
             <span>➕ تسجيل طلبية من المعرض</span>
@@ -702,6 +719,9 @@
               <button type="button" class="btn btn-outline btn-sm" onclick="window.naseejAdmin.confirmClearAllOrders()" title="تصفير الجدول والبدء من جديد" style="color: #64748b; border-color: #cbd5e1;">
                 <span>🧹 تصفير كافة الطلبيات</span>
               </button>
+              <button type="button" class="btn btn-sm btn-notebook" onclick="window.naseejAdmin.openNotebookScanModal()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: 1px solid #38bdf8;">
+                <span>📷 تصوير الدفتر</span>
+              </button>
               <button type="button" class="btn btn-primary btn-sm" onclick="window.openWalkinOrderModal(event)">
                 <span>➕ تسجيل طلبية جديدة من المعرض</span>
               </button>
@@ -753,6 +773,9 @@
             <div class="schedule-quick-add-btn" style="display: flex; gap: 8px;">
               <button type="button" class="btn btn-sm btn-outline" onclick="window.naseejAdmin.confirmClearAllOrders()" title="تصفير جدول العمل">
                 <span>🧹 تصفير الجدول</span>
+              </button>
+              <button type="button" class="btn btn-sm btn-notebook" onclick="window.naseejAdmin.openNotebookScanModal()" title="إضافة طلبية عبر تصوير الدفتر" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: 1px solid #38bdf8;">
+                <span>📷 تصوير الدفتر</span>
               </button>
               <button type="button" class="btn btn-sm btn-primary" onclick="window.openWalkinOrderModal(event)" title="إضافة طلبية زبون حضر للمعرض">
                 <span>➕ طلبية زبون من المعرض</span>
@@ -1821,6 +1844,25 @@
       </div>
       <form id="admin-walkin-form" onsubmit="window.naseejAdmin.submitWalkinOrder(event)">
         <div class="modal-body">
+          <!-- خيار إضافة طلبية عبر تصوير الدفتر من داخل المعرض -->
+          <div class="walkin-notebook-hero-banner">
+            <div class="notebook-hero-content">
+              <div class="notebook-hero-icon">📖</div>
+              <div>
+                <div class="notebook-hero-title">هل الطلبية مدونة على دفتر المعرض أو ورقة الورشة؟</div>
+                <div class="notebook-hero-desc">التقط صورة لورقة الدفتر مباشرة بالكاميرا أو ارفع صورة، وسيقوم النظام بقراءة خط اليد وتفريغ الاسم ونوع الطلبية (تركيب/تسليم) والمواعيد لتأكيدها فوراً!</div>
+              </div>
+            </div>
+            <div class="notebook-hero-btns">
+              <button type="button" class="btn btn-camera-act" onclick="window.naseejAdmin.triggerNotebookCapture('camera')">
+                <span>📷 تصوير الدفتر بالكاميرا</span>
+              </button>
+              <button type="button" class="btn btn-gallery-act" onclick="window.naseejAdmin.triggerNotebookCapture('gallery')">
+                <span>🖼️ رفع صورة من المعرض</span>
+              </button>
+            </div>
+          </div>
+
           <div style="background: rgba(212, 175, 55, 0.1); border-right: 4px solid var(--gold-primary); border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; font-size: 13.5px; color: #856404;">
             🏪 <strong>طلبيات المعرض المباشرة:</strong> إدخال وتوثيق طلبات الزبائن الذين حضروا للمحل دون الحاجة لدخولهم على الموقع، وتوزيعها مباشرة على جدول ورشة القص وجدول فنيي التركيب.
           </div>
@@ -2070,6 +2112,216 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="window.naseejAdmin.closePaperScheduleModal()">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: قراءة وتفريغ طلبية من تصوير الدفتر (Notebook Order OCR & Confirmation) -->
+  <div id="admin-notebook-order-modal" class="naseej-modal" style="display: none;">
+    <div class="modal-dialog modal-xl" style="max-width: 1050px;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 26px;">📖</span>
+          <div>
+            <h3 class="modal-title" style="color: #fff; margin: 0; font-size: 18px;">إضافة طلبية عبر تصوير الدفتر (قراءة خط اليد وتأكيد البيانات)</h3>
+            <p style="color: #94a3b8; font-size: 12px; margin: 2px 0 0 0;">التقط صورة لدفتر طلبيات المعرض بالكاميرا أو اختر صورة، وتحقق من الاسم ورقم الهاتف والموعد قبل الحفظ</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" style="color: #fff;" onclick="window.naseejAdmin.closeNotebookScanModal()">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <!-- Hidden file inputs -->
+        <input type="file" id="notebook-cam-input" accept="image/*" capture="environment" style="display: none;" onchange="window.naseejAdmin.handleNotebookFile(this)">
+        <input type="file" id="notebook-gallery-input" accept="image/*" style="display: none;" onchange="window.naseejAdmin.handleNotebookFile(this)">
+
+        <div class="notebook-modal-grid">
+          <!-- Left Column: Image Capture & Preview Canvas -->
+          <div class="notebook-media-col">
+            <div class="notebook-source-bar">
+              <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('notebook-cam-input').click()">
+                📷 التقاط بالكاميرا
+              </button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('notebook-gallery-input').click()">
+                🖼️ اختيار صورة من المعرض
+              </button>
+              <button type="button" class="btn btn-sm btn-gold-soft" onclick="window.naseejAdmin.loadSampleNotebookSheet()" title="تحميل نموذج دفتر واقعي للتجربة">
+                📄 نموذج دفتر للتجربة
+              </button>
+            </div>
+
+            <!-- Image Container -->
+            <div id="notebook-image-wrapper" class="notebook-image-wrapper">
+              <div id="notebook-empty-placeholder" class="notebook-empty-placeholder">
+                <div style="font-size: 48px; margin-bottom: 10px;">📸</div>
+                <div style="font-weight: 700; font-size: 15px; color: #334155;">لم يتم التقاط أو رفع صورة دفتر بعد</div>
+                <p style="font-size: 12.5px; color: #64748b; margin-top: 4px; max-width: 280px; text-align: center;">
+                  انقر على "التقاط بالكاميرا" لتصوير دفتر المعرض فورياً، أو اختر صورة من جهازك، أو جرب النموذج الواقعي.
+                </p>
+                <div style="display: flex; gap: 8px; margin-top: 14px;">
+                  <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('notebook-cam-input').click()">
+                    📷 فتح الكاميرا
+                  </button>
+                  <button type="button" class="btn btn-sm btn-gold" onclick="window.naseejAdmin.loadSampleNotebookSheet()">
+                    📄 تجربة نموذج جاهز
+                  </button>
+                </div>
+              </div>
+
+              <div id="notebook-preview-holder" style="display: none; position: relative; width: 100%; height: 100%;">
+                <img id="notebook-captured-img" src="" alt="صورة دفتر الطلبيات" style="width: 100%; height: auto; max-height: 480px; object-fit: contain; border-radius: 8px; display: block;">
+                <!-- Scan beam animation overlay -->
+                <div id="notebook-scan-beam" class="notebook-scan-beam" style="display: none;"></div>
+              </div>
+            </div>
+
+            <div id="notebook-ocr-status-bar" class="notebook-ocr-status-bar" style="display: none;">
+              <span id="notebook-ocr-spinner" class="spinner-sm"></span>
+              <span id="notebook-ocr-status-text">جاري قراءة خط اليد وتفريغ البيانات...</span>
+            </div>
+          </div>
+
+          <!-- Right Column: Extracted Order Confirmation Form -->
+          <div class="notebook-form-col">
+            <div class="confirmation-card-header">
+              <div style="font-weight: 800; font-size: 15px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                <span>📋 تأكيد بيانات الطلبية المستخرجة من الدفتر</span>
+                <span id="notebook-extracted-badge" class="badge badge-success" style="display: none;">✓ تم استخراج البيانات</span>
+              </div>
+              <p style="font-size: 12px; color: #64748b; margin: 4px 0 0 0;">
+                راجع اسم الزبون ورقم الهاتف ونوع الطلبية وتاريخ الموعد قبل الاعتماد النهائي:
+              </p>
+            </div>
+
+            <form id="notebook-confirm-form" onsubmit="window.naseejAdmin.confirmNotebookOrder(event)">
+              <div class="confirm-form-grid">
+                <!-- Customer Name -->
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700;">
+                    👤 اسم الزبون الكريم *
+                    <span class="ocr-tag">مستخرج من الدفتر</span>
+                  </label>
+                  <input type="text" id="nb-cust-name" class="form-control" placeholder="اسم الزبون" required>
+                </div>
+
+                <!-- Customer Phone -->
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700;">
+                    📱 رقم جوال / هاتف الزبون *
+                    <span class="ocr-tag">مستخرج من الدفتر</span>
+                  </label>
+                  <input type="tel" id="nb-cust-phone" class="form-control" placeholder="مثال: 0599123456" required dir="ltr" style="text-align: right;">
+                </div>
+
+                <!-- Order Type: Installation vs Showroom Pickup -->
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <label class="form-label" style="font-weight: 700;">🏷️ تصنيف ونوع الطلبية حسب المكتوب بالدفتر *</label>
+                  <div class="order-type-toggle-grid">
+                    <label class="order-type-card is-active" id="type-card-install">
+                      <input type="radio" name="nb-order-type" value="install" id="nb-type-install" checked onchange="window.naseejAdmin.onNotebookTypeChange('install')">
+                      <div class="type-card-body">
+                        <span class="type-icon">🔧</span>
+                        <div>
+                          <div class="type-title">تركيب منزلي</div>
+                          <div class="type-desc">يتطلب فني تركيب بالموقع (أسامة / عز)</div>
+                        </div>
+                      </div>
+                    </label>
+
+                    <label class="order-type-card" id="type-card-delivery">
+                      <input type="radio" name="nb-order-type" value="delivery" id="nb-type-delivery" onchange="window.naseejAdmin.onNotebookTypeChange('delivery')">
+                      <div class="type-card-body">
+                        <span class="type-icon">🏪</span>
+                        <div>
+                          <div class="type-title">تسليم داخل المعرض</div>
+                          <div class="type-desc">استلام وتفصيل بدون فني منزلي</div>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- City / Address -->
+                <div class="form-group">
+                  <label class="form-label">المدينة / الحي</label>
+                  <input type="text" id="nb-cust-city" class="form-control" value="نابلس">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">العنوان أو موقع التركيب</label>
+                  <input type="text" id="nb-cust-address" class="form-control" placeholder="تفاصيل الموقع أو الدفتر">
+                </div>
+
+                <!-- Dates: Target Delivery/Install Date -->
+                <div class="form-group">
+                  <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>📅 موعد التسليم / التركيب للزبون *</span>
+                    <span id="nb-delivery-day-badge" class="badge badge-gold" style="font-size: 11px;">السبت</span>
+                  </label>
+                  <input type="date" id="nb-scheduled-date" class="form-control" required onchange="window.naseejAdmin.onNotebookDateChange(this.value)">
+                </div>
+
+                <!-- Workshop Prep Date -->
+                <div class="form-group">
+                  <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>✂️ موعد تجهيز الورشة والقص *</span>
+                    <span id="nb-prep-day-badge" class="badge badge-primary" style="font-size: 11px;">الخميس</span>
+                  </label>
+                  <input type="date" id="nb-prep-date" class="form-control" required>
+                  <small style="color: #64748b; font-size: 11px;">يتم ضبطه تلقائياً قبل بيوم أو يومين من موعد التسليم</small>
+                </div>
+
+                <!-- Curtains & Fabric Description -->
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <label class="form-label">🪟 مواصفات البرادي والشبابيك والأمتار (من الدفتر)</label>
+                  <input type="text" id="nb-curtains-desc" class="form-control" placeholder="مثال: شباك صالة 3م + غرفة نوم ماستر (قماش شانيل تركي)">
+                </div>
+
+                <!-- Total Amount & Down payment -->
+                <div class="form-group">
+                  <label class="form-label">المبلغ الإجمالي التقريبي (شيكل)</label>
+                  <input type="number" id="nb-total-price" class="form-control" value="480" min="0">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">ملاحظات إضافية من الدفتر</label>
+                  <input type="text" id="nb-notes" class="form-control" placeholder="ملاحظات التفصيل أو الدفعة">
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="notebook-confirm-actions">
+                <button type="submit" class="btn btn-primary btn-save-nb" style="padding: 12px; font-weight: 800; font-size: 15px; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);">
+                  ✅ تأكيد وحفظ الطلبية بالجدول وقاعدة بيانات Neon
+                </button>
+                <button type="button" class="btn btn-outline" onclick="window.naseejAdmin.transferNotebookToWalkinModal()" style="border-color: #cbd5e1; font-size: 13.5px;" title="فتح البيانات في نموذج المعرض لتعديل الشبابيك تفصيلياً">
+                  ✏️ فتح وتعديل في نموذج المعرض الموسع
+                </button>
+                <button type="button" class="btn btn-light" onclick="window.naseejAdmin.closeNotebookScanModal()">
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: عرض وتكبير صورة دفتر الطلبية الأصلية (Lightbox) -->
+  <div id="admin-notebook-preview-modal" class="naseej-modal" style="display: none;">
+    <div class="modal-dialog modal-md" style="max-width: 650px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="nb-preview-modal-title">📖 صورة دفتر الطلبية الأصلية</h3>
+        <button type="button" class="modal-close" onclick="window.naseejAdmin.closeNotebookPreviewModal()">✕</button>
+      </div>
+      <div class="modal-body" style="text-align: center; padding: 16px;">
+        <img id="nb-preview-modal-img" src="" alt="دفتر الطلبية" style="max-width: 100%; max-height: 520px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+        <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+          <span id="nb-preview-modal-meta" style="font-size: 13px; color: #475569; font-weight: 600;"></span>
+          <a id="nb-preview-modal-download" href="" download="notebook-order.jpg" class="btn btn-sm btn-outline">
+            💾 تحميل الصورة
+          </a>
+        </div>
       </div>
     </div>
   </div>
