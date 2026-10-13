@@ -6,7 +6,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Connection string strictly from environment variables (never committed to git)
-const dbUrl = process.env.DATABASE_URL || process.env.DIRECT_DATABASE_URL;
+const dbUrl = process.env.DATABASE_URL ||
+              process.env.POSTGRES_URL ||
+              process.env.NEON_DATABASE_URL ||
+              process.env.NEON_URL ||
+              process.env.DIRECT_DATABASE_URL ||
+              process.env.DB_URL;
 
 let neonSql = null;
 try {
