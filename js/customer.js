@@ -8,6 +8,8 @@ import { auth } from './auth.js';
 class NaseejCustomer {
   constructor() {
     this.cart = this.loadCart();
+    this.favorites = this.loadFavorites();
+    this.drawerActiveTab = 'cart';
     this.currentCategory = 'all';
     this.searchQuery = '';
     this.activeProductModal = null;
@@ -45,6 +47,231 @@ class NaseejCustomer {
     localStorage.setItem('naseej_cart', JSON.stringify(this.cart));
     this.updateCartBadges();
     window.dispatchEvent(new CustomEvent('naseej:cart_updated', { detail: this.cart }));
+  }
+
+  // =========================================================================
+  // FAVORITES (المفضلة / قائمة الرغبات)
+  // =========================================================================
+
+  loadFavorites() {
+    try {
+      const data = localStorage.getItem('naseej_favorites');
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  saveFavorites() {
+    localStorage.setItem('naseej_favorites', JSON.stringify(this.favorites));
+    this.updateFavoritesBadges();
+    window.dispatchEvent(new CustomEvent('naseej:favorites_updated', { detail: this.favorites }));
+  }
+
+  isFavorite(productId) {
+    return Array.isArray(this.favorites) && this.favorites.includes(productId);
+  }
+
+  toggleFavorite(productId, event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const product = store.getProductById(productId);
+    const prodName = product ? product.name : 'القماش';
+
+    const index = this.favorites.indexOf(productId);
+    let added = false;
+    if (index > -1) {
+      this.favorites.splice(index, 1);
+      this.showToast(`تمت إزالة (${prodName}) من المفضلة`, 'info');
+    } else {
+      this.favorites.push(productId);
+      this.showToast(`تمت إضافة (${prodName}) إلى المفضلة بنجاح ❤️`, 'success');
+      added = true;
+    }
+    this.saveFavorites();
+
+    // Dynamically toggle heart button styling in cards
+    document.querySelectorAll(`.btn-card-favorite[data-id="${productId}"]`).forEach(btn => {
+      if (added) {
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-label', 'إزالة من المفضلة');
+        btn.setAttribute('title', 'إزالة من المفضلة');
+        const svg = btn.querySelector('svg');
+        if (svg) {
+          svg.setAttribute('fill', '#e11d48');
+          svg.setAttribute('stroke', '#e11d48');
+        }
+      } else {
+        btn.classList.remove('is-active');
+        btn.setAttribute('aria-label', 'إضافة إلى المفضلة');
+        btn.setAttribute('title', 'إضافة إلى المفضلة');
+        const svg = btn.querySelector('svg');
+        if (svg) {
+          svg.setAttribute('fill', 'none');
+          svg.setAttribute('stroke', '#94a3b8');
+        }
+      }
+    });
+
+    if (this.activeProductModal && this.activeProductModal.id === productId) {
+      this.updateModalFavoriteUI();
+    }
+
+    if (this.drawerActiveTab === 'favorites') {
+      this.renderFavoritesDrawer();
+    }
+  }
+
+  toggleActiveModalFavorite() {
+    if (!this.activeProductModal) return;
+    this.toggleFavorite(this.activeProductModal.id);
+  }
+
+  updateModalFavoriteUI() {
+    const btn = document.getElementById('modal-fav-btn');
+    const txt = document.getElementById('modal-fav-text');
+    if (!btn || !this.activeProductModal) return;
+
+    const isFav = this.isFavorite(this.activeProductModal.id);
+    if (isFav) {
+      btn.classList.add('is-active');
+      if (txt) txt.textContent = 'في المفضلة ❤️';
+      const svg = btn.querySelector('svg');
+      if (svg) {
+        svg.setAttribute('fill', '#e11d48');
+        svg.setAttribute('stroke', '#e11d48');
+      }
+    } else {
+      btn.classList.remove('is-active');
+      if (txt) txt.textContent = 'إضافة للمفضلة';
+      const svg = btn.querySelector('svg');
+      if (svg) {
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+      }
+    }
+  }
+
+  updateFavoritesBadges() {
+    const count = (this.favorites || []).length;
+    document.querySelectorAll('.favorites-count-badge').forEach(badge => {
+      badge.textContent = count;
+      badge.style.display = count > 0 ? 'inline-flex' : 'none';
+    });
+    const tabBadge = document.getElementById('favorites-tab-count');
+    if (tabBadge) tabBadge.textContent = count;
+  }
+
+  clearAllFavorites() {
+    if ((this.favorites || []).length === 0) return;
+    this.favorites = [];
+    this.saveFavorites();
+    this.showToast('تم تفريغ قائمة المفضلة بالكامل', 'info');
+    document.querySelectorAll('.btn-card-favorite').forEach(btn => {
+      btn.classList.remove('is-active');
+      const svg = btn.querySelector('svg');
+      if (svg) {
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', '#94a3b8');
+      }
+    });
+    if (this.activeProductModal) this.updateModalFavoriteUI();
+    this.renderFavoritesDrawer();
+  }
+
+  switchDrawerTab(tab = 'cart') {
+    this.drawerActiveTab = tab;
+    const tabCart = document.getElementById('drawer-tab-cart');
+    const tabFav = document.getElementById('drawer-tab-favorites');
+    const cartSection = document.getElementById('cart-drawer-cart-section');
+    const favSection = document.getElementById('cart-drawer-fav-section');
+
+    if (tab === 'favorites') {
+      if (tabFav) tabFav.classList.add('active');
+      if (tabCart) tabCart.classList.remove('active');
+      if (cartSection) cartSection.style.display = 'none';
+      if (favSection) favSection.style.display = 'block';
+      this.renderFavoritesDrawer();
+    } else {
+      if (tabCart) tabCart.classList.add('active');
+      if (tabFav) tabFav.classList.remove('active');
+      if (favSection) favSection.style.display = 'none';
+      if (cartSection) cartSection.style.display = 'block';
+      this.renderCartDrawer();
+    }
+  }
+
+  openFavoritesDrawer() {
+    this.drawerActiveTab = 'favorites';
+    this.openCartDrawer();
+    this.switchDrawerTab('favorites');
+  }
+
+  renderFavoritesDrawer() {
+    const container = document.getElementById('favorites-drawer-items');
+    if (!container) return;
+
+    const count = (this.favorites || []).length;
+    this.updateFavoritesBadges();
+
+    if (count === 0) {
+      container.innerHTML = `
+        <div class="fav-empty-state">
+          <div class="fav-empty-icon">🤍</div>
+          <h4>قائمة المفضلة فارغة حالياً</h4>
+          <p>اضغط على رمز القلب الرمادي الموجود على زاوية أي قماش لحفظه في قائمتك المفضلة والرجوع إليه وشراء الكمية المطلوبة في أي وقت.</p>
+          <button type="button" class="btn btn-gold" onclick="window.naseejCustomer.closeCartDrawer(); window.scrollToSection('fabrics-catalog-section', event);">
+            <span>تصفح كافة أقمشة الستائر ✦</span>
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    const allProducts = store.getProducts();
+    const favProducts = this.favorites.map(id => allProducts.find(p => p.id === id)).filter(Boolean);
+
+    container.innerHTML = `
+      <div class="fav-header-banner">
+        <div class="fav-banner-title">
+          <span class="fav-heart-icon">❤️</span>
+          <span>أقمشتك المفضلة المحفوظة (${favProducts.length})</span>
+        </div>
+        <button type="button" class="fav-clear-btn" onclick="window.naseejCustomer.clearAllFavorites()" title="تفريغ المفضلة">مسح الكل</button>
+      </div>
+      <div class="fav-items-list">
+        ${favProducts.map(p => `
+          <div class="fav-item-card" data-id="${p.id}">
+            <div class="fav-item-media" onclick="window.naseejCustomer.closeCartDrawer(); window.naseejCustomer.openProductModal('${p.id}')">
+              <img src="${p.image}" alt="${p.name}" class="fav-item-thumb">
+              <span class="badge badge-category fav-cat-badge">${p.categoryName}</span>
+            </div>
+            <div class="fav-item-body">
+              <div class="fav-item-title-row">
+                <h5 class="fav-item-title" onclick="window.naseejCustomer.closeCartDrawer(); window.naseejCustomer.openProductModal('${p.id}')">${p.name}</h5>
+                <button type="button" class="btn-fav-remove" onclick="window.naseejCustomer.toggleFavorite('${p.id}', event)" title="إزالة من المفضلة">
+                  ✕
+                </button>
+              </div>
+              <div class="fav-item-meta">
+                <span>📐 عرض الطاقة: ${p.rollWidth} سم</span>
+                <span>🌍 ${p.origin}</span>
+              </div>
+              <div class="fav-item-footer">
+                <div class="fav-item-price">
+                  <strong>${p.pricePerMeter}</strong> شيكل <span style="font-size: 11px; color: #64748b;">${p.category === 'tarsoon' ? '/ م²' : '/ متر'}</span>
+                </div>
+                <button type="button" class="btn btn-sm btn-gold fav-action-buy" onclick="window.naseejCustomer.closeCartDrawer(); window.naseejCustomer.openProductModal('${p.id}')" title="تفصيل هذا القماش وحساب المقاسات">
+                  <span>✂️ تفصيل وشراء</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
   }
 
   // =========================================================================
@@ -168,6 +395,8 @@ class NaseejCustomer {
       badge.textContent = count;
       badge.style.display = count > 0 ? 'inline-flex' : 'none';
     });
+    const cartTabBadge = document.getElementById('cart-tab-count');
+    if (cartTabBadge) cartTabBadge.textContent = count;
   }
 
   showToast(message, type = 'info') {
@@ -239,10 +468,22 @@ class NaseejCustomer {
         <span class="color-dot" style="background-color: ${c.hex};" title="${c.name}"></span>
       `).join('');
 
+      const isFav = this.isFavorite(product.id);
       return `
         <article class="fabric-card" data-id="${product.id}">
           <div class="fabric-card-media" onclick="window.naseejCustomer.openProductModal('${product.id}')">
             <img src="${product.image}" alt="${product.name}" loading="lazy" class="fabric-img">
+            <!-- Favorite Heart Button (قلب رمادي للتفضيل) -->
+            <button type="button" 
+                    class="btn-card-favorite ${isFav ? 'is-active' : ''}" 
+                    data-id="${product.id}"
+                    onclick="window.naseejCustomer.toggleFavorite('${product.id}', event)" 
+                    aria-label="${isFav ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}"
+                    title="${isFav ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="${isFav ? '#e11d48' : 'none'}" stroke="${isFav ? '#e11d48' : '#94a3b8'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </button>
             <div class="fabric-badges">
               <span class="badge badge-category">${product.categoryName}</span>
               ${product.isFeatured ? '<span class="badge badge-gold">⭐ الأكثر طلباً</span>' : ''}
@@ -313,6 +554,7 @@ class NaseejCustomer {
     this.activeCalculator.roomName = '';
 
     // Set Product Information
+    this.updateModalFavoriteUI();
     document.getElementById('modal-fabric-name').textContent = product.name;
     document.getElementById('modal-fabric-category').textContent = product.categoryName;
     document.getElementById('modal-fabric-img').src = product.image;

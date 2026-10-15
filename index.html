@@ -286,6 +286,13 @@
           <span id="header-orders-count" class="orders-count-badge" style="display: none;">0</span>
         </button>
 
+        <!-- Favorites Trigger Button -->
+        <button class="btn-header-action btn-header-favorites" onclick="window.naseejCustomer.openFavoritesDrawer()" title="قائمة الأقمشة المفضلة">
+          <svg class="header-fav-svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>المفضلة</span>
+          <span class="favorites-count-badge" id="header-favorites-count" style="display: none;">0</span>
+        </button>
+
         <!-- Cart Trigger Button -->
         <button class="btn-header-action btn-header-cart" onclick="window.naseejCustomer.openCartDrawer()" title="سلة مشتريات الستائر">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
@@ -1007,7 +1014,13 @@
   <div id="product-modal" class="naseej-modal">
     <div class="modal-dialog modal-xl">
       <div class="modal-header">
-        <h3 id="modal-fabric-name" class="modal-title">تفاصيل القماش وحاسبة الأمتار</h3>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <h3 id="modal-fabric-name" class="modal-title">تفاصيل القماش وحاسبة الأمتار</h3>
+          <button type="button" id="modal-fav-btn" class="btn-modal-fav" onclick="window.naseejCustomer.toggleActiveModalFavorite()" title="إضافة / إزالة من المفضلة">
+            <svg class="modal-fav-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span id="modal-fav-text">إضافة للمفضلة</span>
+          </button>
+        </div>
         <button class="modal-close" onclick="window.naseejCustomer.closeProductModal()">✕</button>
       </div>
       <div class="modal-body">
@@ -1222,33 +1235,58 @@
     </div>
   </div>
 
-  <!-- Drawer: Shopping Cart -->
+  <!-- Drawer: Shopping Cart & Favorites -->
   <div id="drawer-overlay" class="drawer-overlay" onclick="window.naseejCustomer.closeCartDrawer()"></div>
   <aside id="cart-drawer" class="cart-drawer">
     <div class="cart-drawer-header">
-      <h4>سلة المشتريات <span id="cart-total-meters-badge" class="badge badge-gold">0 متر</span></h4>
+      <div class="drawer-segmented-tabs">
+        <button type="button" class="drawer-tab-btn active" id="drawer-tab-cart" onclick="window.naseejCustomer.switchDrawerTab('cart')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span>سلة المشتريات</span>
+          <span class="drawer-tab-badge" id="cart-tab-count">0</span>
+        </button>
+        <button type="button" class="drawer-tab-btn" id="drawer-tab-favorites" onclick="window.naseejCustomer.switchDrawerTab('favorites')">
+          <svg class="tab-fav-heart" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>المفضلة</span>
+          <span class="drawer-tab-badge fav-badge" id="favorites-tab-count">0</span>
+        </button>
+      </div>
       <button class="modal-close" onclick="window.naseejCustomer.closeCartDrawer()">✕</button>
     </div>
-    <div id="cart-drawer-items" class="cart-drawer-items">
-      <!-- Injected dynamically -->
+
+    <!-- Section 1: Cart Items -->
+    <div id="cart-drawer-cart-section" class="drawer-section-pane">
+      <div class="cart-meters-summary-strip">
+        <span id="cart-total-meters-badge" class="badge badge-gold">إجمالي الأمتار: 0 متر</span>
+      </div>
+      <div id="cart-drawer-items" class="cart-drawer-items">
+        <!-- Injected dynamically -->
+      </div>
+      <div id="cart-drawer-footer" class="cart-drawer-footer">
+        <div class="cart-summary-line">
+          <span>المجموع الفرعي:</span>
+          <span id="cart-subtotal">0 شيكل</span>
+        </div>
+        <div class="cart-summary-line">
+          <span>رسوم الشحن والتغليف:</span>
+          <span id="cart-shipping">مجاني</span>
+        </div>
+        <div class="cart-summary-line total">
+          <span>المجموع الإجمالي:</span>
+          <span id="cart-grandtotal" class="gold-text">0 شيكل</span>
+        </div>
+        <button class="btn btn-gold w-100 mt-3" style="padding: 12px;" onclick="window.naseejCustomer.openCheckoutModal()">
+          <span>متابعة إتمام الطلب الشحن</span>
+          <span>←</span>
+        </button>
+      </div>
     </div>
-    <div id="cart-drawer-footer" class="cart-drawer-footer">
-      <div class="cart-summary-line">
-        <span>المجموع الفرعي:</span>
-        <span id="cart-subtotal">0 شيكل</span>
+
+    <!-- Section 2: Favorites Items -->
+    <div id="cart-drawer-fav-section" class="drawer-section-pane" style="display: none;">
+      <div id="favorites-drawer-items" class="favorites-drawer-items">
+        <!-- Injected dynamically via customer.js renderFavoritesDrawer() -->
       </div>
-      <div class="cart-summary-line">
-        <span>رسوم الشحن والتغليف:</span>
-        <span id="cart-shipping">مجاني</span>
-      </div>
-      <div class="cart-summary-line total">
-        <span>المجموع الإجمالي:</span>
-        <span id="cart-grandtotal" class="gold-text">0 شيكل</span>
-      </div>
-      <button class="btn btn-gold w-100 mt-3" style="padding: 12px;" onclick="window.naseejCustomer.openCheckoutModal()">
-        <span>متابعة إتمام الطلب الشحن</span>
-        <span>←</span>
-      </button>
     </div>
   </aside>
 
@@ -2392,6 +2430,13 @@
     <button class="mobile-nav-item" onclick="window.scrollToSection('contacts-section', event)">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
       <span>الأرقام</span>
+    </button>
+    <button class="mobile-nav-item" onclick="window.naseejCustomer ? window.naseejCustomer.openFavoritesDrawer() : null">
+      <div class="mobile-nav-icon-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span class="favorites-count-badge mobile-badge" id="mobile-favorites-count" style="display: none;">0</span>
+      </div>
+      <span>المفضلة</span>
     </button>
     <button class="mobile-nav-item" onclick="window.naseejCustomer ? window.naseejCustomer.openCartDrawer() : null">
       <div class="mobile-nav-icon-wrap">

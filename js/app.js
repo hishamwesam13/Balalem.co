@@ -25,6 +25,7 @@ class NaseejApp {
     customer.renderCategoryTabs();
     customer.renderCatalog();
     customer.updateCartBadges();
+    customer.updateFavoritesBadges();
     customer.updateUserUI();
 
     // Bind Event Listeners

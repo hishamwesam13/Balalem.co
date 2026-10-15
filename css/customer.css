@@ -2552,9 +2552,9 @@
   }
 
   .hero-badge {
+  .hero-badge {
     background: rgba(255, 255, 255, 0.9) !important;
     border: 1px solid rgba(212, 175, 55, 0.5) !important;
-  }
   }
 
   /* Prevent blurriness, tearing and flicker on WebKit (iOS & Android) */
@@ -2568,3 +2568,500 @@
   }
 }
 
+/* ========================================================================= */
+/* FAVORITES SYSTEM (تفضيل المنتجات / قائمة الرغبات الفاخرة)                   */
+/* ========================================================================= */
+
+/* 1. Subtle Gray Heart Button on Fabric Card Corner (قلب رمادي على طرف الصورة) */
+.btn-card-favorite {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  color: #94a3b8;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+  outline: none;
+}
+
+.btn-card-favorite svg {
+  display: block;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.btn-card-favorite:hover {
+  transform: scale(1.12);
+  background: #ffffff;
+  color: #e11d48;
+  border-color: rgba(225, 29, 72, 0.2);
+  box-shadow: 0 6px 18px rgba(225, 29, 72, 0.25);
+}
+
+.btn-card-favorite:hover svg path {
+  stroke: #e11d48;
+}
+
+/* When the customer favorited the product (يصبح مضاف إلى المفضل - أحمر مع أنيميشن نبض) */
+.btn-card-favorite.is-active {
+  background: #ffffff;
+  color: #e11d48;
+  border-color: rgba(225, 29, 72, 0.3);
+  box-shadow: 0 4px 16px rgba(225, 29, 72, 0.32);
+  animation: heartPop 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-card-favorite.is-active svg path {
+  fill: #e11d48;
+  stroke: #e11d48;
+}
+
+@keyframes heartPop {
+  0% { transform: scale(0.9); }
+  50% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* 2. Header Favorites Button & Dynamic Count Badge */
+.btn-header-favorites {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: var(--transition);
+}
+
+.btn-header-favorites:hover {
+  border-color: rgba(225, 29, 72, 0.45);
+  color: #e11d48;
+}
+
+.btn-header-favorites:hover .header-fav-svg {
+  stroke: #e11d48;
+  transform: scale(1.08);
+}
+
+.favorites-count-badge {
+  background: #e11d48;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  min-width: 19px;
+  height: 19px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.4);
+  line-height: 1;
+}
+
+.btn-header-favorites .favorites-count-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  border: 2px solid #ffffff;
+}
+
+.mobile-badge.favorites-count-badge {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  font-size: 10px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border: 1.5px solid #0b1120;
+}
+
+/* 3. Modal Favorite Action Button (داخل تفاصيل القماش وحاسبة الأمتار) */
+.btn-modal-fav {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(241, 245, 249, 0.9);
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.btn-modal-fav:hover {
+  background: #fff1f2;
+  border-color: #fecdd3;
+  color: #e11d48;
+}
+
+.btn-modal-fav.is-active {
+  background: #fff1f2;
+  border-color: #fecdd3;
+  color: #e11d48;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.15);
+}
+
+.btn-modal-fav.is-active svg path {
+  fill: #e11d48;
+  stroke: #e11d48;
+}
+
+/* 4. Cart Drawer Segmented Dual Tabs (سلة المشتريات | المفضلة) */
+.cart-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  background: #ffffff;
+}
+
+.drawer-segmented-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: #f1f5f9;
+  border-radius: var(--radius-md);
+  border: 1px solid #e2e8f0;
+  flex-grow: 1;
+}
+
+.drawer-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.drawer-tab-btn:hover {
+  color: var(--primary);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.drawer-tab-btn.active {
+  background: #ffffff;
+  color: var(--primary);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.drawer-tab-btn#drawer-tab-favorites.active {
+  color: #e11d48;
+}
+
+.drawer-tab-badge {
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 999px;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.4;
+  transition: all 0.2s;
+}
+
+.drawer-tab-btn.active .drawer-tab-badge {
+  background: var(--gold-primary);
+  color: #ffffff;
+}
+
+.drawer-tab-btn#drawer-tab-favorites.active .drawer-tab-badge {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+.tab-fav-heart {
+  color: #94a3b8;
+  transition: color 0.2s;
+}
+
+.drawer-tab-btn#drawer-tab-favorites.active .tab-fav-heart {
+  color: #e11d48;
+}
+
+.drawer-section-pane {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.cart-meters-summary-strip {
+  padding: 8px 20px;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 5. Favorites Drawer Items & Cards */
+.favorites-drawer-items {
+  padding: 18px 20px;
+  overflow-y: auto;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.fav-header-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #fff1f2;
+  border-radius: var(--radius-sm);
+  border: 1px solid #ffe4e6;
+  margin-bottom: 16px;
+}
+
+.fav-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 800;
+  font-size: 13px;
+  color: #9f1239;
+}
+
+.fav-clear-btn {
+  background: transparent;
+  border: none;
+  color: #be123c;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.fav-clear-btn:hover {
+  color: #881337;
+}
+
+.fav-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fav-item-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.fav-item-card:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
+}
+
+.fav-item-media {
+  position: relative;
+  width: 86px;
+  height: 86px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+  background: #0b1120;
+}
+
+.fav-item-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.fav-item-card:hover .fav-item-thumb {
+  transform: scale(1.08);
+}
+
+.fav-cat-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  background: rgba(15, 23, 42, 0.8);
+  color: #ffffff;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+.fav-item-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.fav-item-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fav-item-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0;
+  cursor: pointer;
+  line-height: 1.35;
+  transition: color 0.2s;
+}
+
+.fav-item-title:hover {
+  color: var(--gold-primary);
+}
+
+.btn-fav-remove {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.btn-fav-remove:hover {
+  color: #e11d48;
+  background: #fff1f2;
+}
+
+.fav-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin: 4px 0;
+}
+
+.fav-item-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.fav-price-tag {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.fav-price-val {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--gold-dark);
+}
+
+.fav-price-unit {
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+.fav-action-buy {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.25);
+  cursor: pointer;
+}
+
+.fav-empty-state {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+}
+
+.fav-empty-icon {
+  font-size: 52px;
+  margin-bottom: 14px;
+  line-height: 1;
+}
+
+.fav-empty-state h4 {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.fav-empty-state p {
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 320px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 480px) {
+  .btn-card-favorite {
+    width: 34px;
+    height: 34px;
+    top: 10px;
+    left: 10px;
+  }
+  .drawer-segmented-tabs {
+    margin-bottom: 10px;
+  }
+  .drawer-tab-btn {
+    padding: 7px 8px;
+    font-size: 12px;
+  }
+}
