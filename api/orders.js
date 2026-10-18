@@ -106,6 +106,7 @@ export default async function handler(req, res) {
           deliveryRegion: d.deliveryRegion || row.city || 'نابلس',
           pickupBranch: d.pickupBranch || 'نابلس - باب الساحة',
           source: row.source || d.source || 'showroom',
+          recordedBy: d.recordedBy || (row.source === 'online' ? 'المتجر الإلكتروني' : 'هشام'),
           notebookImage: d.notebookImage || null,
           workshopPrepDate: d.workshopPrepDate || null,
           workshopPrepDay: d.workshopPrepDay || null,

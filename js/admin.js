@@ -30,6 +30,12 @@ class NaseejAdmin {
     // Active product colors state for product modal
     this.activeProductColors = [];
 
+    // Showroom Salesperson Staff State (هشام - هباب - أسامة - أحمد)
+    this.selectedWalkinStaff = localStorage.getItem('naseej_active_staff') || 'هشام';
+    this.selectedNotebookStaff = this.selectedWalkinStaff;
+    this.currentOrdersStaffFilter = 'all';
+    this.currentScheduleStaffFilter = 'all';
+
     window.naseejAdmin = this;
   }
 
@@ -69,6 +75,137 @@ class NaseejAdmin {
         if (res) res.style.display = 'none';
       }
     });
+  }
+
+  // Showroom Staff Helpers & Operations (هشام - هباب - أسامة - أحمد)
+  getStaffKey(name) {
+    if (!name) return 'hisham';
+    if (name.includes('هشام')) return 'hisham';
+    if (name.includes('هباب')) return 'habbab';
+    if (name.includes('أسامة')) return 'osama';
+    if (name.includes('أحمد')) return 'ahmad';
+    return 'general';
+  }
+
+  selectWalkinStaff(staffName) {
+    this.selectedWalkinStaff = staffName;
+    try { localStorage.setItem('naseej_active_staff', staffName); } catch (e) {}
+
+    const hiddenInput = document.getElementById('walkin-recorded-by');
+    if (hiddenInput) hiddenInput.value = staffName;
+
+    // Update active admin prompt display elements
+    const activeNameEl = document.getElementById('walkin-active-admin-name');
+    if (activeNameEl) activeNameEl.textContent = staffName;
+
+    const savedSubEl = document.getElementById('walkin-saved-admin-sub');
+    if (savedSubEl) savedSubEl.textContent = staffName;
+
+    const changeFromEl = document.getElementById('walkin-change-from-name');
+    if (changeFromEl) changeFromEl.textContent = staffName;
+
+    const btnConfirmName = document.getElementById('btn-confirm-admin-name');
+    if (btnConfirmName) btnConfirmName.textContent = staffName;
+
+    const badge = document.getElementById('walkin-selected-staff-badge');
+    if (badge) {
+      badge.className = `badge-staff badge-staff-${this.getStaffKey(staffName)}`;
+      badge.innerHTML = `👑 الآدمن الحالي: ${staffName}`;
+    }
+
+    const buttons = document.querySelectorAll('.staff-picker-btn[data-staff]');
+    buttons.forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-staff') === staffName);
+    });
+  }
+
+  confirmActiveAdmin() {
+    const adminName = this.selectedWalkinStaff || document.getElementById('walkin-recorded-by')?.value || 'هشام';
+    const btn = document.getElementById('btn-confirm-active-admin');
+    if (btn) {
+      btn.style.background = '#15803d';
+      btn.style.borderColor = '#166534';
+      btn.innerHTML = `✓ تم التأكيد: أنت (${adminName})`;
+      setTimeout(() => {
+        if (btn) {
+          btn.style.background = '';
+          btn.style.borderColor = '';
+          btn.innerHTML = `✓ موافق، أنا <span id="btn-confirm-admin-name">${adminName}</span>`;
+        }
+      }, 1500);
+    }
+    if (window.naseejCustomer) {
+      window.naseejCustomer.showToast(`👑 مرحباً بك يا ${adminName}! تم تأكيد تسجيل الطلبيات باسمك`, 'success');
+    }
+    const nameInput = document.getElementById('walkin-cust-name');
+    if (nameInput) nameInput.focus();
+  }
+
+  selectNotebookStaff(staffName) {
+    this.selectedNotebookStaff = staffName;
+    try { localStorage.setItem('naseej_active_staff', staffName); } catch (e) {}
+
+    const hiddenInput = document.getElementById('nb-recorded-by');
+    if (hiddenInput) hiddenInput.value = staffName;
+
+    const activeNameEl = document.getElementById('nb-active-admin-name');
+    if (activeNameEl) activeNameEl.textContent = staffName;
+
+    const badge = document.getElementById('nb-selected-staff-badge');
+    if (badge) {
+      badge.className = `badge-staff badge-staff-${this.getStaffKey(staffName)}`;
+      badge.innerHTML = `👑 الآدمن: ${staffName}`;
+    }
+
+    const buttons = document.querySelectorAll('.staff-picker-btn[data-nb-staff]');
+    buttons.forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-nb-staff') === staffName);
+    });
+  }
+
+  changeOrderStaff(orderId, newStaff) {
+    const updated = store.updateOrder(orderId, { recordedBy: newStaff });
+    if (updated) {
+      if (window.naseejCustomer) {
+        window.naseejCustomer.showToast(`تم تعيين الآدمن المسؤول عن طلبية ${orderId} إلى [${newStaff}] بنجاح ✓`, 'success');
+      }
+      this.renderOrdersTable();
+      this.renderWeeklySchedule();
+      if (this.currentScheduleSubTab === 'monthly') this.renderMonthlyScheduleView();
+    }
+  }
+
+  filterOrdersByStaff(staffName, btnEl) {
+    this.currentOrdersStaffFilter = staffName;
+    const container = document.getElementById('admin-orders-staff-filters');
+    if (container) {
+      container.querySelectorAll('button').forEach(b => {
+        b.classList.remove('active', 'btn-gold');
+        b.classList.add('btn-outline');
+      });
+    }
+    if (btnEl) {
+      btnEl.classList.add('active', 'btn-gold');
+      btnEl.classList.remove('btn-outline');
+    }
+    this.renderOrdersTable();
+  }
+
+  filterScheduleByStaff(staffName, btnEl) {
+    this.currentScheduleStaffFilter = staffName;
+    const container = document.getElementById('admin-schedule-staff-filters');
+    if (container) {
+      container.querySelectorAll('button').forEach(b => {
+        b.classList.remove('active', 'btn-gold');
+        b.classList.add('btn-outline');
+      });
+    }
+    if (btnEl) {
+      btnEl.classList.add('active', 'btn-gold');
+      btnEl.classList.remove('btn-outline');
+    }
+    this.renderWeeklySchedule();
+    if (this.currentScheduleSubTab === 'monthly') this.renderMonthlyScheduleView();
   }
 
   renderAll() {
@@ -248,16 +385,23 @@ class NaseejAdmin {
     const tbody = document.getElementById('admin-orders-tbody');
     if (!tbody) return;
 
-    const orders = store.getOrders();
+    let orders = store.getOrders();
+
+    if (this.currentOrdersStaffFilter && this.currentOrdersStaffFilter !== 'all') {
+      orders = orders.filter(o => (o.recordedBy || 'المعرض') === this.currentOrdersStaffFilter);
+    }
 
     if (orders.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4" style="padding: 40px 20px; font-size: 14px; color: #64748b;"><div style="font-size: 32px; margin-bottom: 6px;">📋</div><strong>لا توجد طلبيات حالياً في النظام</strong><p style="margin-top: 4px; font-size: 12.5px;">الجدول مصفر وجاهز لاستقبال طلبيات الزبائن الجديدة من المتجر الإلكتروني أو تسجيل طلبية يدوية من المعرض.</p></td></tr>`;
+      const isFiltered = this.currentOrdersStaffFilter && this.currentOrdersStaffFilter !== 'all';
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4" style="padding: 40px 20px; font-size: 14px; color: #64748b;"><div style="font-size: 32px; margin-bottom: 6px;">📋</div><strong>${isFiltered ? `لا توجد طلبيات مسجلة باسم الآدمن (${this.currentOrdersStaffFilter}) حالياً` : 'لا توجد طلبيات حالياً في النظام'}</strong><p style="margin-top: 4px; font-size: 12.5px;">${isFiltered ? 'يمكنك اختيار "كافة الآدمنز" لعرض كافة الطلبيات، أو تسجيل طلبية جديدة وتعيين الآدمن.' : 'الجدول مصفر وجاهز لاستقبال طلبيات الزبائن الجديدة من المتجر الإلكتروني أو تسجيل طلبية يدوية من المعرض.'}</p></td></tr>`;
       return;
     }
 
     const workDays = store.getWorkDays();
 
     tbody.innerHTML = orders.map(order => {
+      const staffName = order.recordedBy || 'المعرض';
+      const staffKey = this.getStaffKey(staffName);
       const itemsList = (order.items || []).map(i => {
         let width = i.width;
         let height = i.height;
@@ -293,12 +437,23 @@ class NaseejAdmin {
       return `
         <tr data-order-id="${order.id}">
           <td>
-            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px; flex-wrap: wrap;">
               <span class="order-id-highlight">${order.id}</span>
               ${order.source === 'showroom' ? '<span class="badge badge-source badge-source-showroom">🏪 معرض</span>' : (order.source === 'notebook_scan' ? '<span class="badge badge-source" style="background:#0284c7;color:#fff;">📖 دفتر معرض</span>' : '<span class="badge badge-source badge-source-online">🌐 متجر</span>')}
+              <span class="badge-staff badge-staff-${staffKey}" title="الآدمن المسؤول عن الطلبية">👑 ${staffName}</span>
               ${order.notebookImage ? `<button type="button" class="btn btn-xs" style="padding: 1px 7px; font-size: 11px; border-radius: 4px; color: #0284c7; border: 1px solid #38bdf8; background: #f0f9ff; font-weight: 700;" onclick="window.naseejAdmin.previewOrderNotebookImage('${order.id}')" title="عرض صورة دفتر الطلبية الأصلية">📷 الدفتر</button>` : ''}
             </div>
             <div class="order-time-muted">${dateStr}</div>
+            <div style="margin-top: 6px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+              <span style="font-size: 11px; color: #64748b; font-weight: 700;">الآدمن:</span>
+              <select class="admin-staff-select" onchange="window.naseejAdmin.changeOrderStaff('${order.id}', this.value)" style="font-size: 11px; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 700; color: #0f172a; background: #fff;" title="تعديل الآدمن المسؤول عن الطلبية">
+                <option value="هشام" ${staffName === 'هشام' ? 'selected' : ''}>👑 هشام</option>
+                <option value="هباب" ${staffName === 'هباب' ? 'selected' : ''}>👑 هباب</option>
+                <option value="أسامة" ${staffName === 'أسامة' ? 'selected' : ''}>👑 أسامة</option>
+                <option value="أحمد" ${staffName === 'أحمد' ? 'selected' : ''}>👑 أحمد</option>
+                <option value="المعرض" ${staffName === 'المعرض' ? 'selected' : ''}>🏪 المعرض</option>
+              </select>
+            </div>
             <div style="margin-top: 6px;">
               <span style="font-size: 11px; color: #64748b; font-weight: 700;">قص الورشة:</span>
               <select class="admin-schedule-day-select" onchange="window.naseejAdmin.changeOrderScheduleDay('${order.id}', this.value)">
@@ -772,16 +927,23 @@ class NaseejAdmin {
       const maxTargetMeters = 40;
       const progressPercent = Math.min(100, Math.round((dayInfo.totalMeters / maxTargetMeters) * 100));
 
-      const ordersHtml = dayInfo.orders.length === 0 ? `
+      const rawDayOrders = dayInfo.orders || [];
+      const displayedOrders = (this.currentScheduleStaffFilter && this.currentScheduleStaffFilter !== 'all')
+        ? rawDayOrders.filter(o => (o.recordedBy || 'المعرض') === this.currentScheduleStaffFilter)
+        : rawDayOrders;
+
+      const ordersHtml = displayedOrders.length === 0 ? `
         <div class="empty-day-box">
           <div class="empty-day-icon">🕊️</div>
-          <p><strong>يوم شاغر (فراغ)</strong></p>
-          <p>لا توجد كميات شغل مبرمجة في هذا اليوم</p>
-          <button class="btn btn-sm btn-outline" onclick="window.naseejAdmin.autoBalanceSchedule()" style="font-size: 11.5px; padding: 6px 12px;">
-            🪄 توزيع العمل لملء هذا اليوم
-          </button>
+          <p><strong>${rawDayOrders.length > 0 ? `لا توجد طلبيات للآدمن (${this.currentScheduleStaffFilter})` : 'يوم شاغر (فراغ)'}</strong></p>
+          <p>${rawDayOrders.length > 0 ? `(يوجد ${rawDayOrders.length} طلبيات لآدمنز آخرين بهذا اليوم)` : 'لا توجد كميات شغل مبرمجة في هذا اليوم'}</p>
+          ${rawDayOrders.length === 0 ? `
+            <button class="btn btn-sm btn-outline" onclick="window.naseejAdmin.autoBalanceSchedule()" style="font-size: 11.5px; padding: 6px 12px;">
+              🪄 توزيع العمل لملء هذا اليوم
+            </button>
+          ` : ''}
         </div>
-      ` : dayInfo.orders.map(order => {
+      ` : displayedOrders.map(order => {
         const windowsCount = (order.items || []).length;
         const fabricsSummary = (order.items || []).map(i => {
           let width = i.width;
@@ -840,8 +1002,11 @@ class NaseejAdmin {
 
         return `
           <div class="schedule-order-card" draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${order.id}')" style="background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 10px;">
-            <div class="schedule-card-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span class="schedule-order-num" style="font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700;">#${order.id}</span>
+            <div class="schedule-card-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px;">
+              <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                <span class="schedule-order-num" style="font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700;">#${order.id}</span>
+                <span class="badge-staff badge-staff-${this.getStaffKey(order.recordedBy || 'هشام')}" style="font-size: 10.5px; padding: 1.5px 6px;">👑 ${order.recordedBy || 'المعرض'}</span>
+              </div>
               ${prepBadge}
             </div>
 
@@ -1181,6 +1346,9 @@ class NaseejAdmin {
                             <span class="day-order-cust-name" onclick="window.naseejAdmin.printOrderReceipt('${o.id}')" title="انقر لعرض وطباعة الفاتورة">
                               👤 <strong>${custName}</strong>
                             </span>
+                            <span class="badge-staff badge-staff-${this.getStaffKey(o.recordedBy || 'هشام')}" style="font-size: 10px; padding: 1px 6px;">
+                              👑 ${o.recordedBy || 'المعرض'}
+                            </span>
                             <span class="badge ${isPrepared ? 'badge-prepared' : 'badge-pending'}" 
                                   onclick="window.naseejAdmin.toggleOrderPrepStatus('${o.id}', event)" 
                                   title="انقر لتغيير حالة التجهيز يدوياً"
@@ -1472,6 +1640,7 @@ class NaseejAdmin {
       installationDate: isInstall ? dateStr : null,
       installationDay: isInstall ? dayName : null,
       deliveryType: isDelivery ? 'delivery' : 'pickup',
+      recordedBy: this.selectedWalkinStaff || 'هشام',
       totalMeters: 8,
       source: 'walkin_paper',
       items: [{
@@ -2134,6 +2303,10 @@ class NaseejAdmin {
 
     this.onNotebookTypeChange('install');
 
+    // Select active staff for notebook modal
+    const activeStaff = localStorage.getItem('naseej_active_staff') || this.selectedNotebookStaff || 'هشام';
+    this.selectNotebookStaff(activeStaff);
+
     // Reset image preview unless already has one
     const placeholder = document.getElementById('notebook-empty-placeholder');
     const previewHolder = document.getElementById('notebook-preview-holder');
@@ -2416,6 +2589,7 @@ class NaseejAdmin {
     const dayName = store.getDayNameFromDate(d);
     const prepD = prepDateStr ? new Date(prepDateStr) : null;
     const prepDayName = prepD ? store.getDayNameFromDate(prepD) : store.getWorkshopPrepDate(dateStr).dayName;
+    const recordedBy = document.getElementById('nb-recorded-by')?.value?.trim() || this.selectedNotebookStaff || 'هشام';
 
     const orderData = {
       customer: {
@@ -2445,6 +2619,7 @@ class NaseejAdmin {
       workshopPrepDate: prepDateStr || dateStr,
       workshopPrepDay: prepDayName,
       source: 'notebook_scan',
+      recordedBy: recordedBy,
       notebookImage: this.currentNotebookImage || null,
       items: [{
         productId: 'nb_item_1',
@@ -2621,6 +2796,10 @@ class NaseejAdmin {
     document.getElementById('walkin-notes').value = '';
     const installFeeInput = document.getElementById('walkin-install-fee');
     if (installFeeInput) installFeeInput.value = 0;
+
+    // Select active showroom staff
+    const activeStaff = localStorage.getItem('naseej_active_staff') || this.selectedWalkinStaff || 'هشام';
+    this.selectWalkinStaff(activeStaff);
 
     // Reset date fields using smart slot finder: if Week 1 is full, default automatically to Week 2!
     const slot = store.getNextAvailableSlot(8);
@@ -3674,6 +3853,7 @@ class NaseejAdmin {
       installerName: installToggle ? store.getInstallerName(installerId) : null,
       installationStatus: installToggle ? 'scheduled' : 'none',
       source: 'showroom',
+      recordedBy: document.getElementById('walkin-recorded-by')?.value?.trim() || this.selectedWalkinStaff || 'هشام',
       items: orderItems,
       totalMeters,
       subtotal,
@@ -3685,7 +3865,7 @@ class NaseejAdmin {
 
     const newOrder = store.createOrder(orderData);
     const windowsSummary = orderItems.length === 1 ? 'شباك واحد' : `${orderItems.length} شبابيك (${totalMeters} متر)`;
-    window.naseejCustomer.showToast(`🎉 تم تسجيل طلبية المعرض (${newOrder.id}) باسم "${name}" (${windowsSummary}) وإدراجها بالجدول ليوم ${tailoringDay} (${tailoringDate})!`, 'success');
+    window.naseejCustomer.showToast(`🎉 تم تسجيل طلبية المعرض (${newOrder.id}) باسم الآدمن [${orderData.recordedBy}] للزبون "${name}" (${windowsSummary}) وإدراجها بالجدول ليوم ${tailoringDay} (${tailoringDate})!`, 'success');
     this.closeWalkinOrderModal();
     this.renderAll();
   }
@@ -3731,6 +3911,7 @@ class NaseejAdmin {
             <strong>📅 موعد التسليم / التركيب للزبون:</strong> <span style="color:#0f172a; font-weight:bold;">يوم ${order.scheduledDay || 'السبت'} (${order.scheduledDate || ''})</span><br>
             <strong>🏷️ نوع وتصنيف الموعد:</strong> <span style="font-weight:bold; color: ${order.requiresInstallation ? '#2563eb' : '#059669'};">${order.requiresInstallation ? `🔧 تركيب منزلي (${order.installerName || 'فني تركيب معتمد'})` : '🏪 تسليم واستلام داخل المعرض'}</span><br>
             <strong>حالة التجهيز بالورشة:</strong> <span style="font-weight:bold; color: ${store.isOrderPrepared(order) ? '#15803d' : '#d97706'};">${store.isOrderPrepared(order) ? '✅ تم التجهيز بالكامل' : '⏳ قيد التجهيز'}</span><br>
+            <strong>الآدمن المسؤول / سُجلت بواسطة:</strong> <span style="font-weight:bold; color:#0f172a;">👑 ${order.recordedBy || 'إدارة المعرض'}</span><br>
             <strong>طريقة الدفع:</strong> ${order.paymentMethod}
           </div>
           <div>

@@ -548,6 +548,7 @@ class NaseejStore {
       installerName: installerName,
       installationStatus: requiresInstallation ? 'pending_install' : 'not_required',
       source: source, // 'online', 'showroom', 'notebook_scan', etc.
+      recordedBy: orderData.recordedBy || (source === 'online' ? 'المتجر الإلكتروني' : 'هشام'),
       notebookImage: orderData.notebookImage || null,
       items: orderData.items || [],
       totalMeters: Number(orderData.totalMeters) || 0,
@@ -658,6 +659,10 @@ class NaseejStore {
     }).catch(e => console.warn('[Cloud Sync] updateOrder:', e.message));
 
     return order;
+  }
+
+  changeOrderStaff(orderId, newStaff) {
+    return this.updateOrder(orderId, { recordedBy: newStaff });
   }
 
   // Determines if an order is prepared: automatically true if workshop date or target date <= today, or explicitly set

@@ -744,6 +744,35 @@
               </button>
             </div>
           </div>
+
+          <!-- Admin Filter Bar for Orders -->
+          <div class="admin-staff-filter-bar" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; background: #ffffff; padding: 10px 14px; border-radius: 8px; border: 1.5px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span style="font-size: 13px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                <span>👑 تصفية الطلبيات بحسب الآدمن المسؤول:</span>
+              </span>
+              <div id="admin-orders-staff-filters" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-xs btn-gold active" onclick="window.naseejAdmin.filterOrdersByStaff('all', this)" style="font-weight: 800; border-radius: 6px; padding: 4px 10px;">
+                  🔘 كافة الآدمنز
+                </button>
+                <button type="button" class="btn btn-xs btn-outline" onclick="window.naseejAdmin.filterOrdersByStaff('هشام', this)" style="font-weight: 800; border-radius: 6px; padding: 4px 10px;">
+                  👑 هشام
+                </button>
+                <button type="button" class="btn btn-xs btn-outline" onclick="window.naseejAdmin.filterOrdersByStaff('هباب', this)" style="font-weight: 800; border-radius: 6px; padding: 4px 10px;">
+                  👑 هباب
+                </button>
+                <button type="button" class="btn btn-xs btn-outline" onclick="window.naseejAdmin.filterOrdersByStaff('أسامة', this)" style="font-weight: 800; border-radius: 6px; padding: 4px 10px;">
+                  👑 أسامة
+                </button>
+                <button type="button" class="btn btn-xs btn-outline" onclick="window.naseejAdmin.filterOrdersByStaff('أحمد', this)" style="font-weight: 800; border-radius: 6px; padding: 4px 10px;">
+                  👑 أحمد
+                </button>
+              </div>
+            </div>
+            <div style="font-size: 12px; color: #64748b; font-weight: 600;">
+              👑 انقر على اسمك لعرض طلبياتك المسجلة فقط
+            </div>
+          </div>
           <div class="admin-table-responsive">
             <table class="admin-table">
               <thead>
@@ -797,6 +826,35 @@
               <button type="button" class="btn btn-sm btn-primary" onclick="window.openWalkinOrderModal(event)" title="إضافة طلبية زبون حضر للمعرض">
                 <span>➕ طلبية زبون من المعرض</span>
               </button>
+            </div>
+          </div>
+
+          <!-- Schedule Admin Filter Bar -->
+          <div class="admin-staff-filter-bar" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; background: #ffffff; padding: 9px 14px; border-radius: 8px; border: 1.5px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span style="font-size: 13px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                <span>👑 تصفية جدول الورشة بحسب الآدمن المسؤول:</span>
+              </span>
+              <div id="admin-schedule-staff-filters" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-xs btn-gold active" onclick="window.naseejAdmin.filterScheduleByStaff('all', this)" style="font-weight: 800; border-radius: 6px; padding: 4px 10px;">
+                  🔘 كافة الآدمنز
+                </button>
+                <button type="button" class="btn btn-xs btn-outline" onclick="window.naseejAdmin.filterScheduleByStaff('هشام', this)" style="font-weight: 800; border-radius: 6px; padding: 4px 10px;">
+                  👑 هشام
+                </button>
+                <button type="button" class="btn btn-xs btn-outline" onclick="window.naseejAdmin.filterScheduleByStaff('هباب', this)" style="font-weight: 800; border-radius: 6px; padding: 4px 10px;">
+                  👑 هباب
+                </button>
+                <button type="button" class="btn btn-xs btn-outline" onclick="window.naseejAdmin.filterScheduleByStaff('أسامة', this)" style="font-weight: 800; border-radius: 6px; padding: 4px 10px;">
+                  👑 أسامة
+                </button>
+                <button type="button" class="btn btn-xs btn-outline" onclick="window.naseejAdmin.filterScheduleByStaff('أحمد', this)" style="font-weight: 800; border-radius: 6px; padding: 4px 10px;">
+                  👑 أحمد
+                </button>
+              </div>
+            </div>
+            <div style="font-size: 11.5px; color: #64748b; font-weight: 600;">
+              💡 يُميز كل آدمن بلون خاص لسهولة متابعة طلبيات المعرض
             </div>
           </div>
 
@@ -1908,6 +1966,58 @@
             </div>
           </div>
 
+          <!-- تأكيد هوية الآدمن المسجل للطلبية (من أنت؟) -->
+          <div class="walkin-staff-card" id="walkin-admin-prompt-card" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; border: 1.5px solid #334155; box-shadow: 0 4px 14px rgba(0,0,0,0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 30px; line-height: 1;">👑</span>
+                <div>
+                  <div style="font-weight: 800; font-size: 15px; color: #f8fafc; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <span>من أنت؟ هل أنت الآدمن:</span>
+                    <span id="walkin-active-admin-name" style="color: #fbbf24; font-size: 16px; font-weight: 900; background: rgba(251, 191, 36, 0.15); padding: 1px 8px; border-radius: 6px; border: 1px solid rgba(251, 191, 36, 0.4);">هشام</span>
+                    <span>؟</span>
+                  </div>
+                  <div style="font-size: 11.5px; color: #94a3b8; margin-top: 3px;">
+                    الجهاز مسجل عليه حالياً (<strong id="walkin-saved-admin-sub" style="color: #e2e8f0;">هشام</strong>). إذا كنت أنت اضغط "موافق"، أو انقر على اسمك بالأسفل إذا كان زميلك:
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-sm btn-gold" id="btn-confirm-active-admin" onclick="window.naseejAdmin.confirmActiveAdmin()" style="font-weight: 800; font-size: 13px; padding: 7px 16px; border-radius: 8px; box-shadow: 0 2px 10px rgba(212,175,55,0.35); cursor: pointer;">
+                  ✓ موافق، أنا <span id="btn-confirm-admin-name">هشام</span>
+                </button>
+                <span id="walkin-selected-staff-badge" class="badge-staff badge-staff-hisham" style="font-size: 12.5px; padding: 6px 12px;">
+                  👑 الآدمن الحالي: هشام
+                </span>
+              </div>
+            </div>
+
+            <div style="margin-top: 12px; border-top: 1px dashed rgba(255,255,255,0.18); padding-top: 10px;">
+              <div style="font-size: 11.5px; font-weight: 700; color: #cbd5e1; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>🔄 لست (<span id="walkin-change-from-name">هشام</span>)؟ انقر على اسمك ليتم حفظ الجهاز باسمك فوراً:</span>
+              </div>
+              <div class="staff-picker-grid">
+                <button type="button" class="staff-picker-btn active" data-staff="هشام" onclick="window.naseejAdmin.selectWalkinStaff('هشام')">
+                  <span>👑 هشام</span>
+                  <span class="staff-check">✓</span>
+                </button>
+                <button type="button" class="staff-picker-btn" data-staff="هباب" onclick="window.naseejAdmin.selectWalkinStaff('هباب')">
+                  <span>👑 هباب</span>
+                  <span class="staff-check">✓</span>
+                </button>
+                <button type="button" class="staff-picker-btn" data-staff="أسامة" onclick="window.naseejAdmin.selectWalkinStaff('أسامة')">
+                  <span>👑 أسامة</span>
+                  <span class="staff-check">✓</span>
+                </button>
+                <button type="button" class="staff-picker-btn" data-staff="أحمد" onclick="window.naseejAdmin.selectWalkinStaff('أحمد')">
+                  <span>👑 أحمد</span>
+                  <span class="staff-check">✓</span>
+                </button>
+              </div>
+            </div>
+            <input type="hidden" id="walkin-recorded-by" value="هشام">
+          </div>
+
           <div class="admin-form-grid">
             <div class="form-group">
               <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -2230,6 +2340,41 @@
 
             <form id="notebook-confirm-form" onsubmit="window.naseejAdmin.confirmNotebookOrder(event)">
               <div class="confirm-form-grid">
+                <!-- تأكيد الآدمن المسؤول عن تسجيل الطلبية -->
+                <div class="form-group" style="grid-column: 1 / -1; margin-bottom: 8px; background: #0f172a; padding: 12px 14px; border-radius: 8px; border: 1.5px solid #334155; color: #fff;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span style="font-size: 18px;">👑</span>
+                      <label class="form-label" style="font-weight: 800; font-size: 13px; color: #f8fafc; margin-bottom: 0;">
+                        من أنت؟ هل أنت الآدمن (<span id="nb-active-admin-name" style="color: #fbbf24;">هشام</span>)؟
+                      </label>
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <button type="button" class="btn btn-xs btn-gold" onclick="window.naseejCustomer.showToast('✓ مرحباً بك! تم اعتماد الآدمن: ' + (document.getElementById('nb-recorded-by')?.value || 'هشام'), 'success')" style="font-weight: 800;">
+                        ✓ موافق
+                      </button>
+                      <span id="nb-selected-staff-badge" class="badge-staff badge-staff-hisham" style="font-size: 11px;">
+                        👑 الآدمن: هشام
+                      </span>
+                    </div>
+                  </div>
+                  <div class="staff-picker-grid" style="gap: 6px; margin-top: 6px;">
+                    <button type="button" class="staff-picker-btn active" data-nb-staff="هشام" onclick="window.naseejAdmin.selectNotebookStaff('هشام')">
+                      <span>👑 هشام</span>
+                    </button>
+                    <button type="button" class="staff-picker-btn" data-nb-staff="هباب" onclick="window.naseejAdmin.selectNotebookStaff('هباب')">
+                      <span>👑 هباب</span>
+                    </button>
+                    <button type="button" class="staff-picker-btn" data-nb-staff="أسامة" onclick="window.naseejAdmin.selectNotebookStaff('أسامة')">
+                      <span>👑 أسامة</span>
+                    </button>
+                    <button type="button" class="staff-picker-btn" data-nb-staff="أحمد" onclick="window.naseejAdmin.selectNotebookStaff('أحمد')">
+                      <span>👑 أحمد</span>
+                    </button>
+                  </div>
+                  <input type="hidden" id="nb-recorded-by" value="هشام">
+                </div>
+
                 <!-- Customer Name -->
                 <div class="form-group">
                   <label class="form-label" style="font-weight: 700;">
