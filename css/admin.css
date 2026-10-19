@@ -185,30 +185,25 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* Eliminate horizontal scroll on orders table */
-.admin-orders-responsive {
-  overflow-x: hidden !important;
-}
-
 .admin-table {
   width: 100%;
   border-collapse: collapse;
   text-align: right;
-  font-size: 12.5px;
+  font-size: 13px;
 }
 
 .admin-table th {
   background: #f8fafc;
-  padding: 9px 10px;
+  padding: 12px 14px;
   font-weight: 800;
   color: var(--text-muted);
   border-bottom: 2px solid var(--border-color);
-  font-size: 12px;
-  white-space: normal;
+  font-size: 12.5px;
+  white-space: nowrap;
 }
 
 .admin-table td {
-  padding: 8px 10px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--border-light);
   vertical-align: middle;
 }
@@ -217,34 +212,36 @@
   background: #fafcff;
 }
 
-/* --- Dedicated Compact Rules for Orders Table (مضغوط بالكامل بدون تمرير أفقي) --- */
+/* Orders Table (Comfortable layout with all buttons clearly visible) */
 .admin-orders-table {
-  width: 100% !important;
-  table-layout: fixed !important;
-  font-size: 11.5px !important;
+  width: 100%;
+  min-width: 1080px;
+  font-size: 13px;
 }
 
 .admin-orders-table th {
-  padding: 8px 6px !important;
-  font-size: 11.5px !important;
+  padding: 12px 14px !important;
+  font-size: 13px !important;
   font-weight: 800 !important;
   color: #0f172a !important;
-  background: #f1f5f9 !important;
+  background: #f8fafc !important;
   border-bottom: 2px solid #cbd5e1 !important;
-  white-space: normal !important;
-  line-height: 1.25 !important;
+  white-space: nowrap !important;
 }
 
 .admin-orders-table td {
-  padding: 7px 5px !important;
-  vertical-align: top !important;
-  word-break: break-word !important;
-  overflow-wrap: break-word !important;
-  line-height: 1.35 !important;
+  padding: 12px 14px !important;
+  vertical-align: middle !important;
 }
 
 .admin-orders-table tr:hover td {
-  background: #f8fafc !important;
+  background: #fafcff !important;
+}
+
+.admin-orders-table td:last-child {
+  white-space: nowrap !important;
+  min-width: 140px !important;
+  text-align: center !important;
 }
 
 
@@ -378,30 +375,30 @@
   background: #fffdf5;
 }
 
-/* Orders Cell Specifics (Ultra Compact) */
+/* Orders Cell Specifics (Comfortable & Clear) */
 .order-id-highlight {
   font-family: monospace;
   font-weight: 800;
   color: var(--primary);
-  font-size: 12px;
+  font-size: 13.5px;
 }
 
 .order-time-muted {
-  font-size: 10.5px;
+  font-size: 11.5px;
   color: #64748b;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 .customer-info-box {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  font-size: 11.5px;
-  line-height: 1.3;
+  gap: 2px;
+  font-size: 12.5px;
+  line-height: 1.4;
 }
 
 .customer-name {
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--primary);
 }
@@ -409,80 +406,74 @@
 .customer-phone {
   color: #1e40af;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .customer-email {
   color: #64748b;
-  font-size: 10.5px;
-  word-break: break-all;
+  font-size: 11.5px;
 }
 
 .customer-city {
   color: #475569;
-  font-size: 10.5px;
-  word-break: break-word;
+  font-size: 12px;
 }
 
 .order-items-cell {
-  width: 100%;
-  max-width: 100%;
+  max-width: 280px;
 }
 
 .admin-order-item-row {
-  font-size: 11px;
-  margin-bottom: 3px;
-  line-height: 1.35;
-  word-break: break-word;
+  font-size: 12px;
+  margin-bottom: 4px;
+  line-height: 1.4;
 }
 
 .badge-meters-count {
   background: rgba(212, 175, 55, 0.15);
   color: #856404;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 4px;
   font-weight: 700;
-  font-size: 10.5px;
+  font-size: 11px;
 }
 
 .total-meters-badge {
-  font-size: 12px;
+  font-size: 13.5px;
   color: #92400e;
   font-weight: 800;
   background: #fef3c7;
   border: 1px solid #fcd34d;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: 6px;
   display: inline-block;
   white-space: nowrap;
 }
 
 .order-price-bold {
-  font-size: 12.5px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--primary);
   white-space: nowrap;
 }
 
 .payment-method-chip {
-  font-size: 10px;
+  font-size: 11px;
   background: #f1f5f9;
-  padding: 1.5px 5px;
+  padding: 2px 7px;
   border-radius: 4px;
   color: #475569;
   display: inline-block;
-  margin-top: 2px;
+  margin-top: 3px;
   font-weight: 600;
 }
 
 .order-status-select {
-  width: 100%;
-  max-width: 100%;
-  padding: 3px 4px;
+  padding: 6px 10px;
   border-radius: 6px;
   border: 1.5px solid #cbd5e1;
   font-family: inherit;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   background: #ffffff;
   cursor: pointer;
@@ -497,26 +488,24 @@
 
 .admin-orders-table .admin-staff-select,
 .admin-orders-table .admin-schedule-day-select {
-  width: 100%;
-  max-width: 100%;
-  font-size: 10.5px !important;
-  padding: 2px 4px !important;
+  font-size: 11px !important;
+  padding: 3px 6px !important;
   border-radius: 4px !important;
 }
 
 .admin-orders-table .schedule-fulfillment-badge {
-  font-size: 10px !important;
-  padding: 1.5px 5px !important;
+  font-size: 11px !important;
+  padding: 2px 7px !important;
   border-radius: 4px !important;
   display: inline-block !important;
 }
 
 .admin-orders-table .badge-installer {
-  font-size: 9.5px !important;
-  padding: 1px 4px !important;
+  font-size: 10.5px !important;
+  padding: 2px 6px !important;
   display: inline-block !important;
-  word-break: break-word !important;
 }
+
 
 /* Add/Edit Product Modal Form */
 .admin-form-grid {

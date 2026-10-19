@@ -506,13 +506,15 @@ class NaseejAdmin {
               <option value="cancelled" ${order.orderStatus === 'cancelled' ? 'selected' : ''}>❌ ملغي من الزبون</option>
             </select>
           </td>
-          <td style="white-space: nowrap;">
-            <button class="btn btn-sm btn-outline" onclick="window.naseejAdmin.printOrderReceipt('${order.id}')" title="طباعة فاتورة تفصيل">
-              🖨️ إيصال
-            </button>
-            <button class="btn btn-sm" onclick="window.naseejAdmin.confirmDeleteOrder('${order.id}')" title="حذف وإلغاء الطلبية من الورشة نهائياً" style="color: #dc2626; border: 1px solid #fecaca; background: #fef2f2; margin-right: 4px; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 700;">
-              🗑️ حذف
-            </button>
+          <td style="white-space: nowrap; text-align: center; min-width: 140px;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+              <button type="button" class="btn btn-sm btn-outline" onclick="window.naseejAdmin.printOrderReceipt('${order.id}')" title="طباعة فاتورة تفصيل" style="font-weight: 700; padding: 5px 10px; font-size: 12px; border-radius: 6px;">
+                🖨️ إيصال
+              </button>
+              <button type="button" class="btn btn-sm" onclick="window.naseejAdmin.confirmDeleteOrder('${order.id}')" title="حذف وإلغاء الطلبية من الورشة نهائياً" style="color: #dc2626; border: 1.5px solid #fca5a5; background: #fef2f2; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: 800; font-size: 12px; transition: all 0.2s ease;">
+                🗑️ حذف
+              </button>
+            </div>
           </td>
         </tr>
       `;
