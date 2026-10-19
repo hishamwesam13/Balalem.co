@@ -1542,7 +1542,9 @@ class NaseejCustomer {
       }
       if (regPane) {
         regPane.classList.add('active');
-        regPane.style.display = 'block';
+        regPane.style.display = 'flex';
+        const bodyEl = regPane.querySelector('.modal-body');
+        if (bodyEl) bodyEl.scrollTop = 0;
       }
       if (modalTitle) modalTitle.textContent = 'إنشاء حساب عميل جديد';
     } else {
@@ -1550,7 +1552,9 @@ class NaseejCustomer {
       if (regTabBtn) regTabBtn.classList.remove('active');
       if (loginPane) {
         loginPane.classList.add('active');
-        loginPane.style.display = 'block';
+        loginPane.style.display = 'flex';
+        const bodyEl = loginPane.querySelector('.modal-body');
+        if (bodyEl) bodyEl.scrollTop = 0;
       }
       if (regPane) {
         regPane.classList.remove('active');

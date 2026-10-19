@@ -1575,13 +1575,13 @@
         <button class="modal-close" onclick="window.naseejCustomer.closeAuthModal()">✕</button>
       </div>
 
-      <!-- Auth Tabs Switcher -->
+      <!-- Auth Tabs Switcher (Prominent high-contrast tabs) -->
       <div class="auth-tabs-nav">
         <button id="tab-btn-login" class="auth-tab-btn active" type="button" onclick="window.naseejCustomer.switchAuthTab('login')">
-          🔑 تسجيل الدخول
+          <span>🔑 تسجيل الدخول</span>
         </button>
         <button id="tab-btn-register" class="auth-tab-btn" type="button" onclick="window.naseejCustomer.switchAuthTab('register')">
-          ✨ إنشاء حساب عميل جديد
+          <span>✨ إنشاء حساب جديد</span>
         </button>
       </div>
 
@@ -1589,7 +1589,7 @@
       <div id="auth-pane-login" class="auth-tab-pane active">
         <form onsubmit="window.naseejCustomer.handleLoginSubmit(event)">
           <div class="modal-body">
-            <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 18px;">
+            <p class="auth-lead-text">
               أهلاً بك مجدداً في متجر Balalem co! أدخل بيانات حسابك للوصول إلى طلباتك وسلتك أو لوحة التحكم.
             </p>
 
@@ -1613,6 +1613,17 @@
               </label>
               <span style="font-size: 11px; color: #8c6808; font-weight: 700; background: rgba(212, 175, 55, 0.15); padding: 3px 8px; border-radius: 6px;">حفظ آمن 🔐</span>
             </div>
+
+            <!-- Prominent Account Switch Callout -->
+            <div class="auth-switch-card">
+              <div class="auth-switch-card-info">
+                <strong class="auth-switch-title">✨ ليس لديك حساب بعد؟</strong>
+                <span class="auth-switch-desc">أنشئ حسابك الآن لحفظ مقاساتك وتتبع تفصيل ستائرك</span>
+              </div>
+              <button type="button" class="btn-auth-switch" onclick="window.naseejCustomer.switchAuthTab('register')">
+                إنشاء حساب جديد الآن 👈
+              </button>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="window.naseejCustomer.closeAuthModal()">إلغاء</button>
@@ -1625,7 +1636,7 @@
       <div id="auth-pane-register" class="auth-tab-pane" style="display: none;">
         <form onsubmit="window.naseejCustomer.handleRegisterSubmit(event)">
           <div class="modal-body">
-            <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 18px;">
+            <p class="auth-lead-text">
               أنشئ حساب عميل جديد لحفظ مقاسات النوافذ وسلة المشتريات ومتابعة أمتار وتفصيل ستائرك بدقة.
             </p>
 
@@ -1673,6 +1684,17 @@
 
             <div class="role-notice-card">
               <span>🛍️ يتم تسجيل حسابك تلقائياً برول <strong>عميل موثوق (Customer)</strong> يتيح لك كافة مزايا التسوق وتتبع طلبيات الستائر.</span>
+            </div>
+
+            <!-- Prominent Switch Back to Login -->
+            <div class="auth-switch-card auth-switch-card-login">
+              <div class="auth-switch-card-info">
+                <strong class="auth-switch-title">🔑 لديك حساب مسجل بالفعل؟</strong>
+                <span class="auth-switch-desc">سجّل دخولك للوصول إلى طلباتك وسلتك ولوحة التحكم</span>
+              </div>
+              <button type="button" class="btn-auth-switch btn-auth-switch-login" onclick="window.naseejCustomer.switchAuthTab('login')">
+                تسجيل الدخول لحسابك 👈
+              </button>
             </div>
           </div>
           <div class="modal-footer">
