@@ -163,8 +163,10 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Handle Static Files
-  let relativePath = pathname === '/' || pathname === '/admin' || pathname === '/admin/'
+  let relativePath = (pathname === '/' || pathname === '/admin' || pathname === '/admin/')
     ? 'index.html'
+    : (pathname === '/about' || pathname === '/about/')
+    ? 'about.html'
     : pathname.replace(/^\/+/, '');
 
   let filePath = path.join(__dirname, decodeURIComponent(relativePath));

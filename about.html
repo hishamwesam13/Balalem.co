@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>من نحن | شركة الولاء للستائر (بلالم إخوان) - عراقة نابلسية منذ 1988</title>
+  <meta name="description" content="من نحن - شركة الولاء للستائر (بلالم إخوان). انطلقت مسيرتنا عام 1988 في أزقة نابلس القديمة على يد المؤسس الحاج أبو هشام بلالم. أصالة البدايات ودقة الهندسة والستائر الذكية المعاصرة.">
+
+  <!-- Favicon & Styles -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d4af37'><path d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/customer.css">
+
+  <style>
+    /* Specific page styling for About Us Standalone Page */
+    .about-page-hero {
+      background: radial-gradient(circle at 50% 20%, rgba(212, 175, 55, 0.12) 0%, rgba(10, 15, 29, 0.98) 75%), #0a0f1d;
+      padding: 50px 0 40px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .about-page-hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d4af37' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    .breadcrumb-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      color: #94a3b8;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      padding: 6px 18px;
+      border-radius: 30px;
+      margin-bottom: 22px;
+      backdrop-filter: blur(8px);
+    }
+    .breadcrumb-nav a {
+      color: #cbd5e1;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    .breadcrumb-nav a:hover {
+      color: var(--gold);
+    }
+    .breadcrumb-separator {
+      color: var(--gold);
+      font-size: 11px;
+    }
+    .about-page-title {
+      font-size: 2.3rem;
+      font-weight: 900;
+      color: #ffffff;
+      margin-bottom: 16px;
+      line-height: 1.35;
+      letter-spacing: -0.5px;
+    }
+    .about-page-lead {
+      max-width: 780px;
+      margin: 0 auto;
+      font-size: 1.15rem;
+      color: #cbd5e1;
+      line-height: 1.8;
+      font-weight: 500;
+    }
+    .back-to-store-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.08));
+      border: 1px solid rgba(212, 175, 55, 0.45);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 14px;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      margin-top: 24px;
+    }
+    .back-to-store-btn:hover {
+      background: linear-gradient(135deg, var(--gold), #b38927);
+      color: #0a0f1d;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+    }
+    @media (max-width: 768px) {
+      .about-page-title {
+        font-size: 1.7rem;
+      }
+      .about-page-lead {
+        font-size: 1rem;
+        padding: 0 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Official Announcement & Fast Contact Bar -->
+  <div class="top-official-bar" id="top-social-bar">
+    <div class="container top-official-inner">
+      <!-- Right: Brand Identity & Palestinian Verification Badge -->
+      <div class="top-brand-badge-group">
+        <span class="official-shield-badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+          العلامة الرسمية المعتمدة
+        </span>
+        <span class="top-brand-title">شركة الولاء لستائر Balalem co • تفصيل وأقمشة فاخرة</span>
+      </div>
+
+      <!-- Center: Delivery Notice across Palestine -->
+      <div class="top-delivery-notice">
+        <span class="pulse-dot-gold"></span>
+        <span>🚚 توصيل سريع وتفصيل فوري لكافة محافظات فلسطين (القدس، الضفة، والداخل) | فنيو تركيب معتمدون</span>
+      </div>
+
+      <!-- Left: Fast Contact, Hotline & Social Links -->
+      <div class="top-contact-actions">
+        <a href="https://wa.me/972599842231?text=السلام%20عليكم،%20أود%20الاستفسار%20عن%20تفصيل%20وأقمشة%20الستائر%20لدى%20شركة%20الولاء%20Balalem%20co" target="_blank" rel="noopener noreferrer" class="top-hotline-btn" title="تواصل مباشر عبر الواتساب والمكالمات">
+          <span class="live-dot-green"></span>
+          <span class="hotline-text">واتساب ومبيعات:</span>
+          <span dir="ltr" class="hotline-number">0599842231</span>
+        </a>
+        <div class="top-social-icons">
+          <a href="https://www.facebook.com/search/top?q=شركة%20الولاء%20للستائر%20BalalemCo" target="_blank" rel="noopener noreferrer" class="top-social-circle facebook" title="فيسبوك - شركة الولاء للستائر BalalemCo">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+          <a href="https://www.tiktok.com/@alwalaabalalemco" target="_blank" rel="noopener noreferrer" class="top-social-circle tiktok" title="تيك توك - شركة الولاء للستائر @alwalaabalalemco">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.47 6.3 6.3 0 0 0 1.96-4.54V9.01a8.28 8.28 0 0 0 4.81 1.54V7.1a4.84 4.84 0 0 1-1-.41z"/></svg>
+          </a>
+          <a href="https://instagram.com/alwalaabalalemco" target="_blank" rel="noopener" class="top-social-circle instagram" title="إنستغرام - شركة الولاء للستائر @alwalaabalalemco">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Luxury Sticky Header -->
+  <header class="main-header" id="main-header">
+    <div class="container header-inner">
+      <!-- Brand Logo -->
+      <a href="index.html" class="brand-wrapper" style="text-decoration: none;">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="brand-texts">
+          <span class="brand-name">الـوَلاء لستائر <span class="brand-gold-dot">•</span> Balalem co</span>
+          <span class="brand-subtitle">أقمشة ستائر فاخرة ومنسوجات راقية</span>
+        </div>
+      </a>
+
+      <!-- Navigation Menu Links (Desktop & Tablet) -->
+      <nav class="header-nav-menu" aria-label="القائمة الرئيسية">
+        <a href="index.html" class="nav-link">الرئيسية</a>
+        <a href="about.html" class="nav-link active">من نحن</a>
+        <a href="index.html#fabrics-catalog-section" class="nav-link">تشكيلات الأقمشة</a>
+        <a href="index.html#tailoring-services-section" class="nav-link">خدمات التفصيل</a>
+        <a href="index.html#contacts-section" class="nav-link">تواصل معنا</a>
+      </nav>
+
+      <!-- Fast Actions -->
+      <div class="header-actions">
+        <a href="index.html#fabrics-catalog-section" class="btn btn-gold btn-sm" style="text-decoration: none; font-weight: 700; padding: 8px 16px;">
+          🛍️ تصفح المتجر
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- About Page Dedicated Hero Header -->
+  <div class="about-page-hero">
+    <div class="container">
+      <div class="breadcrumb-nav">
+        <a href="index.html">الرئيسية</a>
+        <span class="breadcrumb-separator">◀</span>
+        <span>من نحن (شركة الولاء للستائر)</span>
+      </div>
+      <h1 class="about-page-title">
+        من نحن — شركة الولاء للستائر <span class="gold-accent">(بلالم إخوان)</span>
+      </h1>
+      <p class="about-page-lead">
+        أصالة متجذرة في قلب نابلس القديمة منذ عام 1988.. ودقة هندسية حديثة ترتقي بالستائر لتصبح تحفة معمارية في كل زاوية من بيتك.
+      </p>
+      <div>
+        <a href="index.html#fabrics-catalog-section" class="back-to-store-btn">
+          <span>👈 العودة إلى تشكيلات الأقمشة والمتجر</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <!-- ======================================================== -->
+    <!-- ABOUT US CONTENT - شركة الولاء للستائر (بلالم إخوان) -->
+    <!-- ======================================================== -->
+    <section class="about-us-section" style="padding-top: 40px;">
+      <div class="container">
+        
+        <!-- Heritage & Generation Showcase (Dual Showcase Cards) -->
+        <div class="about-story-grid">
+          <!-- Card 1: 1988 The Heritage Roots (بدايات متجذرة في الأصالة) -->
+          <div class="about-story-card heritage-card">
+            <div class="about-card-badge">
+              <span class="badge-year">1988 م</span>
+              <span class="badge-place">نابلس القديمة</span>
+            </div>
+            <div class="about-card-image-wrap">
+              <img src="assets/images/about_us_heritage.jpg" alt="بدايات تأسيس شركة الولاء للستائر 1988 في نابلس - الحرفي الحاج أبو هشام بلالم" class="about-story-img" loading="lazy">
+              <div class="about-image-overlay">
+                <span class="overlay-quote">"بدأنا بحب الحرفة.. وصنعنا من تفاصيل القماش فناً يروي حكاية كل منزل"</span>
+              </div>
+            </div>
+            <div class="about-card-content">
+              <div class="card-icon-title">
+                <span class="card-icon">🪡</span>
+                <h3>بدايات متجذرة في الأصالة.. وتطور يعانق العصر</h3>
+              </div>
+              <p>
+                من قلب أزقة <strong>نابلس القديمة</strong>، وبتمام العراقة والتاريخ الشاهد على أصالة الحرفيين، انطلقت مسيرتنا في عام <strong>1988</strong> بوضع اللبنة الأولى على يد المؤسس <strong>الحاج أبو هشام بلالم</strong>.
+              </p>
+              <p>
+                بدأنا رحلتنا بشغف العمل اليدوي ودقة التفاصيل، من خياطة الكسرات التقليدية التي اشتهر بها ذلك الزمان مثل <strong>"عش البلبل"</strong>، لنتحول تدريجياً عبر سنوات من الخبرة والتفاني إلى علامة فارقة في عالم الديكور وتصميم الستائر.
+              </p>
+              <div class="heritage-highlights-chips">
+                <span class="chip">✨ تأسيس 1988</span>
+                <span class="chip">🏛️ أزقة نابلس التاريخية</span>
+                <span class="chip">✂️ غرزة عش البلبل التراثية</span>
+                <span class="chip">👑 الحاج أبو هشام بلالم</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Modern Generation & Engineering (جيل بعد جيل.. نحو آفاق حديثة) -->
+          <div class="about-story-card modern-card">
+            <div class="about-card-badge modern-badge">
+              <span class="badge-year">2026 م</span>
+              <span class="badge-place">ابتكار وهندسة ذكية</span>
+            </div>
+            <div class="about-card-image-wrap">
+              <img src="assets/images/about_us_modern_smart.jpg" alt="الستائر الذكية والتصاميم الهندسية - شركة الولاء" class="about-story-img" loading="lazy">
+              <div class="about-image-overlay modern-overlay">
+                <span class="overlay-quote">"الستارة ليست مجرد قطعة قماش.. بل عنصر معماري يضفي روحاً وفخامة"</span>
+              </div>
+            </div>
+            <div class="about-card-content">
+              <div class="card-icon-title">
+                <span class="card-icon">📐</span>
+                <h3>جيل بعد جيل.. نحو آفاق حديثة وهندسة مبتكرة</h3>
+              </div>
+              <p>
+                واصل <strong>جيل الشباب</strong> مسيرة البناء والتطوير، بحرص دائم على مواكبة أحدث صيحات الديكور العالمية وأرقى الأقمشة المتداولة في المعارض الدولية.
+              </p>
+              <p>
+                ولم نقف عند هذا الحد؛ بل قمنا بإحداث نقلة نوعية عبر إدخال <strong>التصاميم الهندسية المبتكرة بأيدي مهندسي "الولاء"</strong>، لنرتقي بالستائر من مجرد قطعة قماش تكميلية إلى عناصر جمالية متكاملة تضفي روحاً وفخامة استثنائية على كل مكان.
+              </p>
+              <div class="heritage-highlights-chips">
+                <span class="chip modern-chip">🚀 جيل الشباب الصاعد</span>
+                <span class="chip modern-chip">📐 تصاميم هندسية مبتكرة</span>
+                <span class="chip modern-chip">📱 ستائر ذكية وكهربائية</span>
+                <span class="chip modern-chip">✨ أرقى الخامات العالمية</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vision Banner (رؤيتنا) -->
+        <div class="about-vision-card">
+          <div class="vision-icon-wrap">
+            <div class="vision-shining-star">🌟</div>
+          </div>
+          <div class="vision-text-wrap">
+            <span class="vision-eyebrow">رؤيتنا المستقبلية المستدامة</span>
+            <h3 class="vision-heading">أن نبقى الخيار الأول والرائد بلا منازع</h3>
+            <p class="vision-paragraph">
+              "أن نبقى الخيار الأول والرائد بلا منازع في عالم الستائر والديكورات الداخلية على مستوى <strong>شمال فلسطين</strong>، وتحديداً في <strong>محافظة نابلس العريقة</strong>، من خلال الابتكار المستمر وتقديم أرفع معايير الجودة العالمية."
+            </p>
+          </div>
+          <div class="vision-stats-badge">
+            <span class="stats-num">+38</span>
+            <span class="stats-label">عاماً من الخبرة المتوارثة</span>
+          </div>
+        </div>
+
+        <!-- Section 3: Products & Services (منتجاتنا وخدماتنا) -->
+        <div class="about-sub-header text-center">
+          <span class="about-section-tag">تشكيلاتنا وخدماتنا</span>
+          <h3 class="about-section-title">نلبي كافة الأذواق والمساحات بتشكيلة واسعة وفاخرة</h3>
+          <p class="about-section-desc">مزيج متناغم بين أحدث الابتكارات العصرية والتراث الراقي للأقمشة العالمية</p>
+        </div>
+
+        <div class="about-services-grid">
+          <!-- Service 1: Luxury Fabrics -->
+          <div class="about-service-card">
+            <div class="service-card-header">
+              <span class="service-card-icon">🧵</span>
+              <span class="service-pill">جودة عالمية</span>
+            </div>
+            <h4 class="service-card-title">الأقمشة الفاخرة المستوردة</h4>
+            <p class="service-card-desc">
+              تشكيلة مميزة من أجود الأقمشة <strong>التركية، الإسبانية، والصينية</strong> المصممة خصيصاً لتناسب أرقى الديكورات الكلاسيكية والحديثة بملمس انسيابي وألوان ساحرة.
+            </p>
+            <ul class="service-feature-list">
+              <li>✓ أقمشة كريب مسدل فخم بألوان حيودية</li>
+              <li>✓ كتان تركي وأوروبي عالي المسامية</li>
+              <li>✓ مخمل وبلاك آوت لحجب تام للضوء</li>
+            </ul>
+          </div>
+
+          <!-- Service 2: Practical Curtains -->
+          <div class="about-service-card">
+            <div class="service-card-header">
+              <span class="service-card-icon">🪟</span>
+              <span class="service-pill">عملية وعصرية</span>
+            </div>
+            <h4 class="service-card-title">الستائر العملية والمكتبية</h4>
+            <p class="service-card-desc">
+              أحدث موديلات ستائر <strong>الرول، الزيبرا، والبلاك آوت (Blackout)</strong> بأشكالها المتنوعة التي تمنحك تحكماً مثالياً بدرجة الإضاءة والخصوصية في المنازل والمكاتب.
+            </p>
+            <ul class="service-feature-list">
+              <li>✓ ستائر رول مقاومة للحرارة والشمس</li>
+              <li>✓ ستائر زيبرا مزدوجة بنظام الطبقات</li>
+              <li>✓ ستائر معدنية وخشبية للمكاتب والصالونات</li>
+            </ul>
+          </div>
+
+          <!-- Service 3: Smart Curtains -->
+          <div class="about-service-card highlight-smart">
+            <div class="service-card-header">
+              <span class="service-card-icon">⚡</span>
+              <span class="service-pill smart-pill">المستقبل اليوم</span>
+            </div>
+            <h4 class="service-card-title">الستائر الذكية والكهربائية (Smart)</h4>
+            <p class="service-card-desc">
+              حلول عصرية فائقة تتيح لك التحكم بفتح وإغلاق الستائر بكل سلاسة عبر <strong>الأوامر الصوتية (Alexa / أليكسا)</strong>، الهواتف الذكية، وأنظمة المنازل الذكية المتكاملة.
+            </p>
+            <ul class="service-feature-list">
+              <li>✓ محركات كهربائية هادئة وفائقة القوة</li>
+              <li>✓ توافق مع Alexa و Google Home وتطبيقات الجوال</li>
+              <li>✓ برمجة مؤقتات الفتح والإغلاق التلقائي مع شروق الشمس</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Section 4: Why Us (لماذا الولاء للستائر؟) -->
+        <div class="about-sub-header text-center" style="margin-top: 60px;">
+          <span class="about-section-tag">مميزاتنا التنافسية</span>
+          <h3 class="about-section-title">لماذا الولاء للستائر هي خيارك الأول؟</h3>
+          <p class="about-section-desc">معايير دقيقة وضعناها لنضمن لك تجربة شراء وتركيب استثنائية تفوق التوقعات</p>
+        </div>
+
+        <div class="why-us-grid">
+          <!-- Item 1 -->
+          <div class="why-card">
+            <div class="why-number">01</div>
+            <div class="why-icon-circle">💎</div>
+            <h4>جودة لا تُضاهى</h4>
+            <p>نختار خاماتنا وأقمشتنا بعناية فائقة لنضمن لك منتجاً يتحمل الزمن ويحافظ على رونقه وبريقه لسنوات طويلة.</p>
+          </div>
+
+          <!-- Item 2 -->
+          <div class="why-card">
+            <div class="why-number">02</div>
+            <div class="why-icon-circle">🏷️</div>
+            <h4>أسعار منافسة</h4>
+            <p>نقدم معادلة صعبة تجمع بين الفخامة والأسعار المدروسة لتناسب جميع الزبائن ومختلف الميزانيات دون مساومة على الجودة.</p>
+          </div>
+
+          <!-- Item 3: DUST FREE HIGHLIGHT -->
+          <div class="why-card why-card-featured">
+            <div class="why-number">03</div>
+            <div class="why-icon-circle">⏱️</div>
+            <h4>التزام مطلق بالمواعيد والإتقان</h4>
+            <p>نعتبر وقتك ثميناً؛ لذا نلتزم بدقة متناهية في التوريد والتركيب، مع ميزة حصرية تجعلنا الأفضل.</p>
+            <div class="dust-free-badge">
+              <span class="sparkle-icon">✨</span>
+              <span><strong>ميزة التركيب بدون غبار:</strong> حرصاً منا على نظافة وسلامة المنازل المسكونة وأثاثكم الفاخر.</span>
+            </div>
+          </div>
+
+          <!-- Item 4 -->
+          <div class="why-card">
+            <div class="why-number">04</div>
+            <div class="why-icon-circle">🛡️</div>
+            <h4>كفالة وضمان شامل</h4>
+            <p>نضع ثقتنا الكاملة بين يديك لنقدم كفالة وضماناً حقيقياً على جميع المنتجات، الأقمشة، والمحركات وأعمال التركيب.</p>
+          </div>
+
+          <!-- Item 5 -->
+          <div class="why-card">
+            <div class="why-number">05</div>
+            <div class="why-icon-circle">✏️</div>
+            <h4>تصاميم مخصصة حسب الطلب</h4>
+            <p>لا توجد حلول جاهزة تعيق إبداعك؛ فنحن نصمم وننفذ الستائر خصيصاً لتتلاءم مع مساحتك ورؤيتك الشخصية بدقة متناهية.</p>
+          </div>
+        </div>
+
+        <!-- Section 5: Royal Closing Quote Banner -->
+        <div class="about-quote-banner">
+          <div class="quote-sparkles">✦ ✦ ✦</div>
+          <blockquote class="closing-quote">
+            "الولاء للستائر" .. عراقة البدايات، دقة الهندسة، وفخامة اللمسات الأخيرة لبيتك.
+          </blockquote>
+          <div class="quote-author">
+            <span>— شركة الولاء للستائر • بلالم إخوان (نابلس - فلسطين)</span>
+          </div>
+          <div class="quote-actions">
+            <a href="index.html#fabrics-catalog-section" class="btn btn-gold btn-lg" style="text-decoration: none; font-weight: 800; padding: 13px 26px; border-radius: 12px; font-size: 15px;">
+              🛍️ تصفح تشكيلات الأقمشة في المتجر
+            </a>
+            <a href="https://wa.me/972599842231?text=السلام%20عليكم،%20أود%20الاستفسار%20عن%20تفصيل%20الستائر%20لدى%20شركة%20الولاء%20للستائر" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-luxury">
+              💬 استشارة مباشرة مع مهندسي الولاء
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h4>الولاء لستائر Balalem co</h4>
+          <p>
+            متجر الولاء لستائر Balalem co - الوجهة الأولى لتجارة وتفصيل أقمشة الستائر والمفروشات الفاخرة. نقدم أجود أنواع الكريب، الكتان الأوروبي، التول والفوال، والمخمل العازل للضوء مع حاسبة ذكية لاحتساب الأمتار بدقة وخدمة قص وتوصيل سريع لكافة المدن الفلسطينية.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h5>أقمشة الستائر</h5>
+          <ul>
+            <li><a href="index.html#fabrics-catalog-section" style="color: inherit; text-decoration: none;">كريب ستائر مسدل</a></li>
+            <li><a href="index.html#fabrics-catalog-section" style="color: inherit; text-decoration: none;">كتان هولندي طبيعي</a></li>
+            <li><a href="index.html#fabrics-catalog-section" style="color: inherit; text-decoration: none;">تول وشيفون فوال</a></li>
+            <li><a href="index.html#fabrics-catalog-section" style="color: inherit; text-decoration: none;">مخمل ملكي بلاك آوت</a></li>
+            <li><a href="index.html#fabrics-catalog-section" style="color: inherit; text-decoration: none;">بروكار وجاكار كلاسيك</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>عن شركة الولاء</h5>
+          <ul>
+            <li><a href="about.html" style="color: var(--gold-light); text-decoration: none; font-weight: 800;">🏛️ من نحن (مسيرتنا منذ 1988)</a></li>
+            <li>الحاج أبو هشام بلالم (المؤسس)</li>
+            <li>مهندسو الولاء والتصاميم الهندسية</li>
+            <li>الستائر الذكية والكهربائية (Smart)</li>
+            <li>ميزة التركيب النظيف بدون غبار</li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>خدمات المتجر</h5>
+          <ul>
+            <li><a href="index.html#fabrics-catalog-section" style="color: inherit; text-decoration: none;">كتالوج الأقمشة الفاخرة</a></li>
+            <li><a href="index.html#tailoring-services-section" style="color: inherit; text-decoration: none;">خدمات التفصيل والتركيب</a></li>
+            <li>توصيل سريع للمدن والمحافظات</li>
+            <li>كفالة وضمان شامل معتمد</li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>التواصل والصفحات الرسمية</h5>
+          <p style="font-size: 12.5px; color: var(--gold-light); margin-bottom: 8px; font-weight: 700;">شركة الولاء للستائر BalalemCo</p>
+          <ul>
+            <li><a href="https://www.facebook.com/search/top?q=شركة%20الولاء%20للستائر%20BalalemCo" target="_blank" rel="noopener noreferrer" style="color: #60a5fa; text-decoration: none; font-weight: 600;">🔵 فيسبوك: BalalemCo</a></li>
+            <li><a href="https://www.tiktok.com/@alwalaabalalemco" target="_blank" rel="noopener noreferrer" style="color: #ffffff; text-decoration: none; font-weight: 600;">🎵 تيك توك: @alwalaabalalemco</a></li>
+            <li><a href="https://instagram.com/alwalaabalalemco" target="_blank" rel="noopener" style="color: #f472b6; text-decoration: none; font-weight: 600;">📸 إنستغرام: @alwalaabalalemco</a></li>
+            <li><a href="tel:0599842231" style="color: #ffffff; text-decoration: none; font-weight: 700;">📱 اتصال: <span dir="ltr">0599842231</span></a></li>
+            <li><a href="https://wa.me/972599842231" target="_blank" style="color: #10b981; text-decoration: none; font-weight: 700;">💬 واتساب: <span dir="ltr">0599842231</span></a></li>
+            <li>📍 فلسطين (نابلس • رام الله • الخليل • القدس • جنين)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 شركة الولاء للستائر BalalemCo. جميع الحقوق محفوظة | أقمشة ستائر فاخرة وتفصيل دقيق.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Mobile Bottom Sticky Navigation Bar -->
+  <nav class="mobile-bottom-nav" aria-label="شريط التنقل السفلي للجوال">
+    <a href="index.html" class="mobile-nav-item" style="text-decoration: none; color: inherit;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>الرئيسية</span>
+    </a>
+    <a href="about.html" class="mobile-nav-item active" style="text-decoration: none; color: inherit;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>من نحن</span>
+    </a>
+    <a href="index.html#fabrics-catalog-section" class="mobile-nav-item" style="text-decoration: none; color: inherit;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>الأقمشة</span>
+    </a>
+    <a href="index.html#tailoring-services-section" class="mobile-nav-item" style="text-decoration: none; color: inherit;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+      <span>التفصيل</span>
+    </a>
+    <a href="index.html#contacts-section" class="mobile-nav-item" style="text-decoration: none; color: inherit;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      <span>الأرقام</span>
+    </a>
+  </nav>
+
+</body>
+</html>
