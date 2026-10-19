@@ -182,26 +182,33 @@
 .admin-table-responsive {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Eliminate horizontal scroll on orders table */
+.admin-orders-responsive {
+  overflow-x: hidden !important;
 }
 
 .admin-table {
   width: 100%;
   border-collapse: collapse;
   text-align: right;
-  font-size: 13.5px;
+  font-size: 12.5px;
 }
 
 .admin-table th {
   background: #f8fafc;
-  padding: 14px 18px;
-  font-weight: 700;
+  padding: 9px 10px;
+  font-weight: 800;
   color: var(--text-muted);
-  border-bottom: 1px solid var(--border-color);
-  white-space: nowrap;
+  border-bottom: 2px solid var(--border-color);
+  font-size: 12px;
+  white-space: normal;
 }
 
 .admin-table td {
-  padding: 14px 18px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--border-light);
   vertical-align: middle;
 }
@@ -209,6 +216,37 @@
 .admin-table tr:hover td {
   background: #fafcff;
 }
+
+/* --- Dedicated Compact Rules for Orders Table (مضغوط بالكامل بدون تمرير أفقي) --- */
+.admin-orders-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  font-size: 11.5px !important;
+}
+
+.admin-orders-table th {
+  padding: 8px 6px !important;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  background: #f1f5f9 !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  white-space: normal !important;
+  line-height: 1.25 !important;
+}
+
+.admin-orders-table td {
+  padding: 7px 5px !important;
+  vertical-align: top !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  line-height: 1.35 !important;
+}
+
+.admin-orders-table tr:hover td {
+  background: #f8fafc !important;
+}
+
 
 /* Products Cell Specifics */
 .product-cell-main {
@@ -340,97 +378,144 @@
   background: #fffdf5;
 }
 
-/* Orders Cell Specifics */
+/* Orders Cell Specifics (Ultra Compact) */
 .order-id-highlight {
   font-family: monospace;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--primary);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .order-time-muted {
-  font-size: 11.5px;
-  color: var(--text-muted);
+  font-size: 10.5px;
+  color: #64748b;
+  margin-top: 2px;
 }
 
 .customer-info-box {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-size: 12.5px;
+  gap: 1px;
+  font-size: 11.5px;
+  line-height: 1.3;
 }
 
 .customer-name {
-  font-size: 13.5px;
+  font-size: 12px;
+  font-weight: 800;
   color: var(--primary);
 }
 
 .customer-phone {
   color: #1e40af;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 11px;
 }
 
 .customer-email {
-  color: var(--text-muted);
+  color: #64748b;
+  font-size: 10.5px;
+  word-break: break-all;
 }
 
 .customer-city {
   color: #475569;
-  font-size: 12px;
+  font-size: 10.5px;
+  word-break: break-word;
 }
 
 .order-items-cell {
-  max-width: 260px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .admin-order-item-row {
-  font-size: 12px;
-  margin-bottom: 4px;
-  line-height: 1.4;
+  font-size: 11px;
+  margin-bottom: 3px;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .badge-meters-count {
   background: rgba(212, 175, 55, 0.15);
   color: #856404;
-  padding: 1px 6px;
+  padding: 1px 5px;
   border-radius: 4px;
   font-weight: 700;
+  font-size: 10.5px;
 }
 
 .total-meters-badge {
-  font-size: 14px;
-  color: var(--primary);
+  font-size: 12px;
+  color: #92400e;
+  font-weight: 800;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  padding: 2px 6px;
+  border-radius: 6px;
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .order-price-bold {
-  font-size: 15px;
+  font-size: 12.5px;
   font-weight: 800;
   color: var(--primary);
+  white-space: nowrap;
 }
 
 .payment-method-chip {
-  font-size: 11px;
+  font-size: 10px;
   background: #f1f5f9;
-  padding: 2px 6px;
+  padding: 1.5px 5px;
   border-radius: 4px;
-  color: var(--text-muted);
+  color: #475569;
+  display: inline-block;
+  margin-top: 2px;
+  font-weight: 600;
 }
 
 .order-status-select {
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--border-color);
+  width: 100%;
+  max-width: 100%;
+  padding: 3px 4px;
+  border-radius: 6px;
+  border: 1.5px solid #cbd5e1;
   font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   background: #ffffff;
   cursor: pointer;
   transition: var(--transition);
+  color: #0f172a;
 }
 
 .order-status-select:focus {
   outline: none;
   border-color: var(--primary);
+}
+
+.admin-orders-table .admin-staff-select,
+.admin-orders-table .admin-schedule-day-select {
+  width: 100%;
+  max-width: 100%;
+  font-size: 10.5px !important;
+  padding: 2px 4px !important;
+  border-radius: 4px !important;
+}
+
+.admin-orders-table .schedule-fulfillment-badge {
+  font-size: 10px !important;
+  padding: 1.5px 5px !important;
+  border-radius: 4px !important;
+  display: inline-block !important;
+}
+
+.admin-orders-table .badge-installer {
+  font-size: 9.5px !important;
+  padding: 1px 4px !important;
+  display: inline-block !important;
+  word-break: break-word !important;
 }
 
 /* Add/Edit Product Modal Form */
