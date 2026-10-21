@@ -5334,7 +5334,7 @@ class NaseejAdmin {
 
     const amountInput = document.getElementById('pay-modal-amount');
     amountInput.value = rem > 0 ? rem : '';
-    amountInput.removeAttribute('max');
+    amountInput.max = rem > 0 ? rem : 0;
 
     const staffSelect = document.getElementById('pay-modal-receiver');
     if (staffSelect) {
@@ -5381,7 +5381,10 @@ class NaseejAdmin {
 
     const futureEl = document.getElementById('pay-modal-future-debt');
     if (futureEl) {
-      if (futureDebt === 0) {
+      if (enteredAmount > curRem) {
+        futureEl.textContent = `⚠️ تنبيه: المبلغ أكبر من المتبقي بالذمة (${curRem} ₪)! الحد الأقصى المسموح ${curRem} ₪`;
+        futureEl.style.color = '#dc2626';
+      } else if (futureDebt === 0) {
         futureEl.textContent = '0 ₪ (خالص ومسدد بالكامل ✓)';
         futureEl.style.color = '#059669';
       } else {
@@ -5400,8 +5403,16 @@ class NaseejAdmin {
     const receiver = document.getElementById('pay-modal-receiver')?.value || 'هشام';
     const note = document.getElementById('pay-modal-note')?.value?.trim() || '';
 
+    const order = store.getOrderById(orderId);
+    const maxDebt = order ? (order.remainingDebt !== undefined ? order.remainingDebt : Math.max(0, (order.grandTotal || 0) - (order.totalPaid || 0))) : 0;
+
     if (!orderId || amount <= 0) {
       window.naseejCustomer?.showToast('يرجى إدخال مبلغ صحيح للدفعة المقبوضة', 'error');
+      return;
+    }
+
+    if (amount > maxDebt) {
+      window.naseejCustomer?.showToast(`⚠️ لا يمكن قبول هذا المبلغ! الحد الأقصى للمتبقي بذمة الزبون هو (${maxDebt} ₪).`, 'error');
       return;
     }
 
