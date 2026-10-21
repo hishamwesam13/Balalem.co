@@ -734,6 +734,9 @@ class NaseejStore {
     }
 
     order.totalPaid = (order.totalPaid || 0) + amt;
+    if (order.totalPaid > (order.grandTotal || 0)) {
+      order.grandTotal = order.totalPaid;
+    }
     order.remainingDebt = Math.max(0, (order.grandTotal || 0) - order.totalPaid);
     order.paymentStatus = order.remainingDebt <= 0 ? 'paid' : 'partial';
 

@@ -5334,7 +5334,7 @@ class NaseejAdmin {
 
     const amountInput = document.getElementById('pay-modal-amount');
     amountInput.value = rem > 0 ? rem : '';
-    amountInput.max = rem > 0 ? rem : 999999;
+    amountInput.removeAttribute('max');
 
     const staffSelect = document.getElementById('pay-modal-receiver');
     if (staffSelect) {
