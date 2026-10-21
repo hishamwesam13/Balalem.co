@@ -251,10 +251,8 @@
     <div class="container header-inner">
       <!-- Brand Logo -->
       <div class="brand-wrapper" onclick="window.naseejApp.openStorefrontView()" role="button" tabindex="0">
-        <div class="brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
+        <div class="brand-icon" title="شعار شركة الولاء للستائر">
+          <img src="assets/images/alwalaa_logo.png" alt="شعار شركة الولاء للستائر" class="brand-logo-img">
         </div>
         <div class="brand-texts">
           <span class="brand-name">الـوَلاء لستائر <span class="brand-gold-dot">•</span> Balalem co</span>
@@ -691,6 +689,10 @@
         <button class="admin-nav-btn" data-tab="categories" onclick="window.naseejAdmin.switchTab('categories')">
           🏷️ إدارة التصنيفات والفقاعات
         </button>
+        <button class="admin-nav-btn btn-debts-nav" data-tab="debts" onclick="window.naseejAdmin.switchTab('debts')">
+          📖 دفتر الدَّيْن (الذمم والمستحقات)
+          <span id="admin-debts-badge" class="badge-debts-count" style="display: none;">0</span>
+        </button>
       </div>
 
       <!-- Tab 1: Products Table -->
@@ -1059,6 +1061,128 @@
               </thead>
               <tbody id="admin-categories-tbody">
                 <!-- Injected via admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 6: Debts Ledger (دفتر الدَّيْن وسجل الذمم والمستحقات) -->
+      <div id="admin-tab-debts" class="admin-tab-pane" style="display: none;">
+        <div class="admin-card debts-ledger-card">
+          <!-- Debts Header & Summary KPI Cards -->
+          <div class="debts-header-wrap">
+            <div class="debts-title-box">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="debts-hero-icon">📖</span>
+                <div>
+                  <h3 class="admin-card-title">دفتر الدَّيْن وسجل المستحقات والذمم المالية</h3>
+                  <span class="badge badge-gold">نظام المحاسبة ومتابعة الدفعات المتبقية والديون بعد التركيب والتسليم</span>
+                </div>
+              </div>
+              <div class="debts-actions-quick">
+                <button type="button" class="btn btn-sm btn-gold" onclick="window.naseejAdmin.openQuickRecordPaymentModal()" title="تسجيل سداد دفعة جديدة لزبون">
+                  <span>💰 تسجيل دفعة / تحصيل مبلغ</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="window.naseejAdmin.printDebtsReport()" title="طباعة كشف ديون وذمم الورشة">
+                  <span>🖨️ طباعة كشف الديون</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 4 Financial KPI Summary Cards -->
+            <div class="debts-kpis-grid">
+              <div class="debt-kpi-item alert-debt">
+                <div class="debt-kpi-icon">🚨</div>
+                <div class="debt-kpi-content">
+                  <span class="debt-kpi-label">ديون تجاوزت موعد التركيب:</span>
+                  <span id="debt-kpi-overdue-amount" class="debt-kpi-val text-danger">0 ₪</span>
+                  <small id="debt-kpi-overdue-count" class="debt-kpi-sub">0 زبائن تجاوز موعد تركيبهم</small>
+                </div>
+              </div>
+
+              <div class="debt-kpi-item total-debt">
+                <div class="debt-kpi-icon">💳</div>
+                <div class="debt-kpi-content">
+                  <span class="debt-kpi-label">إجمالي الديون المعلقة بالذمة:</span>
+                  <span id="debt-kpi-total-amount" class="debt-kpi-val text-amber">0 ₪</span>
+                  <small id="debt-kpi-total-count" class="debt-kpi-sub">0 زبائن متبقي عليهم مبالغ</small>
+                </div>
+              </div>
+
+              <div class="debt-kpi-item collected-debt">
+                <div class="debt-kpi-icon">💵</div>
+                <div class="debt-kpi-content">
+                  <span class="debt-kpi-label">إجمالي المبالغ المحصلة (عربونات + دفعات):</span>
+                  <span id="debt-kpi-collected-amount" class="debt-kpi-val text-success">0 ₪</span>
+                  <small class="debt-kpi-sub">مجموع الدفعات المسلمة فعلياً</small>
+                </div>
+              </div>
+
+              <div class="debt-kpi-item settlement-debt">
+                <div class="debt-kpi-icon">⚖️</div>
+                <div class="debt-kpi-content">
+                  <span class="debt-kpi-label">نسبة التحصيل المالي:</span>
+                  <span id="debt-kpi-rate" class="debt-kpi-val">0%</span>
+                  <small class="debt-kpi-sub">من إجمالي قيمة الطلبيات</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Debts Filter & Search Toolbar -->
+          <div class="debts-toolbar-bar">
+            <!-- Search Input -->
+            <div class="debts-search-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="debts-search-input" placeholder="🔍 ابحث باسم الزبون (مثال: محمد سلبن)، رقم الجوال، أو رقم الطلبية..." oninput="window.naseejAdmin.handleDebtsSearch(this.value)">
+              <button type="button" class="btn-clear-search" onclick="document.getElementById('debts-search-input').value=''; window.naseejAdmin.handleDebtsSearch('');" title="مسح">✕</button>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="debts-filter-pills">
+              <button type="button" class="debts-pill-btn active" data-filter="all_debts" onclick="window.naseejAdmin.filterDebtsLedger('all_debts', this)">
+                <span>كافة الذمم والديون</span>
+                <span id="pill-count-all-debts" class="pill-badge">0</span>
+              </button>
+              <button type="button" class="debts-pill-btn pill-overdue" data-filter="overdue_only" onclick="window.naseejAdmin.filterDebtsLedger('overdue_only', this)">
+                <span>🚨 تجاوزت موعد التركيب</span>
+                <span id="pill-count-overdue" class="pill-badge">0</span>
+              </button>
+              <button type="button" class="debts-pill-btn" data-filter="before_install" onclick="window.naseejAdmin.filterDebtsLedger('before_install', this)">
+                <span>⏳ قيد التجهيز (قبل موعد التركيب)</span>
+                <span id="pill-count-before-install" class="pill-badge">0</span>
+              </button>
+              <button type="button" class="debts-pill-btn pill-settled" data-filter="settled" onclick="window.naseejAdmin.filterDebtsLedger('settled', this)">
+                <span>✓ المسددة بالكامل (خالصة)</span>
+                <span id="pill-count-settled" class="pill-badge">0</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Notice Helper for Admin -->
+          <div class="debts-guide-notice">
+            <span>💡 <strong>ملاحظة للمسؤول:</strong> انقر <strong>نقراً مزدوجاً (Double Click)</strong> على أي سطر أو اسم زبون لفتح تفاصيل طلبيته بالكامل (الشبابيك، أنواع الأقمشة، والمقاسات). الطلبيات التي يحين أو يتجاوز موعد تركيبها ويبقى عليها جزء من الحساب تنتقل وتُميز تلقائياً باللون الأحمر الفاقع.</span>
+          </div>
+
+          <!-- Debts Ledger Table -->
+          <div class="admin-table-responsive debts-table-wrap">
+            <table class="admin-table debts-table">
+              <thead>
+                <tr>
+                  <th>الزبون الكريم</th>
+                  <th>رقم الجوال والمدينة</th>
+                  <th>موعد التركيب والتسليم</th>
+                  <th>المبلغ الإجمالي</th>
+                  <th>المدفوع حتى الآن</th>
+                  <th>المتبقي بذمته (الدَّيْن)</th>
+                  <th>حالة السداد</th>
+                  <th>الآدمن المسؤول</th>
+                  <th style="text-align: center;">الإجراءات السريعة</th>
+                </tr>
+              </thead>
+              <tbody id="admin-debts-tbody">
+                <!-- Dynamically rendered via window.naseejAdmin.renderDebtsLedger() -->
               </tbody>
             </table>
           </div>
@@ -2173,16 +2297,48 @@
             </div>
           </div>
 
-          <!-- Walkin Order Live Calculation Box -->
-          <div style="background: #ffffff; border: 1.5px solid var(--gold); border-radius: var(--radius-md); padding: 14px 18px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <span style="font-size: 13px; color: #64748b;">إجمالي حساب الزبون:</span>
-              <div id="walkin-calc-breakdown" style="font-size: 12px; color: #0f172a; margin-top: 2px;">8 متر × 65 ₪ = 520 ₪</div>
+          <!-- Walkin Order Live Accounting & Calculation Box (نظام المحاسبة والدفعات للطلبية) -->
+          <div class="walkin-accounting-card" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1.5px solid #d4af37; border-radius: 12px; padding: 16px; margin-top: 16px; color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.25);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(212, 175, 55, 0.3); padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <div style="font-weight: 800; font-size: 14.5px; color: #fbbf24; display: flex; align-items: center; gap: 8px;">
+                <span>💰</span>
+                <span>الحساب المالي والدفعات المتفق عليها:</span>
+              </div>
+              <div id="walkin-calc-breakdown" style="font-size: 12px; color: #cbd5e1;">
+                حساب الأقمشة والتركيب
+              </div>
             </div>
-            <div style="text-align: left;">
-              <span style="font-size: 12px; color: #64748b;">المجموع المطلوب نقداً:</span>
-              <div id="walkin-calc-grandtotal" style="font-size: 22px; font-weight: 800; color: #b45309;">520 شيكل</div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 12px; align-items: stretch;">
+              <!-- Field 1: Total Price (Calculated with option to manually override) -->
+              <div>
+                <label style="font-size: 11.5px; color: #cbd5e1; display: block; margin-bottom: 4px; font-weight: 700;">المبلغ الإجمالي الشامل (₪):</label>
+                <input type="number" id="walkin-total-override" class="form-control" style="font-weight: 800; font-size: 15px; color: #0f172a; background: #ffffff;" placeholder="الإجمالي" oninput="window.naseejAdmin.recalcWalkinAccounting()">
+                <small style="font-size: 10.5px; color: #94a3b8; display: block; margin-top: 2px;">تلقائي أو اتفاق مقطوع</small>
+              </div>
+
+              <!-- Field 2: Down Payment / Deposit in Showroom -->
+              <div>
+                <label style="font-size: 11.5px; color: #34d399; display: block; margin-bottom: 4px; font-weight: 700;">العربون المدفوع بالمعرض (₪):</label>
+                <input type="number" id="walkin-deposit-paid" class="form-control" style="font-weight: 800; font-size: 15px; color: #065f46; background: #ecfdf5; border-color: #6ee7b7;" value="0" min="0" placeholder="0" oninput="window.naseejAdmin.recalcWalkinAccounting()">
+                <small style="font-size: 10.5px; color: #6ee7b7; display: block; margin-top: 2px;">كاش أو تحويل مستلم الآن</small>
+              </div>
+
+              <!-- Field 3: Payment on Installation -->
+              <div>
+                <label style="font-size: 11.5px; color: #60a5fa; display: block; margin-bottom: 4px; font-weight: 700;">الدفعة عند التركيب (₪):</label>
+                <input type="number" id="walkin-install-payment" class="form-control" style="font-weight: 800; font-size: 15px; color: #1e3a8a; background: #eff6ff; border-color: #93c5fd;" value="0" min="0" placeholder="0" oninput="window.naseejAdmin.recalcWalkinAccounting()">
+                <small style="font-size: 10.5px; color: #93c5fd; display: block; margin-top: 2px;">تُسجل بعد التركيب أو التجهيز</small>
+              </div>
+
+              <!-- Field 4: Remaining Debt / Balance (Live Highlight) -->
+              <div style="background: rgba(220, 38, 38, 0.15); border: 1.5px solid #ef4444; border-radius: 8px; padding: 8px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                <label style="font-size: 11.5px; color: #fca5a5; display: block; margin-bottom: 2px; font-weight: 800;">المتبقي بذمة الزبون (دَيْن):</label>
+                <div id="walkin-calc-remaining" style="font-size: 20px; font-weight: 900; color: #f87171;">0 ₪</div>
+                <div id="walkin-debt-status-text" style="font-size: 10.5px; color: #cbd5e1; margin-top: 2px;">مسدد بالكامل</div>
+              </div>
             </div>
+            <div id="walkin-calc-grandtotal" style="display: none;">0 شيكل</div>
           </div>
         </div>
         <div class="modal-footer">
@@ -2628,6 +2784,224 @@
   </nav>
 
 
+
+  <!-- Modal: Record Payment (نافذة تسجيل وتحصيل دفعة مالية جديدة) -->
+  <div id="admin-record-payment-modal" class="naseej-modal" style="display: none; z-index: 999999;">
+    <div class="modal-dialog" style="max-width: 520px; width: 95%;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <span>💰</span>
+          <span>تسجيل دفعة نقدية / سداد من الحساب</span>
+        </h3>
+        <button type="button" class="modal-close" onclick="window.naseejAdmin.closeRecordPaymentModal()">✕</button>
+      </div>
+      <form id="admin-record-payment-form" onsubmit="window.naseejAdmin.submitRecordPayment(event)">
+        <div class="modal-body" style="padding: 20px;">
+          <!-- Order Brief Info Card -->
+          <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #d4af37; border-radius: 10px; padding: 14px; margin-bottom: 16px; color: #fff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span id="pay-modal-order-id" class="badge badge-gold" style="font-size: 12px; font-weight: 800;">ORD-0000</span>
+              <span id="pay-modal-cust-phone" dir="ltr" style="font-size: 12.5px; color: #94a3b8; font-weight: 700;">0599000000</span>
+            </div>
+            <h4 id="pay-modal-cust-name" style="margin: 0 0 10px 0; font-size: 17px; font-weight: 800; color: #f8fafc;">اسم الزبون</h4>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; border-top: 1px dashed rgba(255,255,255,0.15); padding-top: 10px; text-align: center;">
+              <div>
+                <span style="font-size: 11px; color: #94a3b8; display: block;">المبلغ الإجمالي:</span>
+                <strong id="pay-modal-total-price" style="font-size: 14px; color: #f8fafc;">0 ₪</strong>
+              </div>
+              <div>
+                <span style="font-size: 11px; color: #6ee7b7; display: block;">المدفوع سابقاً:</span>
+                <strong id="pay-modal-total-paid" style="font-size: 14px; color: #34d399;">0 ₪</strong>
+              </div>
+              <div>
+                <span style="font-size: 11px; color: #fca5a5; display: block;">المتبقي حالياً:</span>
+                <strong id="pay-modal-remaining-debt" style="font-size: 16px; color: #f87171; font-weight: 900;">0 ₪</strong>
+              </div>
+            </div>
+          </div>
+
+          <input type="hidden" id="pay-modal-order-id-input" value="">
+
+          <div class="form-group">
+            <label class="form-label" style="font-weight: 800; font-size: 14px; color: #0f172a;">المبلغ المدفوع حالياً (شيكل) *</label>
+            <input type="number" id="pay-modal-amount" class="form-control" style="font-size: 18px; font-weight: 800; color: #047857; padding: 10px 14px;" placeholder="أدخل المبلغ المقبوض..." required min="1" step="any" oninput="window.naseejAdmin.recalcPayModalLive()">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">نوع الدفعة / سبب السداد *</label>
+            <select id="pay-modal-type" class="form-control" required>
+              <option value="installment" selected>💵 سداد دفعة لاحقة من الحساب المتبقي</option>
+              <option value="install">🔧 دفعة مستلمة عند تركيب الستائر في الموقع</option>
+              <option value="deposit">🏪 عربون إضافي مستلم بالمعرض</option>
+              <option value="full">✅ تسديد الحساب بالكامل وتصفية الذمة</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">الآدمن أو الفني المستلم للمبلغ *</label>
+            <select id="pay-modal-receiver" class="form-control">
+              <option value="هشام" selected>👑 هشام بلالم</option>
+              <option value="هباب">👑 هباب بلالم</option>
+              <option value="أسامة">🔧 أسامة (فني التركيب)</option>
+              <option value="عز">🔧 عز (فني التركيب)</option>
+              <option value="أحمد">👑 أحمد</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">ملاحظات أو رقم السند / الوصل</label>
+            <input type="text" id="pay-modal-note" class="form-control" placeholder="مثال: نقداً كاش في المعرض / أو استلمها الفني أسامة">
+          </div>
+
+          <!-- Live Preview of remaining debt after this payment -->
+          <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12.5px; color: #475569; font-weight: 700;">المتبقي بذمة الزبون بعد هذا السداد:</span>
+            <strong id="pay-modal-future-debt" style="font-size: 16px; color: #b45309; font-weight: 900;">0 ₪</strong>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="window.naseejAdmin.closeRecordPaymentModal()">إلغاء</button>
+          <button type="submit" class="btn btn-gold" style="padding: 10px 24px; font-weight: 800;">
+            💾 تأكيد تسجيل الدفعة وتحديث الدفتر ✓
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Full Order & Windows Detailed View (نافذة عرض تفاصيل الطلبية الشاملة) -->
+  <div id="admin-order-details-modal" class="naseej-modal" style="display: none; z-index: 999999;">
+    <div class="modal-dialog modal-xl" style="max-width: 900px; width: 95%;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+            <span>📋</span>
+            <span>تفاصيل الطلبية والشبابيك:</span>
+            <span id="detail-modal-order-id" class="badge badge-gold" style="font-size: 13px;">ORD-0000</span>
+          </h3>
+          <span id="detail-modal-order-source" class="badge badge-source" style="background:#0284c7;color:#fff;">🏪 معرض</span>
+          <span id="detail-modal-debt-alert" class="badge" style="display:none; background:#dc2626; color:#fff; font-weight:800;">🚨 ذمة معلقة</span>
+        </div>
+        <button type="button" class="modal-close" onclick="window.naseejAdmin.closeOrderDetailsModal()">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <!-- Customer & Scheduling Summary Card -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 20px;">
+          <!-- Customer Info -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
+            <div style="font-weight: 800; font-size: 13.5px; color: #0f172a; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+              <span>👤 بيانات الزبون الكريم:</span>
+            </div>
+            <div style="font-size: 13px; line-height: 1.7; color: #334155;">
+              <div><strong>الاسم:</strong> <span id="detail-modal-cust-name" style="font-weight: 800; color: #0f172a;">-</span></div>
+              <div><strong>الجوال:</strong> <span id="detail-modal-cust-phone" dir="ltr" style="font-weight: 700;">-</span></div>
+              <div><strong>المدينة والعنوان:</strong> <span id="detail-modal-cust-address">-</span></div>
+              <div><strong>الآدمن المسؤول:</strong> <span id="detail-modal-staff" style="font-weight: 700; color: #b45309;">-</span></div>
+            </div>
+          </div>
+
+          <!-- Schedule & Installation Info -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
+            <div style="font-weight: 800; font-size: 13.5px; color: #0f172a; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+              <span>📅 المواعيد والتنفيذ الميداني:</span>
+            </div>
+            <div style="font-size: 13px; line-height: 1.7; color: #334155;">
+              <div><strong>موعد القص بالورشة:</strong> <span id="detail-modal-tailoring-date" style="font-weight: 700;">-</span></div>
+              <div><strong>موعد التركيب / التسليم:</strong> <span id="detail-modal-install-date" style="font-weight: 800; color: #1d4ed8;">-</span></div>
+              <div><strong>خدمة التركيب:</strong> <span id="detail-modal-install-type">-</span></div>
+              <div><strong>فني التركيب:</strong> <span id="detail-modal-installer-name" style="font-weight: 700;">-</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Windows & Fabrics Items Breakdown Table -->
+        <div style="margin-bottom: 20px;">
+          <h4 style="font-size: 14.5px; font-weight: 800; color: #0f172a; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <span>🪟 بنود الشبابيك وأقمشة الستائر:</span>
+            <span id="detail-modal-windows-count" class="badge badge-gold" style="font-size: 11.5px;">1 شباك</span>
+          </h4>
+          <div class="admin-table-responsive" style="max-height: 260px; overflow-y: auto;">
+            <table class="admin-table" style="font-size: 12.5px;">
+              <thead>
+                <tr>
+                  <th>الغرفة / الشباك</th>
+                  <th>قماش الستارة واللون</th>
+                  <th>المقاسات (عرض × طول)</th>
+                  <th>نوع الكسرات والخياطة</th>
+                  <th>الأمتار</th>
+                  <th>السعر</th>
+                  <th>الإجمالي</th>
+                </tr>
+              </thead>
+              <tbody id="detail-modal-items-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Financial Accounting & Payments Log -->
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1.5px solid #d4af37; border-radius: 12px; padding: 16px; color: #fff;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #fbbf24; display: flex; align-items: center; gap: 6px;">
+              <span>💳 كشف الحساب والدفعات المالية للطلبية:</span>
+            </h4>
+            <div id="detail-modal-payment-status-badge" class="badge" style="background:#10b981; color:#fff; font-weight:800; font-size:12px;">
+              مسدد بالكامل
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; text-align: center; margin-bottom: 14px;">
+            <div style="background: rgba(255,255,255,0.06); padding: 8px; border-radius: 8px;">
+              <span style="font-size: 11px; color: #94a3b8; display: block;">الإجمالي الكلي:</span>
+              <strong id="detail-modal-grandtotal" style="font-size: 16px; color: #f8fafc;">0 ₪</strong>
+            </div>
+            <div style="background: rgba(255,255,255,0.06); padding: 8px; border-radius: 8px;">
+              <span style="font-size: 11px; color: #34d399; display: block;">العربون بالمعرض:</span>
+              <strong id="detail-modal-deposit" style="font-size: 16px; color: #34d399;">0 ₪</strong>
+            </div>
+            <div style="background: rgba(255,255,255,0.06); padding: 8px; border-radius: 8px;">
+              <span style="font-size: 11px; color: #60a5fa; display: block;">الدفعة عند التركيب:</span>
+              <strong id="detail-modal-install-payment" style="font-size: 16px; color: #60a5fa;">0 ₪</strong>
+            </div>
+            <div style="background: rgba(255,255,255,0.06); padding: 8px; border-radius: 8px;">
+              <span style="font-size: 11px; color: #a7f3d0; display: block;">إجمالي المدفوع:</span>
+              <strong id="detail-modal-total-paid" style="font-size: 16px; color: #a7f3d0;">0 ₪</strong>
+            </div>
+            <div style="background: rgba(220, 38, 38, 0.25); border: 1px solid #ef4444; padding: 8px; border-radius: 8px;">
+              <span style="font-size: 11px; color: #fca5a5; display: block; font-weight: 800;">المتبقي بالذمة (الدَّيْن):</span>
+              <strong id="detail-modal-remaining-debt" style="font-size: 18px; color: #f87171; font-weight: 900;">0 ₪</strong>
+            </div>
+          </div>
+
+          <!-- Payments History Sub-table -->
+          <div style="margin-top: 10px;">
+            <div style="font-size: 12px; font-weight: 700; color: #cbd5e1; margin-bottom: 6px;">سجل تسليم الدفعات النقدية:</div>
+            <div id="detail-modal-payment-history-list" style="max-height: 140px; overflow-y: auto; font-size: 12px; color: #cbd5e1; background: rgba(0,0,0,0.25); border-radius: 6px; padding: 8px;">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-sm btn-gold" id="btn-detail-modal-record-pay" onclick="window.naseejAdmin.openPayModalFromDetails()">
+            💰 تسجيل دفعة جديدة
+          </button>
+          <button type="button" class="btn btn-sm btn-outline" id="btn-detail-modal-whatsapp" onclick="window.naseejAdmin.sendOrderWhatsappFromDetails()">
+            💬 محادثة واتساب
+          </button>
+          <button type="button" class="btn btn-sm btn-outline" id="btn-detail-modal-print" onclick="window.naseejAdmin.printOrderFromDetails()">
+            🖨️ طباعة إيصال
+          </button>
+        </div>
+        <button type="button" class="btn btn-outline" onclick="window.naseejAdmin.closeOrderDetailsModal()">✕ إغلاق</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Scripts -->
   <script type="module" src="js/app.js?v=20261013f"></script>

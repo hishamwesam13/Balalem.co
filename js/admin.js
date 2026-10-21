@@ -36,6 +36,11 @@ class NaseejAdmin {
     this.currentOrdersStaffFilter = 'all';
     this.currentScheduleStaffFilter = 'all';
 
+    // Debts Ledger State (دفتر الدَّيْن والذمم المالية)
+    this.currentDebtFilter = 'all_debts'; // 'all_debts', 'overdue_only', 'before_install', 'settled'
+    this.debtsSearchQuery = '';
+    this.activeDetailOrderId = null;
+
     window.naseejAdmin = this;
   }
 
@@ -57,6 +62,8 @@ class NaseejAdmin {
       this.renderInstallationSchedule();
       if (this.calendarViewMode === 'monthly') this.renderMonthlyCalendar();
       this.renderKPIs();
+      this.updateDebtsBadge();
+      if (this.currentTab === 'debts') this.renderDebtsLedger();
     });
     window.addEventListener('naseej:cloud_status', (e) => {
       this.renderCloudStatus(e.detail?.status);
@@ -217,6 +224,8 @@ class NaseejAdmin {
     this.renderCustomersTable();
     this.renderCategoriesTable();
     this.populateCategorySelect();
+    this.updateDebtsBadge();
+    if (this.currentTab === 'debts') this.renderDebtsLedger();
     this.renderCloudStatus(store.cloudStatus || 'connected');
   }
 
@@ -271,6 +280,7 @@ class NaseejAdmin {
     }
     if (tabName === 'customers') this.renderCustomersTable();
     if (tabName === 'categories') this.renderCategoriesTable();
+    if (tabName === 'debts') this.renderDebtsLedger();
   }
 
   // Render Admin Products Table
@@ -434,19 +444,22 @@ class NaseejAdmin {
         <option value="${d}" ${(order.scheduledDay || 'الأحد') === d ? 'selected' : ''}>📅 يوم ${d}</option>
       `).join('');
 
+      const remDebt = order.remainingDebt !== undefined ? order.remainingDebt : Math.max(0, (order.grandTotal || 0) - (order.totalPaid || 0));
+      const isOverdue = remDebt > 0 && store.isDebtOverdue(order);
+
       return `
-        <tr data-order-id="${order.id}">
+        <tr data-order-id="${order.id}" ondblclick="window.naseejAdmin.openOrderDetailsModal('${order.id}')" title="انقر نقراً مزدوجاً (Double Click) لعرض تفاصيل الطلبية والشبابيك والأقشمة والحساب" style="cursor: pointer;">
           <td>
             <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px; flex-wrap: wrap;">
               <span class="order-id-highlight">${order.id}</span>
               ${order.source === 'showroom' ? '<span class="badge badge-source badge-source-showroom">🏪 معرض</span>' : (order.source === 'notebook_scan' ? '<span class="badge badge-source" style="background:#0284c7;color:#fff;">📖 دفتر معرض</span>' : '<span class="badge badge-source badge-source-online">🌐 متجر</span>')}
               <span class="badge-staff badge-staff-${staffKey}" title="الآدمن المسؤول عن الطلبية">👑 ${staffName}</span>
-              ${order.notebookImage ? `<button type="button" class="btn btn-xs" style="padding: 1px 7px; font-size: 11px; border-radius: 4px; color: #0284c7; border: 1px solid #38bdf8; background: #f0f9ff; font-weight: 700;" onclick="window.naseejAdmin.previewOrderNotebookImage('${order.id}')" title="عرض صورة دفتر الطلبية الأصلية">📷 الدفتر</button>` : ''}
+              ${order.notebookImage ? `<button type="button" class="btn btn-xs" style="padding: 1px 7px; font-size: 11px; border-radius: 4px; color: #0284c7; border: 1px solid #38bdf8; background: #f0f9ff; font-weight: 700;" onclick="event.stopPropagation(); window.naseejAdmin.previewOrderNotebookImage('${order.id}')" title="عرض صورة دفتر الطلبية الأصلية">📷 الدفتر</button>` : ''}
             </div>
             <div class="order-time-muted">${dateStr}</div>
             <div style="margin-top: 6px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
               <span style="font-size: 11px; color: #64748b; font-weight: 700;">الآدمن:</span>
-              <select class="admin-staff-select" onchange="window.naseejAdmin.changeOrderStaff('${order.id}', this.value)" style="font-size: 11px; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 700; color: #0f172a; background: #fff;" title="تعديل الآدمن المسؤول عن الطلبية">
+              <select class="admin-staff-select" onclick="event.stopPropagation()" onchange="window.naseejAdmin.changeOrderStaff('${order.id}', this.value)" style="font-size: 11px; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: 700; color: #0f172a; background: #fff;" title="تعديل الآدمن المسؤول عن الطلبية">
                 <option value="هشام" ${staffName === 'هشام' ? 'selected' : ''}>👑 هشام</option>
                 <option value="هباب" ${staffName === 'هباب' ? 'selected' : ''}>👑 هباب</option>
                 <option value="أسامة" ${staffName === 'أسامة' ? 'selected' : ''}>👑 أسامة</option>
@@ -456,7 +469,7 @@ class NaseejAdmin {
             </div>
             <div style="margin-top: 6px;">
               <span style="font-size: 11px; color: #64748b; font-weight: 700;">قص الورشة:</span>
-              <select class="admin-schedule-day-select" onchange="window.naseejAdmin.changeOrderScheduleDay('${order.id}', this.value)">
+              <select class="admin-schedule-day-select" onclick="event.stopPropagation()" onchange="window.naseejAdmin.changeOrderScheduleDay('${order.id}', this.value)">
                 ${dayOptions}
               </select>
             </div>
@@ -469,7 +482,7 @@ class NaseejAdmin {
           <td>
             <div class="customer-info-box">
               <div class="customer-name"><strong>${order.customer.name}</strong></div>
-              <div class="customer-phone"><a href="tel:${order.customer.phone}" class="phone-link">📱 ${order.customer.phone}</a></div>
+              <div class="customer-phone"><a href="tel:${order.customer.phone}" class="phone-link" onclick="event.stopPropagation()">📱 ${order.customer.phone}</a></div>
               <div class="customer-email">✉️ ${order.customer.email}</div>
               <div class="customer-city">📍 ${order.customer.city} - ${order.customer.address}</div>
             </div>
@@ -494,9 +507,21 @@ class NaseejAdmin {
           <td>
             <div class="order-price-bold">${order.grandTotal.toLocaleString()} شيكل</div>
             <span class="payment-method-chip">${order.paymentMethod}</span>
+            ${remDebt > 0 ? `
+              <div style="margin-top: 4px;">
+                <button type="button" class="badge" onclick="event.stopPropagation(); window.naseejAdmin.openRecordPaymentModal('${order.id}')" style="background: ${isOverdue ? '#fef2f2' : '#fffbeb'}; color: ${isOverdue ? '#dc2626' : '#d97706'}; border: 1px solid ${isOverdue ? '#f87171' : '#fcd34d'}; font-size: 11px; font-weight: 800; cursor: pointer; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;" title="متبقي بالذمة - انقر لتسجيل دفعة">
+                  <span>${isOverdue ? '🚨 متبقي دَيْن:' : '⏳ متبقي:'}</span>
+                  <strong>${remDebt.toLocaleString()} ₪</strong>
+                </button>
+              </div>
+            ` : ((order.totalPaid || 0) > 0 ? `
+              <div style="margin-top: 4px;">
+                <span class="badge" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 4px;">✓ مسدد بالكامل</span>
+              </div>
+            ` : '')}
           </td>
           <td>
-            <select class="order-status-select" onchange="window.naseejAdmin.handleOrderStatusChange('${order.id}', this.value)">
+            <select class="order-status-select" onclick="event.stopPropagation()" onchange="window.naseejAdmin.handleOrderStatusChange('${order.id}', this.value)">
               <option value="pending" ${order.orderStatus === 'pending' ? 'selected' : ''}>⏳ قيد المراجعة وتأكيد المقاسات</option>
               <option value="in_cutting" ${order.orderStatus === 'in_cutting' ? 'selected' : ''}>✂️ جاري قص القماش بالورشة</option>
               <option value="in_tailoring" ${order.orderStatus === 'in_tailoring' ? 'selected' : ''}>🧵 تم القص - انتقلت للخياطة</option>
@@ -506,13 +531,21 @@ class NaseejAdmin {
               <option value="cancelled" ${order.orderStatus === 'cancelled' ? 'selected' : ''}>❌ ملغي من الزبون</option>
             </select>
           </td>
-          <td style="white-space: nowrap; text-align: center; min-width: 140px;">
-            <div style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-              <button type="button" class="btn btn-sm btn-outline" onclick="window.naseejAdmin.printOrderReceipt('${order.id}')" title="طباعة فاتورة تفصيل" style="font-weight: 700; padding: 5px 10px; font-size: 12px; border-radius: 6px;">
-                🖨️ إيصال
+          <td style="white-space: nowrap; text-align: center; min-width: 175px;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
+              <button type="button" class="btn btn-sm btn-gold" onclick="event.stopPropagation(); window.naseejAdmin.openOrderDetailsModal('${order.id}')" title="عرض تفاصيل الطلبية والشبابيك كاملة" style="font-weight: 800; padding: 5px 8px; font-size: 11.5px; border-radius: 6px;">
+                📋 التفاصيل
               </button>
-              <button type="button" class="btn btn-sm" onclick="window.naseejAdmin.confirmDeleteOrder('${order.id}')" title="حذف وإلغاء الطلبية من الورشة نهائياً" style="color: #dc2626; border: 1.5px solid #fca5a5; background: #fef2f2; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: 800; font-size: 12px; transition: all 0.2s ease;">
-                🗑️ حذف
+              ${remDebt > 0 ? `
+                <button type="button" class="btn btn-sm" onclick="event.stopPropagation(); window.naseejAdmin.openRecordPaymentModal('${order.id}')" title="تسجيل دفعة نقدية سريعة" style="background: #10b981; color: #fff; font-weight: 800; padding: 5px 8px; font-size: 11.5px; border-radius: 6px; border: none;">
+                  💰 سداد
+                </button>
+              ` : ''}
+              <button type="button" class="btn btn-sm btn-outline" onclick="event.stopPropagation(); window.naseejAdmin.printOrderReceipt('${order.id}')" title="طباعة فاتورة تفصيل" style="font-weight: 700; padding: 5px 8px; font-size: 11.5px; border-radius: 6px;">
+                🖨️
+              </button>
+              <button type="button" class="btn btn-sm" onclick="event.stopPropagation(); window.naseejAdmin.confirmDeleteOrder('${order.id}')" title="حذف وإلغاء الطلبية من الورشة نهائياً" style="color: #dc2626; border: 1.5px solid #fca5a5; background: #fef2f2; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-weight: 800; font-size: 11.5px; transition: all 0.2s ease;">
+                🗑️
               </button>
             </div>
           </td>
@@ -2799,6 +2832,15 @@ class NaseejAdmin {
     const installFeeInput = document.getElementById('walkin-install-fee');
     if (installFeeInput) installFeeInput.value = 0;
 
+    // Reset accounting & debt fields
+    const totalOverride = document.getElementById('walkin-total-override');
+    if (totalOverride) totalOverride.value = '';
+    const depositPaidInput = document.getElementById('walkin-deposit-paid');
+    if (depositPaidInput) depositPaidInput.value = '';
+    const installPaymentInput = document.getElementById('walkin-install-payment');
+    if (installPaymentInput) installPaymentInput.value = '';
+    this.recalcWalkinAccounting(0);
+
     // Select active showroom staff
     const activeStaff = localStorage.getItem('naseej_active_staff') || this.selectedWalkinStaff || 'هشام';
     this.selectWalkinStaff(activeStaff);
@@ -3730,6 +3772,67 @@ class NaseejAdmin {
     if (grandtotalEl) {
       grandtotalEl.textContent = `${grandTotal.toLocaleString()} شيكل`;
     }
+
+    this.recalcWalkinAccounting(grandTotal);
+  }
+
+  recalcWalkinAccounting(computedTotal = null) {
+    const overrideInput = document.getElementById('walkin-total-override');
+    const depositInput = document.getElementById('walkin-deposit-paid');
+    const installInput = document.getElementById('walkin-install-payment');
+    const remainingEl = document.getElementById('walkin-calc-remaining');
+    const statusTextEl = document.getElementById('walkin-debt-status-text');
+
+    if (computedTotal === null) {
+      let sub = 0;
+      (this.walkinItems || []).forEach(item => {
+        const m = parseFloat(item.meters) || 1;
+        const p = parseFloat(item.unitPrice) || 60;
+        sub += Math.round(m * p);
+      });
+      const installToggle = document.getElementById('walkin-install-toggle')?.checked || false;
+      const installFee = installToggle ? (parseFloat(document.getElementById('walkin-install-fee')?.value) || 0) : 0;
+      computedTotal = sub + installFee;
+    }
+
+    if (overrideInput && (!overrideInput.value || overrideInput.value === '')) {
+      overrideInput.placeholder = computedTotal > 0 ? `${computedTotal}` : '0';
+    }
+
+    const overrideVal = parseFloat(overrideInput?.value);
+    const finalTotal = (!isNaN(overrideVal) && overrideVal > 0) ? overrideVal : computedTotal;
+
+    const deposit = parseFloat(depositInput?.value) || 0;
+    const installPay = parseFloat(installInput?.value) || 0;
+    const totalPaid = deposit + installPay;
+    const remaining = Math.max(0, Math.round(finalTotal - totalPaid));
+
+    if (remainingEl) {
+      remainingEl.textContent = `${remaining.toLocaleString()} ₪`;
+      if (remaining === 0 && finalTotal > 0) {
+        remainingEl.style.color = '#34d399';
+      } else if (remaining > 0) {
+        remainingEl.style.color = '#f87171';
+      } else {
+        remainingEl.style.color = '#f87171';
+      }
+    }
+
+    if (statusTextEl) {
+      if (finalTotal === 0) {
+        statusTextEl.textContent = 'أدخل تفاصيل الطلبية';
+        statusTextEl.style.color = '#94a3b8';
+      } else if (remaining === 0) {
+        statusTextEl.textContent = '✅ مسدد بالكامل (لا ذمم مطلوبة)';
+        statusTextEl.style.color = '#34d399';
+      } else if (totalPaid > 0) {
+        statusTextEl.textContent = `⚠️ باقي بذمته (${remaining.toLocaleString()} ₪) عند التركيب`;
+        statusTextEl.style.color = '#f59e0b';
+      } else {
+        statusTextEl.textContent = `🚨 كامل المبلغ ذمة دَيْن (${remaining.toLocaleString()} ₪)`;
+        statusTextEl.style.color = '#ef4444';
+      }
+    }
   }
 
   submitWalkinOrder(event) {
@@ -3831,7 +3934,39 @@ class NaseejAdmin {
     });
 
     totalMeters = Math.round(totalMeters * 10) / 10;
-    const grandTotal = subtotal + shippingFee + installFee;
+    const computedGrandTotal = subtotal + shippingFee + installFee;
+
+    const overrideVal = parseFloat(document.getElementById('walkin-total-override')?.value);
+    const finalGrandTotal = (!isNaN(overrideVal) && overrideVal > 0) ? overrideVal : computedGrandTotal;
+    const depositPaid = parseFloat(document.getElementById('walkin-deposit-paid')?.value) || 0;
+    const installPayment = parseFloat(document.getElementById('walkin-install-payment')?.value) || 0;
+    const totalPaid = depositPaid + installPayment;
+    const remainingDebt = Math.max(0, finalGrandTotal - totalPaid);
+    const paymentStatus = remainingDebt <= 0 ? 'paid' : (totalPaid > 0 ? 'partial' : 'unpaid');
+
+    const staffName = document.getElementById('walkin-recorded-by')?.value?.trim() || this.selectedWalkinStaff || 'هشام';
+    const paymentHistory = [];
+    const nowIso = new Date().toISOString();
+    if (depositPaid > 0) {
+      paymentHistory.push({
+        id: 'pay_' + Date.now() + '_dep',
+        amount: depositPaid,
+        date: nowIso,
+        type: 'deposit',
+        note: 'عربون مستلم بالمعرض عند تسجيل الطلب',
+        recordedBy: staffName
+      });
+    }
+    if (installPayment > 0) {
+      paymentHistory.push({
+        id: 'pay_' + (Date.now() + 1) + '_inst',
+        amount: installPayment,
+        date: nowIso,
+        type: 'install',
+        note: 'دفعة مستلمة عند تركيب الستائر',
+        recordedBy: staffName
+      });
+    }
 
     const orderData = {
       customer: {
@@ -3855,13 +3990,19 @@ class NaseejAdmin {
       installerName: installToggle ? store.getInstallerName(installerId) : null,
       installationStatus: installToggle ? 'scheduled' : 'none',
       source: 'showroom',
-      recordedBy: document.getElementById('walkin-recorded-by')?.value?.trim() || this.selectedWalkinStaff || 'هشام',
+      recordedBy: staffName,
       items: orderItems,
       totalMeters,
       subtotal,
       shippingFee,
       discount: 0,
-      grandTotal,
+      grandTotal: finalGrandTotal,
+      depositPaid,
+      installPayment,
+      totalPaid,
+      remainingDebt,
+      paymentStatus,
+      paymentHistory,
       paymentMethod: 'الدفع عند الاستلام (نقد داخل المعرض)'
     };
 
@@ -4899,6 +5040,697 @@ class NaseejAdmin {
         `).join('');
       }
     }
+  }
+
+  // =========================================================
+  // DEBTS LEDGER & ACCOUNTING SYSTEM (دفتر الدَّيْن وسجل الذمم)
+  // =========================================================
+
+  updateDebtsBadge() {
+    const orders = store.getOrders();
+    const debts = orders.filter(o => (o.remainingDebt || 0) > 0);
+    const overdueDebts = debts.filter(o => store.isDebtOverdue(o));
+
+    const badgeEl = document.getElementById('debts-badge-count');
+    if (badgeEl) {
+      if (overdueDebts.length > 0) {
+        badgeEl.textContent = `${overdueDebts.length} مستحق 🚨`;
+        badgeEl.className = 'nav-counter-badge badge-overdue-alert';
+        badgeEl.style.display = 'inline-block';
+      } else if (debts.length > 0) {
+        badgeEl.textContent = `${debts.length} ذمة`;
+        badgeEl.className = 'nav-counter-badge';
+        badgeEl.style.display = 'inline-block';
+      } else {
+        badgeEl.textContent = '0';
+        badgeEl.style.display = 'none';
+      }
+    }
+  }
+
+  filterDebtsLedger(filterType, btnEl) {
+    this.currentDebtFilter = filterType;
+    document.querySelectorAll('.debts-pill-btn').forEach(btn => {
+      btn.classList.toggle('active', btn === btnEl);
+    });
+    this.renderDebtsLedger();
+  }
+
+  handleDebtsSearch(query) {
+    this.debtsSearchQuery = (query || '').trim().toLowerCase();
+    this.renderDebtsLedger();
+  }
+
+  renderDebtsLedger() {
+    const tbody = document.getElementById('admin-debts-tbody');
+    if (!tbody) return;
+
+    const allOrders = store.getOrders();
+    
+    // Calculate global financial debt statistics
+    let totalGrand = 0;
+    let totalPaidOverall = 0;
+    let totalRemainingOverall = 0;
+    let overdueCount = 0;
+    let overdueAmount = 0;
+    let allDebtsCount = 0;
+    let beforeInstallCount = 0;
+    let settledCount = 0;
+
+    allOrders.forEach(order => {
+      const g = order.grandTotal || 0;
+      const p = order.totalPaid || 0;
+      const r = order.remainingDebt !== undefined ? order.remainingDebt : Math.max(0, g - p);
+      totalGrand += g;
+      totalPaidOverall += p;
+
+      if (r > 0) {
+        allDebtsCount++;
+        totalRemainingOverall += r;
+        if (store.isDebtOverdue(order)) {
+          overdueCount++;
+          overdueAmount += r;
+        } else {
+          beforeInstallCount++;
+        }
+      } else if (g > 0) {
+        settledCount++;
+      }
+    });
+
+    const recoveryRate = totalGrand > 0 ? Math.round((totalPaidOverall / totalGrand) * 100) : 100;
+
+    // Update KPI Elements
+    const kpiOverdueAmount = document.getElementById('debt-kpi-overdue-amount');
+    const kpiOverdueCount = document.getElementById('debt-kpi-overdue-count');
+    const kpiTotalAmount = document.getElementById('debt-kpi-total-amount');
+    const kpiTotalCount = document.getElementById('debt-kpi-total-count');
+    const kpiCollected = document.getElementById('debt-kpi-collected-amount');
+    const kpiRate = document.getElementById('debt-kpi-rate');
+
+    if (kpiOverdueAmount) kpiOverdueAmount.textContent = `${overdueAmount.toLocaleString()} ₪`;
+    if (kpiOverdueCount) kpiOverdueCount.textContent = `${overdueCount} زبائن تجاوز موعد تركيبهم`;
+    if (kpiTotalAmount) kpiTotalAmount.textContent = `${totalRemainingOverall.toLocaleString()} ₪`;
+    if (kpiTotalCount) kpiTotalCount.textContent = `${allDebtsCount} زبائن متبقي عليهم ذمم`;
+    if (kpiCollected) kpiCollected.textContent = `${totalPaidOverall.toLocaleString()} ₪`;
+    if (kpiRate) kpiRate.textContent = `${recoveryRate}%`;
+
+    // Update filter pills counters
+    const countAllEl = document.getElementById('pill-count-all-debts');
+    const countOverdueEl = document.getElementById('pill-count-overdue');
+    const countBeforeEl = document.getElementById('pill-count-before-install');
+    const countSettledEl = document.getElementById('pill-count-settled');
+    if (countAllEl) countAllEl.textContent = allDebtsCount;
+    if (countOverdueEl) countOverdueEl.textContent = overdueCount;
+    if (countBeforeEl) countBeforeEl.textContent = beforeInstallCount;
+    if (countSettledEl) countSettledEl.textContent = settledCount;
+
+    // Filter displayed orders based on active filter and search query
+    let filteredOrders = allOrders.filter(order => {
+      const rem = order.remainingDebt !== undefined ? order.remainingDebt : Math.max(0, (order.grandTotal || 0) - (order.totalPaid || 0));
+      const isOverdue = store.isDebtOverdue(order);
+
+      // Filter by category
+      if (this.currentDebtFilter === 'overdue_only') {
+        if (!(rem > 0 && isOverdue)) return false;
+      } else if (this.currentDebtFilter === 'before_install') {
+        if (!(rem > 0 && !isOverdue)) return false;
+      } else if (this.currentDebtFilter === 'settled') {
+        if (rem > 0) return false;
+      } else {
+        // 'all_debts' default: only show orders with remaining debt
+        if (rem <= 0) return false;
+      }
+
+      // Search query filtering (name, phone, orderId, city)
+      if (this.debtsSearchQuery) {
+        const q = this.debtsSearchQuery;
+        const name = (order.customer?.name || '').toLowerCase();
+        const phone = (order.customer?.phone || '').toLowerCase();
+        const id = (order.id || '').toLowerCase();
+        const city = (order.customer?.city || '').toLowerCase();
+        if (!name.includes(q) && !phone.includes(q) && !id.includes(q) && !city.includes(q)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    // Sort: Overdue orders first (longest overdue first), then upcoming install dates
+    filteredOrders.sort((a, b) => {
+      const aOverdue = store.isDebtOverdue(a);
+      const bOverdue = store.isDebtOverdue(b);
+      if (aOverdue && !bOverdue) return -1;
+      if (!aOverdue && bOverdue) return 1;
+      const dateA = new Date(a.installationDate || a.scheduledDate || a.date).getTime();
+      const dateB = new Date(b.installationDate || b.scheduledDate || b.date).getTime();
+      return dateA - dateB;
+    });
+
+    if (filteredOrders.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 48px 20px; color: #64748b;">
+            <div style="font-size: 38px; margin-bottom: 8px;">🎉</div>
+            <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 16px;">لا توجد ذمم مطابقة لهذا الفلتر</h4>
+            <p style="margin: 0; font-size: 13px; color: #64748b;">جميع الحسابات مسددة بالكامل أو لا تطابق البحث المحدد.</p>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = filteredOrders.map(order => {
+      const rem = order.remainingDebt !== undefined ? order.remainingDebt : Math.max(0, (order.grandTotal || 0) - (order.totalPaid || 0));
+      const paid = order.totalPaid || 0;
+      const grand = order.grandTotal || 0;
+      const isOverdue = rem > 0 && store.isDebtOverdue(order);
+      const overdueDays = store.getDebtOverdueDays(order);
+      const staffName = order.recordedBy || 'المعرض';
+      const staffKey = this.getStaffKey(staffName);
+      const installDate = order.installationDate || order.scheduledDate || '-';
+      const custPhone = order.customer?.phone || '';
+      const cleanPhone = custPhone.replace(/\D/g, '');
+      const waPhone = cleanPhone.startsWith('0') ? '972' + cleanPhone.substring(1) : (cleanPhone.startsWith('972') ? cleanPhone : '972' + cleanPhone);
+
+      // Status Badge
+      let statusBadge = '';
+      if (rem === 0) {
+        statusBadge = `<span class="badge" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-weight:800; font-size:11.5px;">✓ خالص ومسدد</span>`;
+      } else if (isOverdue) {
+        statusBadge = `
+          <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span class="badge" style="background:#fef2f2; color:#dc2626; border:1.5px solid #f87171; font-weight:900; font-size:11.5px;">🚨 متأخر بعد التركيب</span>
+            <small style="color: #ef4444; font-size: 10.5px; font-weight: 800;">(تجاوز الموعد بـ ${overdueDays} يوم)</small>
+          </div>
+        `;
+      } else if (paid > 0) {
+        statusBadge = `<span class="badge" style="background:#fffbeb; color:#d97706; border:1px solid #fcd34d; font-weight:800; font-size:11.5px;">⏳ عربون مدفوع (قيد التجهيز)</span>`;
+      } else {
+        statusBadge = `<span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:800; font-size:11.5px;">⚪ لم يدفع عربون</span>`;
+      }
+
+      // Overdue row styling
+      const rowClass = isOverdue ? 'debt-row-overdue' : (rem === 0 ? 'debt-row-settled' : 'debt-row-normal');
+
+      return `
+        <tr class="${rowClass}" 
+            data-order-id="${order.id}" 
+            ondblclick="window.naseejAdmin.openOrderDetailsModal('${order.id}')" 
+            title="انقر نقراً مزدوجاً (Double Click) لعرض تفاصيل الطلبية والشبابيك كاملة"
+            style="cursor: pointer; transition: background 0.15s ease;">
+          <td>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">${isOverdue ? '🚨' : (rem === 0 ? '✅' : '👤')}</span>
+              <div>
+                <strong class="debt-cust-name" style="font-size: 14.5px; color: #0f172a; display: block;">${order.customer?.name || 'زبون بدون اسم'}</strong>
+                <span class="badge badge-gold" style="font-size: 11px; padding: 1px 6px;">${order.id}</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div dir="ltr" style="font-weight: 700; color: #1e293b; font-size: 13px;">${custPhone}</div>
+            <small style="color: #64748b;">${order.customer?.city || 'نابلس'}${order.customer?.address ? ' - ' + order.customer.address : ''}</small>
+          </td>
+          <td>
+            <div style="font-weight: 800; color: ${isOverdue ? '#dc2626' : '#1d4ed8'}; font-size: 13px;">
+              📅 ${installDate}
+            </div>
+            <small style="color: #64748b;">
+              ${order.requiresInstallation ? `تركيب: ${order.installerName || 'فني المعرض'}` : 'استلام من المعرض'}
+            </small>
+          </td>
+          <td>
+            <strong style="font-size: 14px; color: #0f172a;">${grand.toLocaleString()} ₪</strong>
+          </td>
+          <td>
+            <div style="color: #059669; font-weight: 800; font-size: 13.5px;">${paid.toLocaleString()} ₪</div>
+            <small style="color: #64748b; font-size: 10.5px;">عربون: ${order.depositPaid || 0} | تركيب: ${order.installPayment || 0}</small>
+          </td>
+          <td>
+            <div class="debt-amount-highlight" style="font-size: 17px; font-weight: 900; color: ${rem > 0 ? '#dc2626' : '#059669'};">
+              ${rem.toLocaleString()} ₪
+            </div>
+          </td>
+          <td>
+            ${statusBadge}
+          </td>
+          <td>
+            <span class="badge-staff badge-staff-${staffKey}" style="font-size: 11px; padding: 2px 7px;">👑 ${staffName}</span>
+          </td>
+          <td style="white-space: nowrap; text-align: center;">
+            <div style="display: inline-flex; align-items: center; gap: 5px;">
+              <button type="button" class="btn btn-sm btn-gold" onclick="event.stopPropagation(); window.naseejAdmin.openRecordPaymentModal('${order.id}')" title="تسجيل سداد دفعة نقدية من هذا الزبون" style="font-weight: 800; font-size: 11.5px; padding: 5px 9px; border-radius: 6px;">
+                💰 سداد
+              </button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="event.stopPropagation(); window.naseejAdmin.openOrderDetailsModal('${order.id}')" title="عرض تفاصيل الطلبية والشبابيك" style="font-weight: 700; font-size: 11.5px; padding: 5px 8px; border-radius: 6px;">
+                📋 التفاصيل
+              </button>
+              ${waPhone && rem > 0 ? `
+                <button type="button" class="btn btn-sm" onclick="event.stopPropagation(); window.naseejAdmin.sendDebtWhatsappReminder('${order.id}')" title="إرسال تذكير سداد لطيف عبر الواتساب" style="background:#25d366; color:#fff; border:none; font-weight:700; font-size:11px; padding:5px 8px; border-radius:6px;">
+                  💬 تذكير
+                </button>
+              ` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Quick Payment Modal Opener
+  openQuickRecordPaymentModal() {
+    const debts = store.getOrders().filter(o => (o.remainingDebt || 0) > 0);
+    if (debts.length === 0) {
+      window.naseejCustomer?.showToast('🎉 لا توجد ذمم أو ديون معلقة حالياً في المتجر!', 'info');
+      return;
+    }
+    this.openRecordPaymentModal(debts[0].id);
+  }
+
+  // Open Payment Recording Modal
+  openRecordPaymentModal(orderId) {
+    const order = store.getOrderById(orderId);
+    if (!order) {
+      window.naseejCustomer?.showToast('لم يتم العثور على الطلبية المطلوبة', 'error');
+      return;
+    }
+
+    const modal = document.getElementById('admin-record-payment-modal');
+    if (!modal) return;
+
+    const g = order.grandTotal || 0;
+    const p = order.totalPaid || 0;
+    const rem = order.remainingDebt !== undefined ? order.remainingDebt : Math.max(0, g - p);
+
+    document.getElementById('pay-modal-order-id').textContent = order.id;
+    document.getElementById('pay-modal-order-id-input').value = order.id;
+    document.getElementById('pay-modal-cust-name').textContent = order.customer?.name || 'الزبون';
+    document.getElementById('pay-modal-cust-phone').textContent = order.customer?.phone || '';
+    document.getElementById('pay-modal-total-price').textContent = `${g.toLocaleString()} ₪`;
+    document.getElementById('pay-modal-total-paid').textContent = `${p.toLocaleString()} ₪`;
+    document.getElementById('pay-modal-remaining-debt').textContent = `${rem.toLocaleString()} ₪`;
+
+    const amountInput = document.getElementById('pay-modal-amount');
+    amountInput.value = rem > 0 ? rem : '';
+    amountInput.max = rem > 0 ? rem : 999999;
+
+    const staffSelect = document.getElementById('pay-modal-receiver');
+    if (staffSelect) {
+      staffSelect.value = this.selectedWalkinStaff || 'هشام';
+    }
+
+    const noteInput = document.getElementById('pay-modal-note');
+    if (noteInput) noteInput.value = '';
+
+    this.recalcPayModalLive();
+
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.style.pointerEvents = 'auto';
+    modal.style.zIndex = '999999';
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeRecordPaymentModal() {
+    const modal = document.getElementById('admin-record-payment-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+      modal.style.opacity = '0';
+      modal.style.visibility = 'hidden';
+      modal.style.pointerEvents = 'none';
+    }
+    document.body.style.overflow = '';
+  }
+
+  recalcPayModalLive() {
+    const orderId = document.getElementById('pay-modal-order-id-input')?.value;
+    const order = store.getOrderById(orderId);
+    if (!order) return;
+
+    const g = order.grandTotal || 0;
+    const p = order.totalPaid || 0;
+    const curRem = order.remainingDebt !== undefined ? order.remainingDebt : Math.max(0, g - p);
+
+    const enteredAmount = parseFloat(document.getElementById('pay-modal-amount')?.value) || 0;
+    const futureDebt = Math.max(0, curRem - enteredAmount);
+
+    const futureEl = document.getElementById('pay-modal-future-debt');
+    if (futureEl) {
+      if (futureDebt === 0) {
+        futureEl.textContent = '0 ₪ (خالص ومسدد بالكامل ✓)';
+        futureEl.style.color = '#059669';
+      } else {
+        futureEl.textContent = `${futureDebt.toLocaleString()} ₪`;
+        futureEl.style.color = '#dc2626';
+      }
+    }
+  }
+
+  submitRecordPayment(event) {
+    if (event) event.preventDefault();
+
+    const orderId = document.getElementById('pay-modal-order-id-input')?.value;
+    const amount = parseFloat(document.getElementById('pay-modal-amount')?.value) || 0;
+    const payType = document.getElementById('pay-modal-type')?.value || 'installment';
+    const receiver = document.getElementById('pay-modal-receiver')?.value || 'هشام';
+    const note = document.getElementById('pay-modal-note')?.value?.trim() || '';
+
+    if (!orderId || amount <= 0) {
+      window.naseejCustomer?.showToast('يرجى إدخال مبلغ صحيح للدفعة المقبوضة', 'error');
+      return;
+    }
+
+    const updatedOrder = store.recordOrderPayment(orderId, amount, payType, note, receiver);
+    if (!updatedOrder) {
+      window.naseejCustomer?.showToast('حدث خطأ أثناء حفظ الدفعة', 'error');
+      return;
+    }
+
+    const rem = updatedOrder.remainingDebt || 0;
+    const statusMsg = rem === 0
+      ? `🎉 تم سداد كامل حساب الطلبية (${updatedOrder.id}) وتصفية الذمة بنجاح!`
+      : `✅ تم تسجيل دفعة بقيمة (${amount} ₪) للطلبية (${updatedOrder.id})، المتبقي بذمته: ${rem} ₪`;
+
+    window.naseejCustomer?.showToast(statusMsg, 'success');
+    this.closeRecordPaymentModal();
+    this.renderDebtsLedger();
+    this.renderOrdersTable();
+    this.updateDebtsBadge();
+
+    // If order details modal is open for this order, refresh it
+    if (this.activeDetailOrderId === orderId) {
+      this.openOrderDetailsModal(orderId);
+    }
+  }
+
+  // Open Full Order & Windows Detailed Modal (نافذة عرض تفاصيل الطلبية الشاملة)
+  openOrderDetailsModal(orderId) {
+    const order = store.getOrderById(orderId);
+    if (!order) {
+      window.naseejCustomer?.showToast('لم يتم العثور على الطلبية', 'error');
+      return;
+    }
+
+    this.activeDetailOrderId = orderId;
+    const modal = document.getElementById('admin-order-details-modal');
+    if (!modal) return;
+
+    // Header info
+    document.getElementById('detail-modal-order-id').textContent = order.id;
+    const sourceEl = document.getElementById('detail-modal-order-source');
+    if (sourceEl) {
+      sourceEl.textContent = order.source === 'showroom' ? '🏪 طلبية معرض' : (order.source === 'notebook_scan' ? '📖 دفتر المعرض' : '🌐 متجر إلكتروني');
+    }
+
+    const isOverdue = store.isDebtOverdue(order);
+    const debtAlertEl = document.getElementById('detail-modal-debt-alert');
+    if (debtAlertEl) {
+      if ((order.remainingDebt || 0) > 0) {
+        debtAlertEl.style.display = 'inline-block';
+        debtAlertEl.textContent = isOverdue ? '🚨 ذمة معلقة - تجاوزت موعد التركيب!' : '⏳ ذمة معلقة (قيد التجهيز)';
+        debtAlertEl.style.background = isOverdue ? '#dc2626' : '#d97706';
+      } else {
+        debtAlertEl.style.display = 'none';
+      }
+    }
+
+    // Customer info
+    document.getElementById('detail-modal-cust-name').textContent = order.customer?.name || 'زبون بدون اسم';
+    document.getElementById('detail-modal-cust-phone').textContent = order.customer?.phone || '-';
+    document.getElementById('detail-modal-cust-address').textContent = `${order.customer?.city || 'نابلس'}${order.customer?.address ? ' - ' + order.customer.address : ''}`;
+    document.getElementById('detail-modal-staff').textContent = `👑 ${order.recordedBy || 'المعرض'}`;
+
+    // Scheduling info
+    document.getElementById('detail-modal-tailoring-date').textContent = `${order.scheduledDay || ''} (${order.scheduledDate || '-'})`;
+    document.getElementById('detail-modal-install-date').textContent = `${order.installationDay || ''} (${order.installationDate || order.scheduledDate || '-'})`;
+    document.getElementById('detail-modal-install-type').textContent = order.requiresInstallation ? 'تركيب في موقع الزبون مع الفني' : (order.deliveryType === 'pickup' ? `استلام من الفرع (${order.pickupBranch || 'نابلس'})` : 'شحن وتوصيل');
+    document.getElementById('detail-modal-installer-name').textContent = order.requiresInstallation ? (order.installerName || 'فني المعرض') : 'لا يوجد تركيب';
+
+    // Windows / Fabrics table
+    const items = order.items || [];
+    const countEl = document.getElementById('detail-modal-windows-count');
+    if (countEl) countEl.textContent = items.length === 1 ? 'شباك واحد' : `${items.length} شبابيك (${order.totalMeters || 0} متر)`;
+
+    const itemsTbody = document.getElementById('detail-modal-items-tbody');
+    if (itemsTbody) {
+      if (items.length === 0) {
+        itemsTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 14px;">لا توجد بنود مسجلة</td></tr>`;
+      } else {
+        itemsTbody.innerHTML = items.map((it, idx) => {
+          let dims = '-';
+          if (it.width && it.height) {
+            dims = `${it.width}م عرض × ${it.height}م طول`;
+          } else if (it.details) {
+            dims = it.details;
+          }
+          return `
+            <tr>
+              <td>
+                <strong style="color: #0369a1; font-weight: 800;">🪟 ${it.roomName || `شباك ${idx + 1}`}</strong>
+                ${it.notes ? `<div style="font-size: 11px; color: #64748b; margin-top: 2px;">${it.notes}</div>` : ''}
+              </td>
+              <td>
+                <div style="font-weight: 700; color: #0f172a;">${it.productName || 'قماش مخصص'}</div>
+                <small style="color: #b45309; font-weight: 600;">اللون: ${it.color || 'بيج'}</small>
+              </td>
+              <td dir="ltr" style="font-weight: 700; color: #334155; text-align: right;">${dims}</td>
+              <td style="color: #475569; font-size: 12px;">${it.sewingType || 'خياطة متقنة'}</td>
+              <td><strong style="color: #047857;">${it.meters} ${it.unitLabel || 'متر'}</strong></td>
+              <td>${it.pricePerMeter || it.unitPrice || '-'} ₪</td>
+              <td><strong style="color: #0f172a;">${(it.total || 0).toLocaleString()} ₪</strong></td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    // Accounting & Payments Breakdown
+    const g = order.grandTotal || 0;
+    const dep = order.depositPaid || 0;
+    const instPay = order.installPayment || 0;
+    const paid = order.totalPaid !== undefined ? order.totalPaid : (dep + instPay);
+    const rem = order.remainingDebt !== undefined ? order.remainingDebt : Math.max(0, g - paid);
+
+    document.getElementById('detail-modal-grandtotal').textContent = `${g.toLocaleString()} ₪`;
+    document.getElementById('detail-modal-deposit').textContent = `${dep.toLocaleString()} ₪`;
+    document.getElementById('detail-modal-install-payment').textContent = `${instPay.toLocaleString()} ₪`;
+    document.getElementById('detail-modal-total-paid').textContent = `${paid.toLocaleString()} ₪`;
+    document.getElementById('detail-modal-remaining-debt').textContent = `${rem.toLocaleString()} ₪`;
+
+    const statusBadge = document.getElementById('detail-modal-payment-status-badge');
+    if (statusBadge) {
+      if (rem === 0) {
+        statusBadge.textContent = '✓ مسدد بالكامل (الذمة خالصة)';
+        statusBadge.style.background = '#10b981';
+      } else if (isOverdue) {
+        statusBadge.textContent = '🚨 دَيْن متأخر بعد موعد التركيب!';
+        statusBadge.style.background = '#dc2626';
+      } else if (paid > 0) {
+        statusBadge.textContent = `⚠️ مسدد جزئياً (متبقي ${rem.toLocaleString()} ₪)`;
+        statusBadge.style.background = '#f59e0b';
+      } else {
+        statusBadge.textContent = '🚨 غير مسدد (كامل المبلغ دَيْن)';
+        statusBadge.style.background = '#ef4444';
+      }
+    }
+
+    // Payment History List
+    const historyList = document.getElementById('detail-modal-payment-history-list');
+    if (historyList) {
+      const history = order.paymentHistory || [];
+      if (history.length === 0) {
+        historyList.innerHTML = `
+          <div style="text-align: center; color: #94a3b8; padding: 6px;">
+            ${dep > 0 ? `عربون مسجل بالمعرض: ${dep} ₪` : 'لم يتم تسجيل دفعات مفصلة بعد في سجل السندات'}
+          </div>
+        `;
+      } else {
+        historyList.innerHTML = history.map((entry, idx) => {
+          const dStr = new Date(entry.date).toLocaleString('ar-SA', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          return `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 5px 0;">
+              <div>
+                <strong>${idx + 1}. دفعة: +${entry.amount} ₪</strong>
+                <span style="color: #94a3b8; font-size: 11px; margin-right: 6px;">(${entry.note || entry.type || 'سداد'})</span>
+              </div>
+              <div style="font-size: 11px; color: #cbd5e1;">
+                <span>${dStr}</span> • <span style="color: #fbbf24;">بواسطة: ${entry.recordedBy || 'المعرض'}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.style.pointerEvents = 'auto';
+    modal.style.zIndex = '999999';
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeOrderDetailsModal() {
+    this.activeDetailOrderId = null;
+    const modal = document.getElementById('admin-order-details-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+      modal.style.opacity = '0';
+      modal.style.visibility = 'hidden';
+      modal.style.pointerEvents = 'none';
+    }
+    document.body.style.overflow = '';
+  }
+
+  openPayModalFromDetails() {
+    if (!this.activeDetailOrderId) return;
+    const id = this.activeDetailOrderId;
+    this.closeOrderDetailsModal();
+    this.openRecordPaymentModal(id);
+  }
+
+  sendOrderWhatsappFromDetails() {
+    if (!this.activeDetailOrderId) return;
+    this.sendDebtWhatsappReminder(this.activeDetailOrderId);
+  }
+
+  printOrderFromDetails() {
+    if (!this.activeDetailOrderId) return;
+    this.printOrderReceipt(this.activeDetailOrderId);
+  }
+
+  sendDebtWhatsappReminder(orderId) {
+    const order = store.getOrderById(orderId);
+    if (!order) return;
+
+    const custName = order.customer?.name || 'الزبون الكريم';
+    const rawPhone = order.customer?.phone || '';
+    const cleanPhone = rawPhone.replace(/\D/g, '');
+    if (!cleanPhone) {
+      window.naseejCustomer?.showToast('لا يتوفر رقم هاتف صحيح للزبون', 'error');
+      return;
+    }
+
+    const waPhone = cleanPhone.startsWith('0') ? '972' + cleanPhone.substring(1) : (cleanPhone.startsWith('972') ? cleanPhone : '972' + cleanPhone);
+    const rem = order.remainingDebt !== undefined ? order.remainingDebt : Math.max(0, (order.grandTotal || 0) - (order.totalPaid || 0));
+
+    const text = `السلام عليكم ورحمة الله وبركاته،
+الأخ الكريم ${custName} المحترم،
+تحية طيبة من محلات الولاء للستائر وتجهيز المنازل (بلالم إخوان).
+
+نود تذكير حضرتكم بخصوص طلبية الستائر الخاصة بكم (رقم: ${order.id}):
+• إجمالي قيمة الطلبية: ${order.grandTotal} ₪
+• المدفوع حتى تاريخه: ${order.totalPaid || 0} ₪
+• المبلغ المتبقي بالذمة: ${rem} ₪
+
+يسعدنا تشريفكم للمعرض أو التنسيق معنا لاستلام المتبقي.
+شاكرين ثقتكم الكريمة بخدماتنا، وأهلاً وسهلاً بكم دائماً! ✨`;
+
+    const encoded = encodeURIComponent(text);
+    window.open(`https://wa.me/${waPhone}?text=${encoded}`, '_blank');
+  }
+
+  printDebtsReport() {
+    const orders = store.getOrders().filter(o => (o.remainingDebt || 0) > 0);
+    const overdueOrders = orders.filter(o => store.isDebtOverdue(o));
+
+    const totalDebts = orders.reduce((sum, o) => sum + (o.remainingDebt || 0), 0);
+    const overdueAmount = overdueOrders.reduce((sum, o) => sum + (o.remainingDebt || 0), 0);
+
+    const win = window.open('', '_blank', 'width=850,height=950');
+    win.document.write(`
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="utf-8">
+        <title>كشف ديون وذمم محلات الولاء للستائر - ${new Date().toLocaleDateString('ar-SA')}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px; color: #0f172a; }
+          .header { text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 14px; margin-bottom: 20px; }
+          .brand-title { font-size: 24px; font-weight: 800; color: #b45309; margin: 0; }
+          .sub { color: #64748b; font-size: 13px; margin-top: 4px; }
+          .stats-row { display: flex; justify-content: space-around; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 20px; }
+          .stat-box { text-align: center; }
+          .stat-val { font-size: 18px; font-weight: 800; }
+          table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+          th { background: #0f172a; color: #fff; padding: 8px 10px; text-align: right; }
+          td { border-bottom: 1px solid #e2e8f0; padding: 8px 10px; }
+          .overdue-tr { background: #fef2f2; }
+          .debt-val { font-weight: 900; color: #dc2626; font-size: 14px; }
+          @media print {
+            button { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1 class="brand-title">الولاء للستائر - كشف الذمم والمستحقات (دفتر الدَّيْن)</h1>
+          <div class="sub">تاريخ الاستخراج: ${new Date().toLocaleString('ar-SA')} | محلات بلالم إخوان - نابلس</div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-box">
+            <div style="font-size: 11px; color: #64748b;">إجمالي عدد الزبائن المتبقي عليهم:</div>
+            <div class="stat-val" style="color: #0f172a;">${orders.length} زبون</div>
+          </div>
+          <div class="stat-box">
+            <div style="font-size: 11px; color: #dc2626;">ديون تجاوزت موعد التركيب (مستعجلة):</div>
+            <div class="stat-val" style="color: #dc2626;">${overdueAmount.toLocaleString()} ₪ (${overdueOrders.length} زبون)</div>
+          </div>
+          <div class="stat-box">
+            <div style="font-size: 11px; color: #b45309;">إجمالي كافة الديون المعلقة:</div>
+            <div class="stat-val" style="color: #b45309;">${totalDebts.toLocaleString()} ₪</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الزبون الكريم</th>
+              <th>رقم الجوال</th>
+              <th>موعد التركيب</th>
+              <th>الإجمالي</th>
+              <th>المدفوع</th>
+              <th>المتبقي (الدين)</th>
+              <th>الحالة</th>
+              <th>الآدمن</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${orders.map((o, idx) => {
+              const isOverdue = store.isDebtOverdue(o);
+              return `
+                <tr class="${isOverdue ? 'overdue-tr' : ''}">
+                  <td>${idx + 1}</td>
+                  <td><strong>${o.customer?.name}</strong> <small>(${o.id})</small></td>
+                  <td dir="ltr">${o.customer?.phone}</td>
+                  <td>${o.installationDate || o.scheduledDate || '-'}</td>
+                  <td>${o.grandTotal} ₪</td>
+                  <td>${o.totalPaid || 0} ₪</td>
+                  <td class="debt-val">${o.remainingDebt} ₪</td>
+                  <td>${isOverdue ? '🚨 متأخر بعد التركيب' : '⏳ قيد التجهيز'}</td>
+                  <td>${o.recordedBy || 'المعرض'}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div style="margin-top: 30px; text-align: center;">
+          <button onclick="window.print()" style="padding: 10px 24px; font-size: 14px; font-weight: 800; cursor: pointer; background: #0f172a; color: #fff; border: none; border-radius: 6px;">🖨️ طباعة الآن</button>
+        </div>
+      </body>
+      </html>
+    `);
+    win.document.close();
   }
 }
 

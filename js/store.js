@@ -483,6 +483,21 @@ class NaseejStore {
           o.deliveryRegion = 'تسليم داخل المعرض';
         }
 
+        const gTotal = Number(o.grandTotal || o.totalPrice || 0);
+        const depPaid = Number(o.depositPaid !== undefined ? o.depositPaid : (o.deposit || 0));
+        const instPaid = Number(o.installPayment || 0);
+        const totPaid = Number(o.totalPaid !== undefined ? o.totalPaid : (depPaid + instPaid));
+        const remDebt = Number(o.remainingDebt !== undefined ? o.remainingDebt : Math.max(0, gTotal - totPaid));
+
+        o.grandTotal = gTotal;
+        o.totalPrice = gTotal;
+        o.depositPaid = depPaid;
+        o.installPayment = instPaid;
+        o.totalPaid = totPaid;
+        o.remainingDebt = remDebt;
+        o.paymentHistory = Array.isArray(o.paymentHistory) ? o.paymentHistory : [];
+        o.paymentStatus = o.paymentStatus || (remDebt <= 0 ? 'paid' : ((totPaid > 0) ? 'partial' : 'unpaid'));
+
         return o;
       });
     } catch (e) {
@@ -519,7 +534,12 @@ class NaseejStore {
 
     const subtotal = Number(orderData.subtotal) || Number(orderData.fabricTotal) || 0;
     const discount = Number(orderData.discount) || 0;
-    const grandTotal = Number(orderData.grandTotal) || Number(orderData.totalAmount) || (subtotal + shippingFee + installationFee - discount);
+    const grandTotal = Number(orderData.grandTotal) || Number(orderData.totalAmount) || Number(orderData.totalPrice) || (subtotal + shippingFee + installationFee - discount);
+
+    const depositPaid = Number(orderData.depositPaid !== undefined ? orderData.depositPaid : (orderData.deposit || 0));
+    const installPayment = Number(orderData.installPayment || 0);
+    const totalPaid = Number(orderData.totalPaid !== undefined ? orderData.totalPaid : (depositPaid + installPayment));
+    const remainingDebt = Number(orderData.remainingDebt !== undefined ? orderData.remainingDebt : Math.max(0, grandTotal - totalPaid));
 
     const custObj = orderData.customer || {
       name: orderData.customerName || 'زبون الورشة',
@@ -556,11 +576,32 @@ class NaseejStore {
       shippingFee: shippingFee,
       discount: discount,
       grandTotal: grandTotal,
+      totalPrice: grandTotal,
+      depositPaid: depositPaid,
+      installPayment: installPayment,
+      totalPaid: totalPaid,
+      remainingDebt: remainingDebt,
+      paymentHistory: Array.isArray(orderData.paymentHistory) && orderData.paymentHistory.length > 0 ? orderData.paymentHistory : [
+        ...(depositPaid > 0 ? [{
+          id: 'pay-' + Date.now(),
+          amount: depositPaid,
+          date: orderData.date || new Date().toISOString(),
+          type: 'deposit',
+          note: orderData.depositNote || 'عربون مدفوع عند الاتفاق بالمعرض',
+          recordedBy: orderData.recordedBy || 'المعرض'
+        }] : []),
+        ...(installPayment > 0 ? [{
+          id: 'pay-' + (Date.now() + 1),
+          amount: installPayment,
+          date: orderData.date || new Date().toISOString(),
+          type: 'install',
+          note: 'دفعة مستلمة عند التركيب',
+          recordedBy: orderData.recordedBy || 'فني التركيب'
+        }] : [])
+      ],
       loyaltyPoints: orderData.loyaltyPoints !== undefined ? orderData.loyaltyPoints : Math.floor((grandTotal / 100) * 50),
       paymentMethod: orderData.paymentMethod || 'الدفع عند الاستلام',
-      paymentStatus: orderData.paymentMethod === 'الدفع عند الاستلام' 
-        ? (orderData.deliveryType === 'pickup' ? 'عند الاستلام في الفرع' : 'عند الاستلام')
-        : 'مدفوع إلكترونياً',
+      paymentStatus: remainingDebt <= 0 ? 'paid' : (totalPaid > 0 ? 'partial' : 'unpaid'),
       orderStatus: orderData.orderStatus || 'pending', // pending, in_tailoring, ready, shipped, delivered
       statusText: orderData.statusText || 'قيد المراجعة وتأكيد المقاسات',
       scheduledDay: scheduledDay,
@@ -663,6 +704,71 @@ class NaseejStore {
 
   changeOrderStaff(orderId, newStaff) {
     return this.updateOrder(orderId, { recordedBy: newStaff });
+  }
+
+  // --- Accounting & Debts Ledger System ---
+  recordOrderPayment(orderId, paymentAmount, paymentType = 'installment', note = '', recordedBy = 'الإدارة') {
+    const orders = this.getOrders();
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return null;
+
+    const amt = Number(paymentAmount) || 0;
+    if (amt <= 0) return null;
+
+    if (!Array.isArray(order.paymentHistory)) order.paymentHistory = [];
+    const payId = 'pay-' + Date.now();
+    const payRecord = {
+      id: payId,
+      amount: amt,
+      date: new Date().toISOString(),
+      type: paymentType, // 'deposit', 'install', 'installment', 'full'
+      note: note || (paymentType === 'deposit' ? 'عربون معرض' : (paymentType === 'install' ? 'دفعة تركيب' : 'سداد دفعة لاحقة')),
+      recordedBy: recordedBy || 'الإدارة'
+    };
+    order.paymentHistory.push(payRecord);
+
+    if (paymentType === 'deposit') {
+      order.depositPaid = (order.depositPaid || 0) + amt;
+    } else if (paymentType === 'install') {
+      order.installPayment = (order.installPayment || 0) + amt;
+    }
+
+    order.totalPaid = (order.totalPaid || 0) + amt;
+    order.remainingDebt = Math.max(0, (order.grandTotal || 0) - order.totalPaid);
+    order.paymentStatus = order.remainingDebt <= 0 ? 'paid' : 'partial';
+
+    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+    window.dispatchEvent(new CustomEvent('naseej:orders_updated', { detail: { orderId, payment: payRecord } }));
+
+    // Async sync to Neon DB
+    fetch('/api/orders', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(order)
+    }).catch(e => console.warn('[Cloud Sync] recordOrderPayment:', e.message));
+
+    return order;
+  }
+
+  isDebtOverdue(order) {
+    if (!order || (Number(order.remainingDebt) || 0) <= 0) return false;
+    const targetDateStr = order.installationDate || order.scheduledDate;
+    if (!targetDateStr) return false;
+
+    const todayStr = this.formatDateISO(new Date());
+    const target = targetDateStr.substring(0, 10);
+    return target <= todayStr;
+  }
+
+  getDebtOverdueDays(order) {
+    const targetDateStr = order.installationDate || order.scheduledDate;
+    if (!targetDateStr) return 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(targetDateStr);
+    target.setHours(0, 0, 0, 0);
+    const diffMs = today.getTime() - target.getTime();
+    return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
   }
 
   // Determines if an order is prepared: automatically true if workshop date or target date <= today, or explicitly set

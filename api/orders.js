@@ -113,6 +113,12 @@ export default async function handler(req, res) {
           isPrepared: d.isPrepared !== undefined ? d.isPrepared : false,
           manualPreparedOverride: d.manualPreparedOverride !== undefined ? d.manualPreparedOverride : undefined,
           totalMeters: Number(d.totalMeters || 0),
+          depositPaid: Number(d.depositPaid !== undefined ? d.depositPaid : (d.deposit || 0)),
+          installPayment: Number(d.installPayment || 0),
+          totalPaid: Number(d.totalPaid !== undefined ? d.totalPaid : (Number(d.depositPaid || d.deposit || 0) + Number(d.installPayment || 0))),
+          remainingDebt: Number(d.remainingDebt !== undefined ? d.remainingDebt : Math.max(0, grandTotal - (Number(d.depositPaid || d.deposit || 0) + Number(d.installPayment || 0)))),
+          paymentHistory: Array.isArray(d.paymentHistory) ? d.paymentHistory : [],
+          paymentStatus: d.paymentStatus || (Math.max(0, grandTotal - (Number(d.depositPaid || d.deposit || 0) + Number(d.installPayment || 0))) <= 0 ? 'paid' : ((Number(d.depositPaid || d.deposit || 0) > 0 || Number(d.installPayment || 0) > 0) ? 'partial' : 'unpaid')),
           notes: row.notes || d.notes || d.customer?.notes || '',
           createdAt: row.createdAt || d.createdAt || new Date().toISOString(),
           updatedAt: row.updatedAt || d.updatedAt || new Date().toISOString()
@@ -134,7 +140,6 @@ export default async function handler(req, res) {
         o.id === 'ORD-8218' || 
         o.id === 'ORD-3310' || 
         cName === 'عمر القواسمي' || 
-        cName === 'محمد سلبن' || 
         cName === 'LL'
       ) {
         return res.status(200).json({ success: true, message: 'Sample order skipped to maintain zero baseline' });
