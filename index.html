@@ -738,6 +738,9 @@
               <span class="badge badge-category">قم بتغيير حالة الطلب أو يوم الجدولة لمزامنتها مباشرة</span>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="if(window.store){window.store.syncCloud(true); if(window.naseejToast) window.naseejToast.success('جاري تحديث ومزامنة الطلبات من السحابة...');}" title="مزامنة وتحديث الطلبات فوراً من السحابة" style="color: #0369a1; border-color: #7dd3fc; background: #f0f9ff; font-weight: 700;">
+                <span>🔄 تحديث الطلبات</span>
+              </button>
               <button type="button" class="btn btn-outline btn-sm" onclick="window.naseejAdmin.confirmClearAllOrders()" title="تصفير الجدول والبدء من جديد" style="color: #64748b; border-color: #cbd5e1;">
                 <span>🧹 تصفير كافة الطلبيات</span>
               </button>

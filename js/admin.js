@@ -268,7 +268,10 @@ class NaseejAdmin {
     });
 
     if (tabName === 'products') this.renderProductsTable();
-    if (tabName === 'orders') this.renderOrdersTable();
+    if (tabName === 'orders') {
+      this.renderOrdersTable();
+      if (typeof store !== 'undefined' && store.syncCloud) store.syncCloud();
+    }
     if (tabName === 'schedule') {
       if (this.currentScheduleSubTab === 'monthly') {
         this.renderMonthlyScheduleView();
