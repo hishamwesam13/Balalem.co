@@ -283,12 +283,13 @@ class NaseejStore {
     // Trigger initial asynchronous Neon Cloud synchronization
     this.syncCloud();
 
-    // Smart, lightweight sync: only when returning to the tab (throttled to at most once every 3 minutes)
+    // Smart, automatic sync across devices:
+    // Only runs when the tab is actively open/in use, allowing Neon to auto-suspend when inactive
     if (typeof window !== 'undefined') {
       const throttledSync = () => {
         const now = Date.now();
-        // At least 3 minutes between automatic background syncs to let Neon compute sleep
-        if (now - this.lastSyncTime > 180000) {
+        // Auto-refresh when opening or returning to tab if more than 60 seconds have passed
+        if (now - this.lastSyncTime > 60000) {
           this.syncCloud();
         }
       };
@@ -303,13 +304,13 @@ class NaseejStore {
         this.syncCloud();
       });
 
-      // Background heartbeat for admin: at most once every 5 minutes, NOT every 3.5 seconds!
+      // Background automatic sync: updates the table every 2 minutes while the user has the page active
       setInterval(() => {
         const now = Date.now();
-        if (now - this.lastSyncTime > 300000 && typeof document !== 'undefined' && !document.hidden) {
+        if (now - this.lastSyncTime > 120000 && typeof document !== 'undefined' && !document.hidden) {
           this.syncCloud();
         }
-      }, 60000);
+      }, 30000);
     }
   }
 
