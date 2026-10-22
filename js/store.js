@@ -229,6 +229,9 @@ const INITIAL_ORDERS = [];
 
 class NaseejStore {
   constructor() {
+    this.cloudStatus = 'connecting';
+    this.lastSyncTime = 0;
+    this.productsSynced = false;
     this.init();
   }
 
@@ -277,51 +280,66 @@ class NaseejStore {
       localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify([]));
     }
 
-    // Trigger asynchronous Neon Cloud synchronization
-    this.cloudStatus = 'connecting';
+    // Trigger initial asynchronous Neon Cloud synchronization
     this.syncCloud();
 
-    // Continuous automatic background sync every 3.5 seconds across all devices
+    // Smart, lightweight sync: only when returning to the tab (throttled to at most once every 3 minutes)
     if (typeof window !== 'undefined') {
-      setInterval(() => {
-        this.syncCloud();
-      }, 3500);
+      const throttledSync = () => {
+        const now = Date.now();
+        // At least 3 minutes between automatic background syncs to let Neon compute sleep
+        if (now - this.lastSyncTime > 180000) {
+          this.syncCloud();
+        }
+      };
 
-      window.addEventListener('focus', () => {
-        this.syncCloud();
-      });
+      window.addEventListener('focus', throttledSync);
 
       document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) this.syncCloud();
+        if (!document.hidden) throttledSync();
       });
 
       window.addEventListener('online', () => {
         this.syncCloud();
       });
+
+      // Background heartbeat for admin: at most once every 5 minutes, NOT every 3.5 seconds!
+      setInterval(() => {
+        const now = Date.now();
+        if (now - this.lastSyncTime > 300000 && typeof document !== 'undefined' && !document.hidden) {
+          this.syncCloud();
+        }
+      }, 60000);
     }
   }
 
   async syncCloud(isManual = false) {
+    this.lastSyncTime = Date.now();
     let cloudSynced = false;
     try {
-      const prodRes = await fetch('/api/products');
-      if (prodRes.ok) {
-        const prodData = await prodRes.json();
-        if (prodData.success && Array.isArray(prodData.products) && prodData.products.length > 0) {
-          localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(prodData.products));
-          if (Array.isArray(prodData.categories) && prodData.categories.length > 0) {
-            localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(prodData.categories));
+      // 1. Products: only fetch once on startup or if manually requested (products don't change frequently)
+      if (!this.productsSynced || isManual) {
+        const prodRes = await fetch('/api/products');
+        if (prodRes.ok) {
+          const prodData = await prodRes.json();
+          if (prodData.success && Array.isArray(prodData.products) && prodData.products.length > 0) {
+            localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(prodData.products));
+            if (Array.isArray(prodData.categories) && prodData.categories.length > 0) {
+              localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(prodData.categories));
+            }
+            window.dispatchEvent(new CustomEvent('naseej:products_updated'));
+            this.productsSynced = true;
+            cloudSynced = true;
+          } else if (prodData.success && prodData.products && prodData.products.length === 0) {
+            // Initialize DB if empty
+            fetch('/api/init').then(r => r.json()).then(initData => {
+              if (initData.success) this.syncCloud(true);
+            }).catch(console.warn);
           }
-          window.dispatchEvent(new CustomEvent('naseej:products_updated'));
-          cloudSynced = true;
-        } else if (prodData.success && prodData.products && prodData.products.length === 0) {
-          // Initialize DB if empty
-          fetch('/api/init').then(r => r.json()).then(initData => {
-            if (initData.success) this.syncCloud();
-          }).catch(console.warn);
         }
       }
 
+      // 2. Orders: fetch latest orders
       const ordRes = await fetch('/api/orders');
       if (ordRes.ok) {
         const ordData = await ordRes.json();
