@@ -2761,16 +2761,16 @@
   </div>
 
   <!-- Modal: إعداد مفتاح Gemini Vision AI لقراءة الدفتر -->
-  <div id="admin-gemini-key-modal" class="naseej-modal" style="display: none;">
-    <div class="modal-dialog modal-md" style="max-width: 520px;">
+  <div id="admin-gemini-key-modal" class="naseej-modal" style="display: none; pointer-events: auto !important; z-index: 999999 !important;" onclick="if(event.target===this){ this.style.display='none'; this.classList.remove('active'); }">
+    <div class="modal-dialog modal-md" style="max-width: 520px; pointer-events: auto !important; position: relative; z-index: 1000000 !important;">
       <div class="modal-header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 22px;">🤖</span>
           <h3 class="modal-title" style="color: #fff; margin: 0; font-size: 16px;">إعداد مفتاح Google Gemini Vision AI</h3>
         </div>
-        <button type="button" class="modal-close" style="color: #fff;" onclick="window.naseejAdmin.closeGeminiKeyModal()">✕</button>
+        <button type="button" class="modal-close" style="color: #fff; cursor: pointer; pointer-events: auto !important;" onclick="document.getElementById('admin-gemini-key-modal').style.display='none'; document.getElementById('admin-gemini-key-modal').classList.remove('active'); window.naseejAdmin?.closeGeminiKeyModal();">✕</button>
       </div>
-      <div class="modal-body" style="padding: 20px;">
+      <div class="modal-body" style="padding: 20px; pointer-events: auto !important;">
         <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
           <div style="font-weight: 800; font-size: 13px; color: #0369a1; margin-bottom: 4px;">
             💡 ما فائدة مفتاح Gemini؟
@@ -2782,8 +2782,13 @@
 
         <div class="form-group">
           <label class="form-label" style="font-weight: 700;">مفتاح Gemini API Key:</label>
-          <input type="password" id="gemini-api-key-input" class="form-control" placeholder="AIzaSy..." dir="ltr" style="font-family: monospace; font-size: 13px;">
-          <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="gemini-api-key-input" class="form-control" placeholder="AIzaSy... أو AQ.Ab..." dir="ltr" style="font-family: monospace; font-size: 13px; pointer-events: auto !important; position: relative; z-index: 1000005 !important; flex: 1;">
+            <button type="button" class="btn btn-outline" onclick="navigator.clipboard?.readText().then(t => { const el = document.getElementById('gemini-api-key-input'); if (el) el.value = t.trim(); window.naseejCustomer?.showToast('تم اللصق بنجاح ✓', 'info'); }).catch(() => { const el = document.getElementById('gemini-api-key-input'); el?.focus(); alert('يرجى الضغط على زر الفأرة الأيمن ثم Paste أو Ctrl+V'); });" style="white-space: nowrap; font-size: 12.5px; padding: 6px 14px; font-weight: 700; border-color: #38bdf8; color: #0284c7; cursor: pointer; pointer-events: auto !important;" title="لصق المفتاح من الحافظة فوراً">
+              📋 لصق المفتاح
+            </button>
+          </div>
+          <small style="color: #64748b; font-size: 11.5px; margin-top: 6px; display: block;">
             يمكنك الحصول على مفتاح مجاني فورياً وبدون بطاقة بنكية من: 
             <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color: #0284c7; font-weight: 700; text-decoration: underline;">Google AI Studio</a>
           </small>
@@ -2791,13 +2796,13 @@
 
         <div id="gemini-key-status" style="margin-top: 10px; font-size: 12.5px; font-weight: 700;"></div>
       </div>
-      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
-        <button type="button" class="btn btn-outline" onclick="window.naseejAdmin.removeGeminiApiKey()" style="color: #dc2626; border-color: #fca5a5;">
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; pointer-events: auto !important;">
+        <button type="button" class="btn btn-outline" onclick="window.naseejAdmin?.removeGeminiApiKey()" style="color: #dc2626; border-color: #fca5a5; cursor: pointer; pointer-events: auto !important;">
           🗑️ إزالة المفتاح
         </button>
         <div style="display: flex; gap: 8px;">
-          <button type="button" class="btn btn-light" onclick="window.naseejAdmin.closeGeminiKeyModal()">إلغاء</button>
-          <button type="button" class="btn btn-primary" onclick="window.naseejAdmin.saveGeminiApiKey()" style="font-weight: 800;">
+          <button type="button" class="btn btn-light" style="cursor: pointer; pointer-events: auto !important;" onclick="document.getElementById('admin-gemini-key-modal').style.display='none'; document.getElementById('admin-gemini-key-modal').classList.remove('active'); window.naseejAdmin?.closeGeminiKeyModal();">إلغاء</button>
+          <button type="button" class="btn btn-primary" onclick="window.naseejAdmin?.saveGeminiApiKey()" style="font-weight: 800; cursor: pointer; pointer-events: auto !important;">
             💾 حفظ المفتاح وتفعيل القراءة
           </button>
         </div>
