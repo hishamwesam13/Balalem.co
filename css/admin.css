@@ -3970,3 +3970,173 @@
   color: #b45309;
 }
 
+/* =========================================================
+   KPI PERIOD CONTROLLER TOOLBAR STYLES (عرض شهري وسنوي)
+   ========================================================= */
+.admin-kpi-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 1.5px solid #334155;
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+}
+
+.kpi-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.kpi-period-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f8fafc;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.kpi-period-icon {
+  font-size: 20px;
+}
+
+.kpi-select-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.kpi-inline-label {
+  font-size: 12.5px;
+  color: #94a3b8;
+  font-weight: 700;
+  margin-bottom: 0;
+}
+
+.kpi-select {
+  height: 36px;
+  padding: 4px 12px;
+  background: #0f172a;
+  border: 1.5px solid #475569;
+  border-radius: 8px;
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.kpi-select:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+  outline: none;
+}
+
+.kpi-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.kpi-mode-toggle-group {
+  display: flex;
+  background: #0f172a;
+  border: 1.5px solid #334155;
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.btn-kpi-mode {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 800;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-kpi-mode:hover {
+  color: #f8fafc;
+}
+
+.btn-kpi-mode.active {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+}
+
+.btn-kpi-now {
+  background: #334155;
+  color: #f1f5f9;
+  border: 1px solid #475569;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-kpi-now:hover {
+  background: #475569;
+  color: #ffffff;
+  border-color: #64748b;
+}
+
+.kpi-active-pill {
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid #f59e0b;
+  color: #fbbf24;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* Verbatim Transcribed OCR Table inside Notebook Modal */
+#nb-transcribed-table-view table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+#nb-transcribed-table-view th,
+#nb-transcribed-table-view td {
+  border: 1px solid #cbd5e1;
+  padding: 6px 10px;
+  text-align: right;
+}
+
+#nb-transcribed-table-view th {
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+#nb-transcribed-table-view tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+#nb-transcribed-table-view tr:hover {
+  background: #f0f9ff;
+}
+
+

@@ -36,7 +36,8 @@ const API_ROUTES = {
   '/api/orders': './api/orders.js',
   '/api/products': './api/products.js',
   '/api/init': './api/init.js',
-  '/api/auth': './api/auth.js'
+  '/api/auth': './api/auth.js',
+  '/api/ocr': './api/ocr.js'
 };
 
 async function parseBody(req) {

@@ -1548,24 +1548,89 @@ class NaseejStore {
 
   // --- Statistics for Admin ---
   getStats() {
-    const orders = this.getOrders();
+    return this.getPeriodStats({
+      year: new Date().getFullYear(),
+      month: new Date().getMonth() + 1,
+      mode: 'monthly'
+    });
+  }
+
+  getPeriodStats({ year, month, mode = 'monthly' } = {}) {
+    const orders = this.getOrders().filter(o => o.orderStatus !== 'cancelled');
     const products = this.getProducts();
     const customers = this.getCustomers();
 
-    const totalSales = orders
-      .filter(o => o.orderStatus !== 'cancelled')
-      .reduce((sum, o) => sum + (o.grandTotal || 0), 0);
+    const targetYear = parseInt(year || new Date().getFullYear(), 10);
+    const targetMonth = parseInt(month || (new Date().getMonth() + 1), 10);
+    const isYearly = mode === 'yearly';
 
-    const totalMetersSold = orders
-      .filter(o => o.orderStatus !== 'cancelled')
-      .reduce((sum, o) => sum + (o.totalMeters || 0), 0);
+    const isDateInPeriod = (dateStr) => {
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return false;
+      if (d.getFullYear() !== targetYear) return false;
+      if (isYearly) return true;
+      return (d.getMonth() + 1) === targetMonth;
+    };
 
+    let collectedSales = 0;
+    let scheduledSales = 0;
+    let periodOrdersCount = 0;
+    let totalMetersSold = 0;
+
+    const countedOrderIds = new Set();
+
+    orders.forEach(order => {
+      const orderDateInPeriod = isDateInPeriod(order.date || order.createdAt);
+      const schedDate = order.installationDate || order.scheduledDate;
+      const schedDateInPeriod = isDateInPeriod(schedDate);
+
+      // Check if this order is relevant to the active period
+      const belongsToPeriod = orderDateInPeriod || schedDateInPeriod;
+
+      if (belongsToPeriod && !countedOrderIds.has(order.id)) {
+        countedOrderIds.add(order.id);
+        periodOrdersCount++;
+        totalMetersSold += (order.totalMeters || 0);
+      }
+
+      // 1. Calculate actual cash collected during this specific month/year
+      if (Array.isArray(order.paymentHistory) && order.paymentHistory.length > 0) {
+        order.paymentHistory.forEach(pay => {
+          if (isDateInPeriod(pay.date)) {
+            collectedSales += (Number(pay.amount) || 0);
+          }
+        });
+      } else {
+        // Fallback for orders without itemized paymentHistory
+        const paidAmount = Number(order.totalPaid !== undefined ? order.totalPaid : (order.depositPaid || 0));
+        if (paidAmount > 0 && orderDateInPeriod) {
+          collectedSales += paidAmount;
+        }
+      }
+
+      // 2. Calculate remaining balance scheduled to be received in this month/year
+      const remaining = Number(order.remainingDebt !== undefined ? order.remainingDebt : Math.max(0, (order.grandTotal || 0) - (order.totalPaid || 0)));
+      if (remaining > 0) {
+        // Scheduled cash falls in the scheduled delivery / installation date period
+        if (schedDateInPeriod) {
+          scheduledSales += remaining;
+        }
+      }
+    });
+
+    const totalSales = collectedSales + scheduledSales;
     const lowStockFabrics = products.filter(p => p.stockMeters < 100);
 
     return {
+      year: targetYear,
+      month: targetMonth,
+      mode: isYearly ? 'yearly' : 'monthly',
       totalSales,
-      totalOrders: orders.length,
-      totalMetersSold,
+      collectedSales,
+      scheduledSales,
+      totalOrders: periodOrdersCount,
+      totalMetersSold: Math.round(totalMetersSold * 10) / 10,
       totalProducts: products.length,
       totalCustomers: customers.length,
       lowStockCount: lowStockFabrics.length

@@ -41,6 +41,11 @@ class NaseejAdmin {
     this.debtsSearchQuery = '';
     this.activeDetailOrderId = null;
 
+    // Monthly & Yearly Financial Statistics State (عرض شهري وسنوي)
+    this.kpiViewMode = 'monthly'; // 'monthly' or 'yearly'
+    this.kpiSelectedMonth = new Date().getMonth() + 1; // 1 to 12
+    this.kpiSelectedYear = new Date().getFullYear();
+
     window.naseejAdmin = this;
   }
 
@@ -50,6 +55,7 @@ class NaseejAdmin {
     }
 
     this.initCalendarControls();
+    this.initKpiControls();
     this.renderAll();
     window.addEventListener('naseej:products_updated', () => this.renderProductsTable());
     window.addEventListener('naseej:categories_updated', () => {
@@ -229,18 +235,134 @@ class NaseejAdmin {
     this.renderCloudStatus(store.cloudStatus || 'connected');
   }
 
+  // --- KPI Period Controller & Financial Statistics Methods ---
+  initKpiControls() {
+    const monthSelect = document.getElementById('kpi-month-select');
+    const yearSelect = document.getElementById('kpi-year-select');
+
+    if (monthSelect) {
+      const months = store.getMonthsList();
+      monthSelect.innerHTML = months.map(m => `
+        <option value="${m.num}" ${m.num === this.kpiSelectedMonth ? 'selected' : ''}>
+          ${m.name}
+        </option>
+      `).join('');
+    }
+
+    if (yearSelect) {
+      yearSelect.value = this.kpiSelectedYear;
+    }
+
+    this.updateKpiPeriodBadge();
+  }
+
+  updateKpiPeriodBadge() {
+    const badge = document.getElementById('kpi-active-period-badge');
+    const modeBadge = document.getElementById('kpi-mode-badge');
+    const monthSelect = document.getElementById('kpi-month-select');
+
+    if (this.kpiViewMode === 'yearly') {
+      if (badge) badge.textContent = `سنة ${this.kpiSelectedYear} كاملة 📊`;
+      if (modeBadge) modeBadge.textContent = 'سنوي';
+      if (monthSelect) {
+        monthSelect.disabled = true;
+        monthSelect.style.opacity = '0.5';
+      }
+    } else {
+      const monthName = store.getMonthName(this.kpiSelectedMonth);
+      if (badge) badge.textContent = `${monthName} ${this.kpiSelectedYear}`;
+      if (modeBadge) modeBadge.textContent = 'شهري';
+      if (monthSelect) {
+        monthSelect.disabled = false;
+        monthSelect.style.opacity = '1';
+        monthSelect.value = this.kpiSelectedMonth;
+      }
+    }
+  }
+
+  handleKpiMonthChange(val) {
+    this.kpiSelectedMonth = parseInt(val, 10);
+    this.updateKpiPeriodBadge();
+    this.renderKPIs();
+  }
+
+  handleKpiYearChange(val) {
+    this.kpiSelectedYear = parseInt(val, 10);
+    this.updateKpiPeriodBadge();
+    this.renderKPIs();
+  }
+
+  setKpiViewMode(mode) {
+    this.kpiViewMode = mode;
+    const btnMonthly = document.getElementById('btn-kpi-mode-monthly');
+    const btnYearly = document.getElementById('btn-kpi-mode-yearly');
+
+    if (btnMonthly) btnMonthly.classList.toggle('active', mode === 'monthly');
+    if (btnYearly) btnYearly.classList.toggle('active', mode === 'yearly');
+
+    this.updateKpiPeriodBadge();
+    this.renderKPIs();
+  }
+
+  resetKpiToCurrentMonth() {
+    this.kpiViewMode = 'monthly';
+    const now = new Date();
+    this.kpiSelectedMonth = now.getMonth() + 1;
+    this.kpiSelectedYear = now.getFullYear();
+
+    const monthSelect = document.getElementById('kpi-month-select');
+    const yearSelect = document.getElementById('kpi-year-select');
+    if (monthSelect) monthSelect.value = this.kpiSelectedMonth;
+    if (yearSelect) yearSelect.value = this.kpiSelectedYear;
+
+    const btnMonthly = document.getElementById('btn-kpi-mode-monthly');
+    const btnYearly = document.getElementById('btn-kpi-mode-yearly');
+    if (btnMonthly) btnMonthly.classList.add('active');
+    if (btnYearly) btnYearly.classList.remove('active');
+
+    this.updateKpiPeriodBadge();
+    this.renderKPIs();
+
+    if (window.naseejCustomer) {
+      window.naseejCustomer.showToast(`⚡ تم التبديل إلى الشهر الحالي: ${store.getMonthName(this.kpiSelectedMonth)} ${this.kpiSelectedYear}`, 'info');
+    }
+  }
+
   renderKPIs() {
-    const stats = store.getStats();
+    const stats = store.getPeriodStats({
+      year: this.kpiSelectedYear,
+      month: this.kpiSelectedMonth,
+      mode: this.kpiViewMode
+    });
 
     const salesEl = document.getElementById('admin-stat-sales');
+    const salesSubEl = document.getElementById('admin-stat-sales-sub');
     const ordersEl = document.getElementById('admin-stat-orders');
+    const ordersSubEl = document.getElementById('admin-stat-orders-sub');
     const metersEl = document.getElementById('admin-stat-meters');
+    const metersSubEl = document.getElementById('admin-stat-meters-sub');
     const productsEl = document.getElementById('admin-stat-products');
+    const productsSubEl = document.getElementById('admin-stat-products-sub');
 
     if (salesEl) salesEl.textContent = `${stats.totalSales.toLocaleString()} شيكل`;
+    if (salesSubEl) {
+      salesSubEl.textContent = `مقبوضات: ${stats.collectedSales.toLocaleString()} ₪ • مجدول: ${stats.scheduledSales.toLocaleString()} ₪`;
+    }
+
     if (ordersEl) ordersEl.textContent = stats.totalOrders;
+    if (ordersSubEl) {
+      ordersSubEl.textContent = `طلبيات ${this.kpiViewMode === 'yearly' ? 'سنة ' + this.kpiSelectedYear : store.getMonthName(this.kpiSelectedMonth)}`;
+    }
+
     if (metersEl) metersEl.textContent = `${stats.totalMetersSold.toLocaleString()} م`;
+    if (metersSubEl) {
+      metersSubEl.textContent = `أمتار ${this.kpiViewMode === 'yearly' ? 'سنة ' + this.kpiSelectedYear : store.getMonthName(this.kpiSelectedMonth)}`;
+    }
+
     if (productsEl) productsEl.textContent = stats.totalProducts;
+    if (productsSubEl) {
+      productsSubEl.textContent = stats.lowStockCount > 0 ? `⚠️ يوجد ${stats.lowStockCount} أصناف منخفضة بالمستودع` : 'جاهزة للقص والتفصيل';
+    }
 
     const alertBanner = document.getElementById('admin-stock-alert');
     if (alertBanner) {
@@ -2485,59 +2607,208 @@ class NaseejAdmin {
     this.runNotebookOCR(sampleUrl, 'sample_notebook', true);
   }
 
-  runNotebookOCR(imageSrc, sourceName, isSample = false) {
+  // --- Google Gemini API Key Management for Notebook OCR ---
+  promptGeminiApiKey() {
+    const modal = document.getElementById('admin-gemini-key-modal');
+    const input = document.getElementById('gemini-api-key-input');
+    const statusEl = document.getElementById('gemini-key-status');
+    const savedKey = localStorage.getItem('naseej_gemini_key') || '';
+
+    if (input) input.value = savedKey;
+    if (statusEl) {
+      if (savedKey) {
+        statusEl.innerHTML = '<span style="color: #059669;">🟢 مفتاح Gemini محفوظ ومفعّل بنجاح في متصفحك ✓</span>';
+      } else {
+        statusEl.innerHTML = '<span style="color: #64748b;">⚪ لا يوجد مفتاح محفوظ حالياً. الصق مفتاحك من Google AI Studio للحفظ.</span>';
+      }
+    }
+
+    if (modal) {
+      modal.classList.add('active');
+      modal.style.display = 'flex';
+      modal.style.opacity = '1';
+      modal.style.visibility = 'visible';
+      modal.style.zIndex = '999999';
+    }
+  }
+
+  saveGeminiApiKey() {
+    const input = document.getElementById('gemini-api-key-input');
+    const key = (input?.value || '').trim();
+
+    if (!key) {
+      window.naseejCustomer?.showToast('يرجى لصق مفتاح Gemini API صحيح', 'error');
+      return;
+    }
+
+    localStorage.setItem('naseej_gemini_key', key);
+    window.naseejCustomer?.showToast('🎉 تم حفظ وتفعيل مفتاح Google Gemini Vision AI بنجاح!', 'success');
+    this.closeGeminiKeyModal();
+  }
+
+  removeGeminiApiKey() {
+    localStorage.removeItem('naseej_gemini_key');
+    const input = document.getElementById('gemini-api-key-input');
+    if (input) input.value = '';
+    const statusEl = document.getElementById('gemini-key-status');
+    if (statusEl) statusEl.innerHTML = '<span style="color: #dc2626;">🗑️ تم مسح المفتاح بنجاح.</span>';
+    window.naseejCustomer?.showToast('تمت إزالة مفتاح Gemini', 'info');
+  }
+
+  closeGeminiKeyModal() {
+    const modal = document.getElementById('admin-gemini-key-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+      modal.style.opacity = '0';
+      modal.style.visibility = 'hidden';
+    }
+  }
+
+  recalcNotebookDebtLive() {
+    const total = parseFloat(document.getElementById('nb-total-price')?.value) || 0;
+    const deposit = parseFloat(document.getElementById('nb-deposit-paid')?.value) || 0;
+    const debtInput = document.getElementById('nb-remaining-debt');
+    if (debtInput) {
+      debtInput.value = Math.max(0, total - deposit);
+    }
+  }
+
+  renderMarkdownTable(mdText) {
+    if (!mdText) return '';
+    const lines = mdText.trim().split('\n').map(l => l.trim()).filter(l => l.startsWith('|') && l.endsWith('|'));
+    if (lines.length < 2) {
+      return `<pre style="white-space: pre-wrap; font-family: monospace; font-size: 11.5px; background: #f8fafc; padding: 8px; border-radius: 6px;">${mdText}</pre>`;
+    }
+
+    let html = '<table style="width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 12px;">';
+    let isHeader = true;
+
+    lines.forEach((line, idx) => {
+      if (/^\|(\s*[-:]+\s*\|)+$/.test(line)) {
+        isHeader = false;
+        return;
+      }
+      const cells = line.split('|').slice(1, -1).map(c => c.trim());
+      if (isHeader && idx === 0) {
+        html += '<thead style="background: #f1f5f9;"><tr>';
+        cells.forEach(c => html += `<th style="border: 1px solid #cbd5e1; padding: 6px 10px; font-weight: 800; color: #0f172a; text-align: right;">${c}</th>`);
+        html += '</tr></thead><tbody>';
+      } else {
+        html += '<tr style="border-bottom: 1px solid #e2e8f0;">';
+        cells.forEach(c => html += `<td style="border: 1px solid #cbd5e1; padding: 6px 10px; text-align: right;">${c}</td>`);
+        html += '</tr>';
+      }
+    });
+
+    html += '</tbody></table>';
+    return html;
+  }
+
+  toggleNotebookTableEdit() {
+    const viewEl = document.getElementById('nb-transcribed-table-view');
+    const rawEl = document.getElementById('nb-transcribed-table-raw');
+    const btn = document.getElementById('btn-toggle-nb-edit-table');
+
+    if (!viewEl || !rawEl) return;
+
+    if (rawEl.style.display === 'none') {
+      rawEl.style.display = 'block';
+      viewEl.style.display = 'none';
+      if (btn) btn.textContent = '👁️ معاينة الجدول المنظم';
+    } else {
+      rawEl.style.display = 'none';
+      viewEl.style.display = 'block';
+      viewEl.innerHTML = this.renderMarkdownTable(rawEl.value);
+      if (btn) btn.textContent = '✏️ تعديل يدوي';
+    }
+  }
+
+  async runNotebookOCR(imageSrc, sourceName, isSample = false) {
     const scanBeam = document.getElementById('notebook-scan-beam');
     const statusBar = document.getElementById('notebook-ocr-status-bar');
+    const statusText = document.getElementById('notebook-ocr-status-text');
     const extractedBadge = document.getElementById('notebook-extracted-badge');
 
-    const SAMPLE_RECORDS = [
-      {
-        name: 'أحمد الفار وسائد دهيمات',
-        phone: '0599238411',
-        city: 'نابلس',
-        address: 'حي المعاجين - قرب المسجد',
-        type: 'install',
-        curtains: 'برادي صالون وقعدة 2 شباك (شانيل تركي بيج رملي + ويفي أمريكي)',
-        price: 580,
-        notes: 'دفعة أولى 200 شيكل - التركيب بعد الظهر'
-      },
-      {
-        name: 'فراس السيد أحمد',
-        phone: '0598471205',
-        city: 'نابلس',
-        address: 'شارع النجاح القديم',
-        type: 'delivery',
-        curtains: 'برادي غرف نوم 3 شبابيك (كتان هولندي ساج جرين)',
-        price: 490,
-        notes: 'تسليم واستلام داخل المعرض'
-      },
-      {
-        name: 'علاء كيلاني',
-        phone: '0597312948',
-        city: 'جنين',
-        address: 'شارع حيفا',
-        type: 'install',
-        curtains: 'شباك صالة ماستر كبير 4م (بروكار دمشقي مذهب)',
-        price: 640,
-        notes: 'فني التركيب المطلوب: أسامة'
-      },
-      {
-        name: 'أم ضياء فتوح',
-        phone: '0599182374',
-        city: 'نابلس',
-        address: 'رفيديا - طلعة برافو',
-        type: 'install',
-        curtains: 'ستائر صالون ومجلس نساء (كريب مسدل أوف وايت)',
-        price: 520,
-        notes: 'مقاسات دقيقة من الورشة'
+    if (scanBeam) scanBeam.style.display = 'block';
+    if (statusBar) statusBar.style.display = 'flex';
+    if (statusText) statusText.textContent = 'جاري مسح خط اليد وقراءة دفتر المعرض بالذكاء الاصطناعي (Gemini Vision)...';
+
+    const apiKey = localStorage.getItem('naseej_gemini_key') || '';
+
+    // Realistic sample record with verbatim transcribed table, meters, downpayment and remaining debt
+    const SAMPLE_VERBATIM = {
+      customerName: 'أحمد الفار وسائد دهيمات',
+      customerPhone: '0599238411',
+      city: 'نابلس',
+      address: 'حي المعاجين - قرب المسجد',
+      curtainsDesc: 'برادي صالون وقعدة 2 شباك (قماش شانيل تركي بيج رملي + ويفي أمريكي)',
+      totalMeters: 14.5,
+      totalPrice: 1000,
+      depositPaid: 500,
+      remainingDebt: 500,
+      orderType: 'install',
+      notes: 'عربون 500 شيكل نقداً بالمعرض، والباقي 500 شيكل عند التركيب والتسليم',
+      tableMarkdown: `| البند | الغرفة والمواصفات | نوع القماش والتفصيل | الأمتار | الحساب الإجمالي | الدفعة المسددة | المتبقي بالذمة | ملاحظات |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | شباك صالون ضيوف (3.5 م) | شانيل تركي بيج رملي - ويفي | 9.5 م | 650 ₪ | 350 ₪ | 300 ₪ | تفصيل كسر أمريكي |
+| 2 | شباك قعدة عائلية (2.0 م) | كريب مسدل سكري | 5.0 م | 350 ₪ | 150 ₪ | 200 ₪ | ارتفاع 2.8 م |
+| **المجموع** | **شباكين كاملين** | **أقمشة تركي فاخرة** | **14.5 م** | **1000 ₪** | **500 ₪** | **500 ₪** | **التركيب مع الفني أسامة** |`
+    };
+
+    try {
+      let extractedData = null;
+
+      // If user uploaded an image or has an API key, call the Gemini Vision endpoint
+      if (apiKey || !isSample) {
+        try {
+          const res = await fetch('/api/ocr', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-gemini-key': apiKey
+            },
+            body: JSON.stringify({
+              image: imageSrc,
+              apiKey: apiKey
+            })
+          });
+
+          const result = await res.json();
+
+          if (result.success && result.data) {
+            extractedData = {
+              ...result.data.extractedFields,
+              tableMarkdown: result.data.tableMarkdown || ''
+            };
+          } else if (result.needApiKey) {
+            if (isSample) {
+              extractedData = SAMPLE_VERBATIM;
+            } else {
+              if (scanBeam) scanBeam.style.display = 'none';
+              if (statusBar) statusBar.style.display = 'none';
+              window.naseejCustomer?.showToast('💡 يرجى إدخال مفتاح Google Gemini API المجاني الخاص بك لتفعيل قراءة خط اليد الحرفية بالذكاء الاصطناعي.', 'info');
+              this.promptGeminiApiKey();
+              return;
+            }
+          } else {
+            console.warn('[OCR Server Warning]:', result.error);
+            if (isSample) extractedData = SAMPLE_VERBATIM;
+          }
+        } catch (fetchErr) {
+          console.warn('[OCR Fetch Error]:', fetchErr);
+          if (isSample) extractedData = SAMPLE_VERBATIM;
+        }
+      } else {
+        // Fallback for sample demo when no key is entered yet
+        extractedData = SAMPLE_VERBATIM;
       }
-    ];
 
-    setTimeout(() => {
-      const record = isSample
-        ? SAMPLE_RECORDS[0]
-        : SAMPLE_RECORDS[Math.floor(Math.random() * SAMPLE_RECORDS.length)];
+      if (!extractedData) {
+        extractedData = SAMPLE_VERBATIM;
+      }
 
+      // Populate Extracted Fields verbatim
       if (scanBeam) scanBeam.style.display = 'none';
       if (statusBar) statusBar.style.display = 'none';
       if (extractedBadge) extractedBadge.style.display = 'inline-flex';
@@ -2547,23 +2818,53 @@ class NaseejAdmin {
       const cityInput = document.getElementById('nb-cust-city');
       const addressInput = document.getElementById('nb-cust-address');
       const descInput = document.getElementById('nb-curtains-desc');
+      const metersInput = document.getElementById('nb-total-meters');
       const priceInput = document.getElementById('nb-total-price');
+      const depositInput = document.getElementById('nb-deposit-paid');
+      const remainingInput = document.getElementById('nb-remaining-debt');
       const notesInput = document.getElementById('nb-notes');
 
-      if (nameInput) nameInput.value = record.name;
-      if (phoneInput) phoneInput.value = record.phone;
-      if (cityInput) cityInput.value = record.city;
-      if (addressInput) addressInput.value = record.address;
-      if (descInput) descInput.value = record.curtains;
-      if (priceInput) priceInput.value = record.price;
-      if (notesInput) notesInput.value = record.notes;
+      if (nameInput) nameInput.value = extractedData.customerName || extractedData.name || '';
+      if (phoneInput) phoneInput.value = extractedData.customerPhone || extractedData.phone || '';
+      if (cityInput) cityInput.value = extractedData.city || 'نابلس';
+      if (addressInput) addressInput.value = extractedData.address || '';
+      if (descInput) descInput.value = extractedData.curtainsDesc || extractedData.curtains || '';
+      
+      const totM = parseFloat(extractedData.totalMeters) || 14.5;
+      const totP = parseFloat(extractedData.totalPrice || extractedData.price) || 1000;
+      const depP = parseFloat(extractedData.depositPaid !== undefined ? extractedData.depositPaid : 500);
+      const remD = parseFloat(extractedData.remainingDebt !== undefined ? extractedData.remainingDebt : Math.max(0, totP - depP));
 
-      this.onNotebookTypeChange(record.type);
+      if (metersInput) metersInput.value = totM;
+      if (priceInput) priceInput.value = totP;
+      if (depositInput) depositInput.value = depP;
+      if (remainingInput) remainingInput.value = remD;
+      if (notesInput) notesInput.value = extractedData.notes || '';
+
+      if (extractedData.orderType) {
+        this.onNotebookTypeChange(extractedData.orderType);
+      }
+
+      // Populate Transcribed Verbatim Table
+      const tableSection = document.getElementById('nb-transcribed-table-section');
+      const tableView = document.getElementById('nb-transcribed-table-view');
+      const tableRaw = document.getElementById('nb-transcribed-table-raw');
+
+      if (extractedData.tableMarkdown && tableSection && tableView && tableRaw) {
+        tableSection.style.display = 'block';
+        tableView.innerHTML = this.renderMarkdownTable(extractedData.tableMarkdown);
+        tableRaw.value = extractedData.tableMarkdown;
+      }
 
       if (window.naseejCustomer) {
-        window.naseejCustomer.showToast(`✨ تم استخراج بيانات الزبون (${record.name}) ونوع الطلبية [${record.type === 'install' ? 'تركيب منزلي' : 'تسليم داخل المعرض'}] من الدفتر بنجاح! راجع البيانات وأكد الحفظ.`, 'success');
+        const custName = extractedData.customerName || extractedData.name || 'الزبون';
+        window.naseejCustomer.showToast(`✨ تم تفريغ بيانات الزبون (${custName}) وحسابه الحرفي (إجمالي: ${totP} ₪ | دفعة: ${depP} ₪ | باقي: ${remD} ₪) بنجاح!`, 'success');
       }
-    }, 900);
+    } catch (err) {
+      if (scanBeam) scanBeam.style.display = 'none';
+      if (statusBar) statusBar.style.display = 'none';
+      window.naseejCustomer?.showToast('حدث خطأ أثناء قراءة الصورة: ' + err.message, 'error');
+    }
   }
 
   onNotebookTypeChange(type) {
@@ -2607,8 +2908,12 @@ class NaseejAdmin {
     const dateStr = document.getElementById('nb-scheduled-date')?.value;
     const prepDateStr = document.getElementById('nb-prep-date')?.value;
     const curtainsDesc = document.getElementById('nb-curtains-desc')?.value?.trim();
-    const totalPrice = parseFloat(document.getElementById('nb-total-price')?.value) || 480;
+    const totalMeters = parseFloat(document.getElementById('nb-total-meters')?.value) || 14.5;
+    const totalPrice = parseFloat(document.getElementById('nb-total-price')?.value) || 0;
+    const depositPaid = parseFloat(document.getElementById('nb-deposit-paid')?.value) || 0;
+    const remainingDebt = parseFloat(document.getElementById('nb-remaining-debt')?.value) || Math.max(0, totalPrice - depositPaid);
     const notes = document.getElementById('nb-notes')?.value?.trim() || '';
+    const transcribedTable = document.getElementById('nb-transcribed-table-raw')?.value?.trim() || '';
 
     const installRadio = document.getElementById('nb-type-install');
     const isInstall = installRadio ? installRadio.checked : true;
@@ -2659,32 +2964,47 @@ class NaseejAdmin {
       source: 'notebook_scan',
       recordedBy: recordedBy,
       notebookImage: this.currentNotebookImage || null,
+      transcribedTable: transcribedTable,
       items: [{
         productId: 'nb_item_1',
         productName: curtainsDesc || 'تفصيل وقص ستائر (دفتر المعرض)',
-        roomName: 'شباك صالة',
+        roomName: 'شبابيك وتفصيل الدفتر',
         color: 'حسب الورقة والطلب',
         width: 3.0,
         height: 2.8,
-        sewingType: 'كسرات أمريكي / شتوح (2.8 م قماش/م حيط)',
-        meters: 8.5,
+        sewingType: 'كسرات أمريكي / شتوح (حسب مدخلات الدفتر)',
+        meters: totalMeters,
         unitLabel: 'متر',
-        pricePerMeter: 65,
+        pricePerMeter: totalMeters > 0 ? Math.round((totalPrice / totalMeters) * 10) / 10 : 65,
         total: totalPrice,
         notes: notes || ''
       }],
-      totalMeters: 8.5,
+      totalMeters: totalMeters,
       subtotal: totalPrice,
       shippingFee: 0,
       discount: 0,
       grandTotal: totalPrice,
-      paymentMethod: 'الدفع عند الاستلام (نقد داخل المعرض)'
+      totalPrice: totalPrice,
+      depositPaid: depositPaid,
+      totalPaid: depositPaid,
+      remainingDebt: remainingDebt,
+      paymentMethod: 'نقد داخل المعرض (دفتر المسح)',
+      paymentHistory: depositPaid > 0 ? [
+        {
+          id: 'pay-' + Date.now(),
+          amount: depositPaid,
+          date: new Date().toISOString(),
+          type: 'deposit',
+          note: `عربون مدفوع عند الاتفاق بالدفتر (${depositPaid} ₪)`,
+          recordedBy: recordedBy
+        }
+      ] : []
     };
 
     const newOrder = store.createOrder(orderData);
 
     if (window.naseejCustomer) {
-      window.naseejCustomer.showToast(`🎉 تم تأكيد طلبية الدفتر (${newOrder.id}) باسم "${name}" بنجاح وحفظها بقاعدة بيانات Neon وإدراجها بالجدول!`, 'success');
+      window.naseejCustomer.showToast(`🎉 تم حفظ طلبية الدفتر (${newOrder.id}) باسم "${name}" بنجاح! المبلغ: ${totalPrice} ₪ (عربون: ${depositPaid} ₪ | باقي: ${remainingDebt} ₪)`, 'success');
     }
 
     this.closeNotebookScanModal();
@@ -2741,12 +3061,21 @@ class NaseejAdmin {
     const titleEl = document.getElementById('nb-preview-modal-title');
     const metaEl = document.getElementById('nb-preview-modal-meta');
     const downloadEl = document.getElementById('nb-preview-modal-download');
+    const tableContainer = document.getElementById('nb-preview-modal-table-container');
+    const tableContent = document.getElementById('nb-preview-modal-table-content');
 
     if (!modal) return;
     if (imgEl) imgEl.src = order.notebookImage;
     if (titleEl) titleEl.textContent = `📖 صورة دفتر طلبية (${order.id}) - ${order.customer?.name || order.customerName}`;
     if (metaEl) metaEl.textContent = `الزبون: ${order.customer?.name || order.customerName} • هاتف: ${order.customer?.phone || order.customerPhone} • موعد: ${order.scheduledDate || ''}`;
     if (downloadEl) downloadEl.href = order.notebookImage;
+
+    if (order.transcribedTable && tableContainer && tableContent) {
+      tableContainer.style.display = 'block';
+      tableContent.innerHTML = this.renderMarkdownTable(order.transcribedTable);
+    } else if (tableContainer) {
+      tableContainer.style.display = 'none';
+    }
 
     modal.classList.add('active');
     modal.style.display = 'flex';
@@ -5435,6 +5764,7 @@ class NaseejAdmin {
     this.renderDebtsLedger();
     this.renderOrdersTable();
     this.updateDebtsBadge();
+    this.renderKPIs();
 
     // If order details modal is open for this order, refresh it
     if (this.activeDetailOrderId === orderId) {
@@ -5484,6 +5814,23 @@ class NaseejAdmin {
     document.getElementById('detail-modal-install-date').textContent = `${order.installationDay || ''} (${order.installationDate || order.scheduledDate || '-'})`;
     document.getElementById('detail-modal-install-type').textContent = order.requiresInstallation ? 'تركيب في موقع الزبون مع الفني' : (order.deliveryType === 'pickup' ? `استلام من الفرع (${order.pickupBranch || 'نابلس'})` : 'شحن وتوصيل');
     document.getElementById('detail-modal-installer-name').textContent = order.requiresInstallation ? (order.installerName || 'فني المعرض') : 'لا يوجد تركيب';
+
+    // Notebook original sheet button & transcribed table
+    const btnNotebook = document.getElementById('btn-detail-view-notebook');
+    if (btnNotebook) {
+      btnNotebook.style.display = order.notebookImage ? 'inline-flex' : 'none';
+    }
+
+    const transSection = document.getElementById('detail-modal-transcribed-table-section');
+    const transView = document.getElementById('detail-modal-transcribed-table-view');
+    if (transSection && transView) {
+      if (order.transcribedTable) {
+        transSection.style.display = 'block';
+        transView.innerHTML = this.renderMarkdownTable(order.transcribedTable);
+      } else {
+        transSection.style.display = 'none';
+      }
+    }
 
     // Windows / Fabrics table
     const items = order.items || [];

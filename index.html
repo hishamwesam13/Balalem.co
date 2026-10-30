@@ -637,13 +637,60 @@
         <!-- Injected dynamically -->
       </div>
 
+      <!-- KPI Period Controller Toolbar (عرض شهري وسنوي واختيار الشهر والسنة) -->
+      <div class="admin-kpi-toolbar">
+        <div class="kpi-toolbar-left">
+          <div class="kpi-period-title">
+            <span class="kpi-period-icon">📊</span>
+            <span class="kpi-period-text">فترة الإحصائيات المالية:</span>
+          </div>
+
+          <div class="kpi-select-group">
+            <label class="kpi-inline-label" for="kpi-month-select">📅 الشهر:</label>
+            <select id="kpi-month-select" class="form-control kpi-select" onchange="window.naseejAdmin.handleKpiMonthChange(this.value)">
+              <!-- Populated dynamically via admin.js -->
+            </select>
+
+            <label class="kpi-inline-label" for="kpi-year-select">سنة:</label>
+            <select id="kpi-year-select" class="form-control kpi-select" onchange="window.naseejAdmin.handleKpiYearChange(this.value)">
+              <option value="2026">2026</option>
+              <option value="2027">2027</option>
+              <option value="2025">2025</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="kpi-toolbar-right">
+          <div class="kpi-mode-toggle-group">
+            <button type="button" id="btn-kpi-mode-monthly" class="btn-kpi-mode active" onclick="window.naseejAdmin.setKpiViewMode('monthly')" title="عرض أرقام ومبيعات الشهر المحدد فقط">
+              <span>📅 عرض شهري</span>
+            </button>
+            <button type="button" id="btn-kpi-mode-yearly" class="btn-kpi-mode" onclick="window.naseejAdmin.setKpiViewMode('yearly')" title="عرض إجمالي مبيعات وأرقام السنة بالكامل">
+              <span>📈 عرض سنوي كامل</span>
+            </button>
+          </div>
+
+          <button type="button" class="btn btn-sm btn-kpi-now" onclick="window.naseejAdmin.resetKpiToCurrentMonth()" title="الانتقال الفوري إلى إحصائيات الشهر الحالي">
+            <span>⚡ الشهر الحالي</span>
+          </button>
+
+          <div id="kpi-active-period-badge" class="kpi-active-pill">
+            تشرين الأول (أكتوبر) 2026
+          </div>
+        </div>
+      </div>
+
       <!-- KPI Statistics Grid -->
       <div class="admin-kpi-grid">
         <div class="kpi-card">
           <div class="kpi-icon-wrap kpi-icon-sales">💰</div>
           <div class="kpi-content">
-            <span class="kpi-label">إجمالي المبيعات</span>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="kpi-label">إجمالي المبيعات</span>
+              <span id="kpi-mode-badge" class="badge badge-gold" style="font-size: 10px; padding: 1px 6px;">شهري</span>
+            </div>
             <span id="admin-stat-sales" class="kpi-val">0 شيكل</span>
+            <small id="admin-stat-sales-sub" style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px; display: block;">مقبوضات نقدية وعرابين</small>
           </div>
         </div>
 
@@ -652,6 +699,7 @@
           <div class="kpi-content">
             <span class="kpi-label">إجمالي طلبات التفصيل</span>
             <span id="admin-stat-orders" class="kpi-val">0</span>
+            <small id="admin-stat-orders-sub" style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px; display: block;">طلبيات مجدولة ومباعة</small>
           </div>
         </div>
 
@@ -660,6 +708,7 @@
           <div class="kpi-content">
             <span class="kpi-label">إجمالي الأمتار المباعة</span>
             <span id="admin-stat-meters" class="kpi-val">0 م</span>
+            <small id="admin-stat-meters-sub" style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px; display: block;">أمتار مفصلة بالفترة</small>
           </div>
         </div>
 
@@ -668,6 +717,7 @@
           <div class="kpi-content">
             <span class="kpi-label">أصناف الأقمشة بالمستودع</span>
             <span id="admin-stat-products" class="kpi-val">0</span>
+            <small id="admin-stat-products-sub" style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px; display: block;">جاهزة للقص والتفصيل</small>
           </div>
         </div>
       </div>
@@ -2481,6 +2531,9 @@
               <button type="button" class="btn btn-sm btn-gold-soft" onclick="window.naseejAdmin.loadSampleNotebookSheet()" title="تحميل نموذج دفتر واقعي للتجربة">
                 📄 نموذج دفتر للتجربة
               </button>
+              <button type="button" class="btn btn-sm" id="btn-gemini-config" onclick="window.naseejAdmin.promptGeminiApiKey()" style="background: #0f172a; color: #38bdf8; border: 1px solid #38bdf8; font-weight: 700;" title="إعداد مفتاح Google Gemini API للقراءة الدقيقة لخط اليد">
+                ⚙️ مفتاح Gemini AI
+              </button>
             </div>
 
             <!-- Image Container -->
@@ -2516,10 +2569,13 @@
 
           <!-- Right Column: Extracted Order Confirmation Form -->
           <div class="notebook-form-col">
-            <div class="confirmation-card-header" style="margin-bottom: 12px;">
+            <div class="confirmation-card-header" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
               <div style="font-weight: 800; font-size: 15px; color: #0f172a;">
-                📋 تأكيد بيانات الطلبية
+                📋 تأكيد بيانات الطلبية المستخرجة
               </div>
+              <span id="notebook-extracted-badge" class="badge" style="display: none; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-size: 11px; font-weight: 800;">
+                ✨ استخراج حرفي بالذكاء الاصطناعي
+              </span>
             </div>
 
             <form id="notebook-confirm-form" onsubmit="window.naseejAdmin.confirmNotebookOrder(event)">
@@ -2635,19 +2691,54 @@
 
                 <!-- Curtains & Fabric Description -->
                 <div class="form-group" style="grid-column: 1 / -1;">
-                  <label class="form-label">🪟 مواصفات البرادي والشبابيك والأمتار (من الدفتر)</label>
-                  <input type="text" id="nb-curtains-desc" class="form-control" placeholder="مثال: شباك صالة 3م + غرفة نوم ماستر (قماش شانيل تركي)">
+                  <label class="form-label" style="font-weight: 700;">🪟 مواصفات البرادي والشبابيك ونوع القماش (من الدفتر حرفياً)</label>
+                  <input type="text" id="nb-curtains-desc" class="form-control" placeholder="مثال: شباك صالة 3م + قماش شانيل تركي ويفي">
                 </div>
 
-                <!-- Total Amount & Down payment -->
+                <!-- Total Meters -->
                 <div class="form-group">
-                  <label class="form-label">المبلغ الإجمالي التقريبي (شيكل)</label>
-                  <input type="number" id="nb-total-price" class="form-control" value="480" min="0">
+                  <label class="form-label" style="font-weight: 700;">📏 إجمالي الأمتار (متر)</label>
+                  <input type="number" id="nb-total-meters" class="form-control" value="8.5" step="0.1" min="0" placeholder="الأمتار">
                 </div>
 
+                <!-- Total Price / الحساب -->
                 <div class="form-group">
-                  <label class="form-label">ملاحظات إضافية من الدفتر</label>
-                  <input type="text" id="nb-notes" class="form-control" placeholder="ملاحظات التفصيل أو الدفعة">
+                  <label class="form-label" style="font-weight: 700;">💰 الحساب الإجمالي (شيكل) *</label>
+                  <input type="number" id="nb-total-price" class="form-control" value="500" min="0" oninput="window.naseejAdmin.recalcNotebookDebtLive()">
+                </div>
+
+                <!-- Deposit / الدفعة الأولى -->
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700; color: #059669;">💵 الدفعة المقبوضة / العربون (شيكل)</label>
+                  <input type="number" id="nb-deposit-paid" class="form-control" value="0" min="0" oninput="window.naseejAdmin.recalcNotebookDebtLive()" style="border-color: #10b981;">
+                </div>
+
+                <!-- Remaining Debt / الباقي -->
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700; color: #dc2626;">⏳ المتبقي بالذمة (شيكل)</label>
+                  <input type="number" id="nb-remaining-debt" class="form-control" value="500" min="0" style="border-color: #f87171; font-weight: 800;">
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <label class="form-label">📝 ملاحظات إضافية من الدفتر</label>
+                  <input type="text" id="nb-notes" class="form-control" placeholder="ملاحظات التفصيل أو الفني أو طريقة الدفع">
+                </div>
+
+                <!-- Verbatim OCR Transcribed Table Preview -->
+                <div id="nb-transcribed-table-section" class="form-group" style="grid-column: 1 / -1; display: none; margin-top: 6px; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-weight: 800; font-size: 13px; color: #0369a1; display: flex; align-items: center; gap: 6px;">
+                      <span>📑</span>
+                      <span>جدول تفريغ خط اليد الحرفي من الدفتر (Verbatim OCR Table):</span>
+                    </div>
+                    <button type="button" class="btn btn-xs btn-outline" id="btn-toggle-nb-edit-table" onclick="window.naseejAdmin.toggleNotebookTableEdit()" style="font-size: 11px; padding: 2px 8px;">
+                      ✏️ تعديل يدوي
+                    </button>
+                  </div>
+                  <div id="nb-transcribed-table-view" style="font-size: 12.5px; overflow-x: auto; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                    <!-- Rendered markdown table -->
+                  </div>
+                  <textarea id="nb-transcribed-table-raw" class="form-control" style="display: none; height: 100px; font-family: monospace; font-size: 11.5px; margin-top: 6px;" dir="ltr"></textarea>
                 </div>
               </div>
 
@@ -2661,10 +2752,54 @@
                 </button>
                 <button type="button" class="btn btn-light" onclick="window.naseejAdmin.closeNotebookScanModal()">
                   إلغاء
-                </button>
               </div>
             </form>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: إعداد مفتاح Gemini Vision AI لقراءة الدفتر -->
+  <div id="admin-gemini-key-modal" class="naseej-modal" style="display: none;">
+    <div class="modal-dialog modal-md" style="max-width: 520px;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">🤖</span>
+          <h3 class="modal-title" style="color: #fff; margin: 0; font-size: 16px;">إعداد مفتاح Google Gemini Vision AI</h3>
+        </div>
+        <button type="button" class="modal-close" style="color: #fff;" onclick="window.naseejAdmin.closeGeminiKeyModal()">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+          <div style="font-weight: 800; font-size: 13px; color: #0369a1; margin-bottom: 4px;">
+            💡 ما فائدة مفتاح Gemini؟
+          </div>
+          <p style="font-size: 12.5px; color: #0c4a6e; margin: 0; line-height: 1.5;">
+            يُستخدم لتشغيل محرك الذكاء الاصطناعي (Gemini Vision) لقراءة وتحليل خط اليد العربي بالدفتر بدقة 100%، واستخراج الأسماء، الأرقام، الأمتار، الحساب، والعربون بدون أي أخطاء أو تخمين.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-weight: 700;">مفتاح Gemini API Key:</label>
+          <input type="password" id="gemini-api-key-input" class="form-control" placeholder="AIzaSy..." dir="ltr" style="font-family: monospace; font-size: 13px;">
+          <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">
+            يمكنك الحصول على مفتاح مجاني فورياً وبدون بطاقة بنكية من: 
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color: #0284c7; font-weight: 700; text-decoration: underline;">Google AI Studio</a>
+          </small>
+        </div>
+
+        <div id="gemini-key-status" style="margin-top: 10px; font-size: 12.5px; font-weight: 700;"></div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <button type="button" class="btn btn-outline" onclick="window.naseejAdmin.removeGeminiApiKey()" style="color: #dc2626; border-color: #fca5a5;">
+          🗑️ إزالة المفتاح
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn btn-light" onclick="window.naseejAdmin.closeGeminiKeyModal()">إلغاء</button>
+          <button type="button" class="btn btn-primary" onclick="window.naseejAdmin.saveGeminiApiKey()" style="font-weight: 800;">
+            💾 حفظ المفتاح وتفعيل القراءة
+          </button>
         </div>
       </div>
     </div>
@@ -2679,6 +2814,15 @@
       </div>
       <div class="modal-body" style="text-align: center; padding: 16px;">
         <img id="nb-preview-modal-img" src="" alt="دفتر الطلبية" style="max-width: 100%; max-height: 520px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+        
+        <!-- Transcribed Verbatim Table in Preview Modal -->
+        <div id="nb-preview-modal-table-container" style="display: none; margin-top: 14px; text-align: right; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px;">
+          <div style="font-weight: 800; font-size: 13px; color: #0369a1; margin-bottom: 6px;">
+            📑 جدول تفريغ خط اليد الحرفي من الدفتر:
+          </div>
+          <div id="nb-preview-modal-table-content" style="font-size: 12px; overflow-x: auto;"></div>
+        </div>
+
         <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 10px;">
           <span id="nb-preview-modal-meta" style="font-size: 13px; color: #475569; font-weight: 600;"></span>
           <a id="nb-preview-modal-download" href="" download="notebook-order.jpg" class="btn btn-sm btn-outline">
@@ -2885,6 +3029,9 @@
           </h3>
           <span id="detail-modal-order-source" class="badge badge-source" style="background:#0284c7;color:#fff;">🏪 معرض</span>
           <span id="detail-modal-debt-alert" class="badge" style="display:none; background:#dc2626; color:#fff; font-weight:800;">🚨 ذمة معلقة</span>
+          <button type="button" id="btn-detail-view-notebook" class="btn btn-sm" onclick="window.naseejAdmin.previewOrderNotebookImage(window.naseejAdmin.activeDetailOrderId)" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: 1px solid #38bdf8; font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 6px; display: none;">
+            📷 عرض وتكبير صورة الدفتر الأصلية
+          </button>
         </div>
         <button type="button" class="modal-close" onclick="window.naseejAdmin.closeOrderDetailsModal()">✕</button>
       </div>
@@ -2943,6 +3090,15 @@
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- Transcribed Verbatim Table from Notebook (if available) -->
+        <div id="detail-modal-transcribed-table-section" style="display: none; margin-bottom: 20px; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px;">
+          <div style="font-weight: 800; font-size: 13.5px; color: #0369a1; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <span>📑</span>
+            <span>جدول تفريغ خط اليد الحرفي من دفتر المعرض (OCR Verbatim Table):</span>
+          </div>
+          <div id="detail-modal-transcribed-table-view" style="font-size: 12px; overflow-x: auto; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;"></div>
         </div>
 
         <!-- Financial Accounting & Payments Log -->
