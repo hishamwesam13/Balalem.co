@@ -5715,8 +5715,12 @@ class NaseejAdmin {
     document.getElementById('pay-modal-remaining-debt').textContent = `${rem.toLocaleString()} ₪`;
 
     const amountInput = document.getElementById('pay-modal-amount');
-    amountInput.value = rem > 0 ? rem : '';
-    amountInput.max = rem > 0 ? rem : 0;
+    // Keep empty by default so nothing is assumed paid until entered by cashier
+    if (amountInput) {
+      amountInput.value = '';
+      amountInput.max = rem > 0 ? rem : 0;
+      setTimeout(() => amountInput.focus(), 150);
+    }
 
     const staffSelect = document.getElementById('pay-modal-receiver');
     if (staffSelect) {
@@ -5735,6 +5739,20 @@ class NaseejAdmin {
     modal.style.pointerEvents = 'auto';
     modal.style.zIndex = '999999';
     document.body.style.overflow = 'hidden';
+  }
+
+  fillPayModalFullDebt() {
+    const orderId = document.getElementById('pay-modal-order-id-input')?.value;
+    const order = store.getOrderById(orderId);
+    if (!order) return;
+    const g = order.grandTotal || 0;
+    const p = order.totalPaid || 0;
+    const curRem = order.remainingDebt !== undefined ? order.remainingDebt : Math.max(0, g - p);
+    const amountInput = document.getElementById('pay-modal-amount');
+    if (amountInput) {
+      amountInput.value = curRem > 0 ? curRem : 0;
+      this.recalcPayModalLive();
+    }
   }
 
   closeRecordPaymentModal() {
@@ -5758,19 +5776,23 @@ class NaseejAdmin {
     const p = order.totalPaid || 0;
     const curRem = order.remainingDebt !== undefined ? order.remainingDebt : Math.max(0, g - p);
 
-    const enteredAmount = parseFloat(document.getElementById('pay-modal-amount')?.value) || 0;
+    const amountInputVal = document.getElementById('pay-modal-amount')?.value?.trim();
+    const enteredAmount = parseFloat(amountInputVal) || 0;
     const futureDebt = Math.max(0, curRem - enteredAmount);
 
     const futureEl = document.getElementById('pay-modal-future-debt');
     if (futureEl) {
-      if (enteredAmount > curRem) {
+      if (!amountInputVal || enteredAmount === 0) {
+        futureEl.textContent = `${curRem.toLocaleString()} ₪ (لم يتم سداد أي دفعة بعد)`;
+        futureEl.style.color = '#b45309';
+      } else if (enteredAmount > curRem) {
         futureEl.textContent = `⚠️ تنبيه: المبلغ أكبر من المتبقي بالذمة (${curRem} ₪)! الحد الأقصى المسموح ${curRem} ₪`;
         futureEl.style.color = '#dc2626';
       } else if (futureDebt === 0) {
         futureEl.textContent = '0 ₪ (خالص ومسدد بالكامل ✓)';
         futureEl.style.color = '#059669';
       } else {
-        futureEl.textContent = `${futureDebt.toLocaleString()} ₪`;
+        futureEl.textContent = `${futureDebt.toLocaleString()} ₪ (المتبقي بذمة الزبون بعد هذا السداد)`;
         futureEl.style.color = '#dc2626';
       }
     }
