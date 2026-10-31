@@ -2085,21 +2085,42 @@ class NaseejAdmin {
             ${windowsDetailsHtml}
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+          ${o.notebookImage ? `
+            <div style="margin: 8px 0; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1.5px solid #38bdf8; border-radius: 8px; padding: 7px 10px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s ease;" onclick="window.naseejAdmin.previewOrderNotebookImage('${o.id}')" title="انقر لعرض وتكبير صورة ورقة الدفتر الأصلية">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <img src="${o.notebookImage}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1.5px solid #0284c7; box-shadow: 0 2px 4px rgba(0,0,0,0.12);" alt="صورة الدفتر" />
+                <div>
+                  <div style="font-size: 12.5px; font-weight: 800; color: #0369a1;">📖 صورة ورقة الدفتر الأصلية محفوظة</div>
+                  <div style="font-size: 11px; color: #0284c7; font-weight: 600;">انقر هنا لتكبير ومطابقة خط اليد والجدول 🔍</div>
+                </div>
+              </div>
+              <span class="btn btn-xs" style="background: #0284c7; color: #fff; font-weight: 800; padding: 4px 10px; border-radius: 6px; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);">استعراض 👁️</span>
+            </div>
+          ` : ''}
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; flex-wrap: wrap; gap: 6px;">
             <div style="font-size: 14px; font-weight: 800; color: #b45309;">
               المجموع: <strong>${grandTotal.toLocaleString()} ₪</strong>
             </div>
-            <div class="search-card-actions">
-              <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 3px 8px;" onclick="window.naseejAdmin.printOrderWorkReceipt('${o.id}'); window.naseejAdmin.clearTopCustomerSearch();">
+            <div class="search-card-actions" style="display: flex; gap: 5px; flex-wrap: wrap; align-items: center;">
+              ${o.notebookImage ? `
+                <button type="button" class="btn btn-sm" style="background: #0284c7; color: #ffffff; font-size: 11px; padding: 4px 8px; font-weight: 800; border: none; border-radius: 5px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);" onclick="window.naseejAdmin.previewOrderNotebookImage('${o.id}')" title="عرض وتكبير صورة دفتر الطلبية الأصلية">
+                  📖 صورة الدفتر
+                </button>
+              ` : ''}
+              <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 4px 8px; font-weight: 700; color: #334155; border-color: #cbd5e1;" onclick="window.naseejAdmin.openOrderDetailsModal('${o.id}'); window.naseejAdmin.clearTopCustomerSearch();" title="عرض تفاصيل الطلبية كاملة">
+                👁️ تفاصيل كاملة
+              </button>
+              <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 4px 8px;" onclick="window.naseejAdmin.printOrderWorkReceipt('${o.id}'); window.naseejAdmin.clearTopCustomerSearch();">
                 🖨️ أمر الورشة
               </button>
               ${custPhone ? `
-                <a href="https://wa.me/972${custPhone.replace(/\\D/g, '').replace(/^0+/, '')}?text=${encodeURIComponent(`مرحباً ${custName}، شركة الولاء للستائر BalalemCo بخصوص طلبية الستائر رقم ${o.id}`)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline" style="color: #10b981; border-color: #10b981; font-size: 11px; padding: 3px 8px;" title="مراسلة واتساب">
+                <a href="https://wa.me/972${custPhone.replace(/\\D/g, '').replace(/^0+/, '')}?text=${encodeURIComponent(`مرحباً ${custName}، شركة الولاء للستائر BalalemCo بخصوص طلبية الستائر رقم ${o.id}`)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline" style="color: #10b981; border-color: #10b981; font-size: 11px; padding: 4px 8px;" title="مراسلة واتساب">
                   💬 واتساب
                 </a>
               ` : ''}
-              <button type="button" class="btn btn-sm btn-gold" style="font-size: 11px; padding: 3px 8px;" onclick="window.naseejAdmin.jumpToDate('${o.scheduledDate || o.installationDate || ''}'); window.naseejAdmin.clearTopCustomerSearch();">
-                📅 عرض بالجدول
+              <button type="button" class="btn btn-sm btn-gold" style="font-size: 11px; padding: 4px 8px;" onclick="window.naseejAdmin.jumpToOrderInTable('${o.id}', '${o.scheduledDate || o.installationDate || ''}')" title="الانتقال إلى سطر الطلبية في جدول الطلبيات العام وتحديده">
+                📋 عرض بالجدول
               </button>
             </div>
           </div>
@@ -2125,6 +2146,31 @@ class NaseejAdmin {
     if (input) input.value = '';
     if (clearBtn) clearBtn.style.display = 'none';
     if (resultsPanel) resultsPanel.style.display = 'none';
+  }
+
+  jumpToOrderInTable(orderId, dateStr) {
+    this.clearTopCustomerSearch();
+    this.switchTab('orders');
+    setTimeout(() => {
+      const cleanId = String(orderId).replace(/^#/, '').trim();
+      const row = document.querySelector(`tr[data-order-id="${orderId}"]`) || 
+                  document.querySelector(`tr[data-order-id="${cleanId}"]`) ||
+                  document.querySelector(`tr[data-order-id="ORD-${cleanId}"]`) ||
+                  document.querySelector(`tr[data-order-id$="${cleanId}"]`);
+      if (row) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        row.style.transition = 'all 0.4s ease';
+        row.style.backgroundColor = '#fef08a';
+        row.style.boxShadow = '0 0 18px rgba(234, 179, 8, 0.8)';
+        setTimeout(() => {
+          row.style.backgroundColor = '';
+          row.style.boxShadow = '';
+        }, 4000);
+      } else if (dateStr) {
+        this.switchTab('schedule');
+        this.jumpToDate(dateStr);
+      }
+    }, 150);
   }
 
   // Filter Installers on Installation Board
@@ -3051,8 +3097,10 @@ class NaseejAdmin {
   }
 
   previewOrderNotebookImage(orderId) {
+    const cleanId = String(orderId).replace(/^#/, '').trim();
     const orders = store.getOrders();
-    const order = orders.find(o => o.id === orderId);
+    const order = (typeof store.getOrderById === 'function' ? store.getOrderById(orderId) : null) ||
+                  orders.find(o => o.id === orderId || o.id === cleanId || o.id === `ORD-${cleanId}` || String(o.id).replace(/\D/g, '') === cleanId.replace(/\D/g, ''));
     if (!order || !order.notebookImage) {
       if (window.naseejCustomer) window.naseejCustomer.showToast('لا توجد صورة دفتر محفوظة لهذه الطلبية', 'warning');
       return;

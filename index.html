@@ -2811,11 +2811,11 @@
   </div>
 
   <!-- Modal: عرض وتكبير صورة دفتر الطلبية الأصلية (Lightbox) -->
-  <div id="admin-notebook-preview-modal" class="naseej-modal" style="display: none;">
-    <div class="modal-dialog modal-md" style="max-width: 650px;">
+  <div id="admin-notebook-preview-modal" class="naseej-modal" style="display: none; pointer-events: auto !important; z-index: 1000000 !important;" onclick="if(event.target===this){ window.naseejAdmin?.closeNotebookPreviewModal(); }">
+    <div class="modal-dialog modal-md" style="max-width: 650px; pointer-events: auto !important; position: relative; z-index: 1000005 !important;">
       <div class="modal-header">
         <h3 class="modal-title" id="nb-preview-modal-title">📖 صورة دفتر الطلبية الأصلية</h3>
-        <button type="button" class="modal-close" onclick="window.naseejAdmin.closeNotebookPreviewModal()">✕</button>
+        <button type="button" class="modal-close" style="cursor: pointer; pointer-events: auto !important;" onclick="window.naseejAdmin.closeNotebookPreviewModal()">✕</button>
       </div>
       <div class="modal-body" style="text-align: center; padding: 16px;">
         <img id="nb-preview-modal-img" src="" alt="دفتر الطلبية" style="max-width: 100%; max-height: 520px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
